@@ -3,17 +3,28 @@ import os
 import requests
 import time
 import json
-from dotenv import load_dotenv
 import streamlit.components.v1 as components
 
-# 加载环境变量
-load_dotenv()
+# 注意：Streamlit Cloud 的 Secrets 会自动加载为环境变量
+# 本地开发时可在 .streamlit/secrets.toml 中配置，或保留 .env 文件
 
 # 1. 页面基本设置
 st.set_page_config(page_title="卷积核微课 - 虚拟实验室", page_icon="🧠", layout="wide")
 
-# ================= API 接口实现 =================
-DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY")
+# ================= API 配置 =================
+# 优先使用环境变量（Streamlit Cloud Secrets），本地开发也可从 .env 加载
+def get_api_key():
+    key = os.getenv("DASHSCOPE_API_KEY")
+    if not key:
+        try:
+            from dotenv import load_dotenv
+            load_dotenv()
+            key = os.getenv("DASHSCOPE_API_KEY")
+        except:
+            pass
+    return key
+
+DASHSCOPE_API_KEY = get_api_key()
 DASHSCOPE_BASE_URL = os.getenv("DASHSCOPE_BASE_URL", "https://dashscope.aliyuncs.com/api/v1")
 QWEN_MODEL = os.getenv("QWEN_MODEL", "qwen-plus")
 
@@ -67,10 +78,14 @@ def call_qwen_api(prompt, system_prompt="你是一个专业、耐心的深度学
 
 # 检查是否是 API 调用（通过 query params）
 query_params = st.query_params
-if "question" in query_params:
+if "question" in query_params and query_params["question"]:
     # API 模式：返回 JSON
     question = query_params["question"]
+
+    # 尝试获取type参数，默认default
     hint_type = query_params.get("type", "default")
+    if not hint_type:
+        hint_type = "default"
 
     # 根据类型设置不同的 system prompt
     system_prompts = {
@@ -83,6 +98,10 @@ if "question" in query_params:
 
     result = call_qwen_api(question, system_prompts.get(hint_type, system_prompts["default"]))
     st.json(result)
+    st.stop()
+elif "question" in query_params:
+    # question参数存在但为空
+    st.json({"error": "问题参数为空"})
     st.stop()
 
 # 自定义 CSS 样式
