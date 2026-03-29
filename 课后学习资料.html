@@ -378,20 +378,33 @@
 
         // 调用后端 API
         async function callAPI(question, type = 'default') {
+            // 使用 parent.window 获取父窗口的 URL（因为 HTML 在 iframe 中）
+            const parentLoc = window.parent !== window ? window.parent.location : window.location;
+            const baseUrl = parentLoc.origin + parentLoc.pathname;
             const params = new URLSearchParams({
                 question: question,
                 type: type
             });
-            const url = window.location.pathname + '?' + params.toString();
+            const url = baseUrl + '?' + params.toString();
+
+            console.log('API URL:', url);  // 调试日志
 
             try {
                 const response = await fetch(url);
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    // 返回的是HTML而非JSON，说明API调用失败
+                    const text = await response.text();
+                    console.error('API返回非JSON:', text.substring(0, 200));
+                    return '⚠️ 请确保已在Streamlit Secrets中配置DASHSCOPE_API_KEY';
+                }
                 const data = await response.json();
                 if (data.error) {
                     return '⚠️ ' + data.error;
                 }
                 return data.content || '暂无回复';
             } catch (e) {
+                console.error('API错误:', e);  // 调试日志
                 return '🔌 连接错误: ' + e.message;
             }
         }
