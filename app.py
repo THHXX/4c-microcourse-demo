@@ -152,12 +152,16 @@ with tab2:
     st.markdown("### 🤖 AI 学习助手")
     st.info("💡 在这里可以获取学习提示、纠错帮助，或与AI讨论学习心得！")
 
+    # 初始化Tab2的session_state
+    if "tab2_response" not in st.session_state:
+        st.session_state["tab2_response"] = None
+
     # 选择功能类型
-    ai_mode = st.selectbox("选择功能：", ["💡 获取提示", "❌ 错题解析", "💬 学习讨论", "📊 学习报告"])
+    ai_mode = st.selectbox("选择功能：", ["💡 获取提示", "❌ 错题解析", "💬 学习讨论", "📊 学习报告"], key="ai_mode_tab2")
 
     if ai_mode == "💡 获取提示":
-        topic = st.selectbox("选择主题：", ["图像表示", "卷积运算", "边缘检测", "其他问题"])
-        if st.button("获取AI提示"):
+        topic = st.selectbox("选择主题：", ["图像表示", "卷积运算", "边缘检测", "其他问题"], key="topic_tab2")
+        if st.button("获取AI提示", key="btn_hint"):
             prompts = {
                 "图像表示": "请给我一个关于'图像在计算机中如何表示'的简洁提示，帮助学生理解像素和矩阵的概念。",
                 "卷积运算": "请给我一个关于'卷积运算如何进行'的简洁提示，引导学生理解滑动窗口和点积的概念。",
@@ -165,33 +169,44 @@ with tab2:
                 "其他问题": "请给我一个学习卷积核的提示。"
             }
             with st.spinner("AI正在思考..."):
-                response = call_qwen_api(prompts[topic])
-                st.success(response)
+                result = call_qwen_api(prompts[topic])
+                st.session_state["tab2_response"] = result.get("content") or result.get("error", "未知错误")
+                st.rerun()
 
     elif ai_mode == "❌ 错题解析":
-        wrong_topic = st.text_input("输入你做错的题目或知识点：")
-        if st.button("获取错题解析"):
+        wrong_topic = st.text_input("输入你做错的题目或知识点：", key="wrong_topic")
+        if st.button("获取错题解析", key="btn_error"):
             if wrong_topic:
                 with st.spinner("AI正在分析..."):
                     prompt = f"请分析以下学习难点，给出详细的错题解析和正确思路：{wrong_topic}"
-                    response = call_qwen_api(prompt)
-                    st.info(response)
+                    result = call_qwen_api(prompt)
+                    st.session_state["tab2_response"] = result.get("content") or result.get("error", "未知错误")
+                    st.rerun()
 
     elif ai_mode == "💬 学习讨论":
-        thought = st.text_area("写下你的学习心得或疑问：")
-        if st.button("与AI讨论"):
+        thought = st.text_area("写下你的学习心得或疑问：", key="thought_tab2")
+        if st.button("与AI讨论", key="btn_discuss"):
             if thought:
                 with st.spinner("AI正在与你讨论..."):
                     prompt = f"请与学生进行友好的学习讨论，给出鼓励和深入的引导，主题是：{thought}"
-                    response = call_qwen_api(prompt)
-                    st.success(response)
+                    result = call_qwen_api(prompt)
+                    st.session_state["tab2_response"] = result.get("content") or result.get("error", "未知错误")
+                    st.rerun()
 
     elif ai_mode == "📊 学习报告":
-        if st.button("生成学习报告"):
+        if st.button("生成学习报告", key="btn_report"):
             with st.spinner("正在生成个性化报告..."):
                 prompt = "请根据学生的学习情况，生成一份个性化学习报告，包括学习进度、掌握程度和建议。"
-                response = call_qwen_api(prompt)
-                st.markdown(f"**📊 你的AI学习报告：**\n\n{response}")
+                result = call_qwen_api(prompt)
+                st.session_state["tab2_response"] = result.get("content") or result.get("error", "未知错误")
+                st.rerun()
+
+    # 渲染结果（在按钮外部，重跑后依然存在）
+    if st.session_state["tab2_response"]:
+        if "错误" in st.session_state["tab2_response"] or "请" in st.session_state["tab2_response"]:
+            st.error(st.session_state["tab2_response"])
+        else:
+            st.success(st.session_state["tab2_response"])
 
 # ================= 标签页 3：AI 助教 =================
 with tab3:
@@ -205,26 +220,21 @@ with tab3:
              "content": "你好！我是你的专属深度学习助教。有关卷积核、计算机视觉或 Python 编程的问题，都可以问我哦！"}
         ]
 
-    # 聊天容器
-    chat_container = st.container()
-    with chat_container:
-        # 显示历史聊天记录
-        for msg in st.session_state["messages"]:
-            with st.chat_message(msg["role"]):
-                st.markdown(msg["content"])
-
-    # 聊天输入框 - 放在最底部，Streamlit 自动固定在下方
+    # 聊天输入框
     if prompt := st.chat_input("💭 输入你的问题，比如：卷积核是如何提取图像特征的？"):
         # 添加用户消息
         st.session_state["messages"].append({"role": "user", "content": prompt})
-        with chat_container:
-            with st.chat_message("user"):
-                st.markdown(prompt)
 
         # 调用 AI 回复
-        with chat_container:
-            with st.chat_message("assistant"):
-                with st.spinner("AI 正在思考..."):
-                    reply = call_qwen_api(prompt)
-                    st.markdown(reply)
-                    st.session_state["messages"].append({"role": "assistant", "content": reply})
+        with st.spinner("AI 正在思考..."):
+            result = call_qwen_api(prompt)
+            content = result.get("content") or result.get("error", "请求失败")
+
+        # 添加AI回复到历史
+        st.session_state["messages"].append({"role": "assistant", "content": content})
+        st.rerun()
+
+    # 渲染聊天记录（在输入框之后，确保重跑后消息不丢失）
+    for msg in st.session_state["messages"]:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
