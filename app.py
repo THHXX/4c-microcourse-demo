@@ -137,105 +137,61 @@ with tab1:
 with tab2:
     st.subheader("📖 课后学习资料")
 
-    # 初始化学习状态
-    if "learn_state" not in st.session_state:
-        st.session_state["learn_state"] = {
-            "q1_answered": False,
-            "q2_answered": False,
-            "q3_answered": False,
-            "q1_answer": None,
-            "q2_answer": None,
-            "q3_answer": None,
-            "ai_responses": {}
-        }
+    # 显示原有HTML内容
+    html_path = "课后学习资料.html"
+    if os.path.exists(html_path):
+        with open(html_path, "r", encoding="utf-8") as f:
+            html_content = f.read()
+        # 只显示HTML的学习内容部分，不包含交互（交互由下方Streamlit接管）
+        components.html(html_content, height=1200, scrolling=True)
+    else:
+        st.error(f"未找到 HTML 文件: {html_path}")
 
-    # 题目1
-    with st.expander("📝 题目1：图像的计算机表示", expanded=True):
-        st.markdown("计算机中存储图像最常用的数据结构是什么？")
-        col1, col2 = st.columns([1,1])
-        with col1:
-            if st.button("A. 矢量方程", key="q1_a"):
-                st.session_state["learn_state"]["q1_answered"] = True
-                st.session_state["learn_state"]["q1_answer"] = "A"
-                if "A" != "B":  # 正确答案
-                    prompt = "学生选择了'A. 矢量方程'，这是错误的。请给出纠错提示，说明照片是像素图。"
-                    resp = call_qwen_api(prompt)
-                    st.session_state["learn_state"]["ai_responses"]["q1"] = resp
-                st.rerun()
-        with col2:
-            if st.button("B. 矩阵/像素阵列", key="q1_b"):
-                st.session_state["learn_state"]["q1_answered"] = True
-                st.session_state["learn_state"]["q1_answer"] = "B"
-                st.rerun()
-
-        if st.session_state["learn_state"]["q1_answered"]:
-            if st.session_state["learn_state"]["q1_answer"] == "B":
-                st.success("✅ 正确！图像在计算机中用矩阵表示，每个像素是一个数值。")
-            else:
-                st.error("❌ 不对哦~")
-                if "q1" in st.session_state["learn_state"]["ai_responses"]:
-                    st.info(st.session_state["learn_state"]["ai_responses"]["q1"])
-
-    # 题目2
-    with st.expander("📝 题目2：卷积运算"):
-        st.markdown("计算卷积：与核 [[-1,0,1],[-1,0,1],[-1,0,1]] 的点积结果？")
-        col1, col2 = st.columns([1,1])
-        with col1:
-            if st.button("A. 0", key="q2_a"):
-                st.session_state["learn_state"]["q2_answered"] = True
-                st.session_state["learn_state"]["q2_answer"] = "A"
-                st.rerun()
-        with col2:
-            if st.button("B. 3", key="q2_b"):
-                st.session_state["learn_state"]["q2_answered"] = True
-                st.session_state["learn_state"]["q2_answer"] = "B"
-                if "B" != "B":
-                    prompt = "请给出提示"
-                    resp = call_qwen_api(prompt)
-                    st.session_state["learn_state"]["ai_responses"]["q2"] = resp
-                st.rerun()
-
-        if st.session_state["learn_state"]["q2_answered"]:
-            if st.session_state["learn_state"]["q2_answer"] == "B":
-                st.success("✅ 正确！")
-
-    # 题目3
-    with st.expander("📝 题目3：卷积核方向"):
-        st.markdown("核 [[-1,0,1],[-1,0,1],[-1,0,1]] 检测什么方向的边缘？")
-        col1, col2 = st.columns([1,1])
-        with col1:
-            if st.button("A. 水平", key="q3_a"):
-                st.session_state["learn_state"]["q3_answered"] = True
-                st.session_state["learn_state"]["q3_answer"] = "A"
-                st.rerun()
-        with col2:
-            if st.button("B. 垂直", key="q3_b"):
-                st.session_state["learn_state"]["q3_answered"] = True
-                st.session_state["learn_state"]["q3_answer"] = "B"
-                st.rerun()
-
-        if st.session_state["learn_state"]["q3_answered"]:
-            if st.session_state["learn_state"]["q3_answer"] == "B":
-                st.success("✅ 正确！这是左右结构的核，检测垂直边缘。")
-
-    # AI讨论区
+    # 在下方添加AI学习助手（Streamlit原生实现）
     st.markdown("---")
-    st.markdown("### 💬 与AI讨论学习")
-    user_thought = st.text_area("写下你的学习心得或疑问，AI会和你讨论：", key="thought_input")
-    if st.button("🚀 提交与AI交流"):
-        if user_thought:
+    st.markdown("### 🤖 AI 学习助手")
+    st.info("💡 在这里可以获取学习提示、纠错帮助，或与AI讨论学习心得！")
+
+    # 选择功能类型
+    ai_mode = st.selectbox("选择功能：", ["💡 获取提示", "❌ 错题解析", "💬 学习讨论", "📊 学习报告"])
+
+    if ai_mode == "💡 获取提示":
+        topic = st.selectbox("选择主题：", ["图像表示", "卷积运算", "边缘检测", "其他问题"])
+        if st.button("获取AI提示"):
+            prompts = {
+                "图像表示": "请给我一个关于'图像在计算机中如何表示'的简洁提示，帮助学生理解像素和矩阵的概念。",
+                "卷积运算": "请给我一个关于'卷积运算如何进行'的简洁提示，引导学生理解滑动窗口和点积的概念。",
+                "边缘检测": "请给我一个关于'卷积核如何检测边缘'的简洁提示，帮助学生理解不同方向核的作用。",
+                "其他问题": "请给我一个学习卷积核的提示。"
+            }
             with st.spinner("AI正在思考..."):
-                prompt = f"请与学生进行深度讨论，主题是：{user_thought}"
-                response = call_qwen_api(prompt)
-                st.info(response)
+                response = call_qwen_api(prompts[topic])
+                st.success(response)
 
-    # 学习报告
-    st.markdown("---")
-    if st.button("📊 生成AI学习报告"):
-        with st.spinner("正在生成报告..."):
-            summary = "学生完成了课后学习，请生成个性化学习报告。"
-            report = call_qwen_api(summary)
-            st.markdown(f"**🏆 你的AI学习报告：**\n\n{report}")
+    elif ai_mode == "❌ 错题解析":
+        wrong_topic = st.text_input("输入你做错的题目或知识点：")
+        if st.button("获取错题解析"):
+            if wrong_topic:
+                with st.spinner("AI正在分析..."):
+                    prompt = f"请分析以下学习难点，给出详细的错题解析和正确思路：{wrong_topic}"
+                    response = call_qwen_api(prompt)
+                    st.info(response)
+
+    elif ai_mode == "💬 学习讨论":
+        thought = st.text_area("写下你的学习心得或疑问：")
+        if st.button("与AI讨论"):
+            if thought:
+                with st.spinner("AI正在与你讨论..."):
+                    prompt = f"请与学生进行友好的学习讨论，给出鼓励和深入的引导，主题是：{thought}"
+                    response = call_qwen_api(prompt)
+                    st.success(response)
+
+    elif ai_mode == "📊 学习报告":
+        if st.button("生成学习报告"):
+            with st.spinner("正在生成个性化报告..."):
+                prompt = "请根据学生的学习情况，生成一份个性化学习报告，包括学习进度、掌握程度和建议。"
+                response = call_qwen_api(prompt)
+                st.markdown(f"**📊 你的AI学习报告：**\n\n{response}")
 
 # ================= 标签页 3：AI 助教 =================
 with tab3:
