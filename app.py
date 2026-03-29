@@ -2,6 +2,7 @@ import streamlit as st
 import os
 import requests
 import time
+import json
 from dotenv import load_dotenv
 import streamlit.components.v1 as components
 
@@ -10,6 +11,79 @@ load_dotenv()
 
 # 1. 页面基本设置
 st.set_page_config(page_title="卷积核微课 - 虚拟实验室", page_icon="🧠", layout="wide")
+
+# ================= API 接口实现 =================
+DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY")
+DASHSCOPE_BASE_URL = os.getenv("DASHSCOPE_BASE_URL", "https://dashscope.aliyuncs.com/api/v1")
+QWEN_MODEL = os.getenv("QWEN_MODEL", "qwen-plus")
+
+def call_qwen_api(prompt, system_prompt="你是一个专业、耐心的深度学习助教，擅长用简洁易懂的语言讲解卷积核和计算机视觉相关知识。"):
+    """调用千问 API"""
+    if not DASHSCOPE_API_KEY:
+        return {"error": "请先在 Secrets 中配置 DASHSCOPE_API_KEY"}
+
+    url = f"{DASHSCOPE_BASE_URL}/services/aigc/text-generation/generation"
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {DASHSCOPE_API_KEY}"
+    }
+
+    body = {
+        "model": QWEN_MODEL,
+        "input": {
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt}
+            ]
+        },
+        "parameters": {
+            "result_format": "message"
+        }
+    }
+
+    # 增加超时时间到60秒，并添加重试机制
+    for attempt in range(3):
+        try:
+            response = requests.post(url, headers=headers, json=body, timeout=60)
+            if response.ok:
+                data = response.json()
+                return {"content": data["output"]["choices"][0]["message"]["content"]}
+            elif response.status_code == 429:
+                time.sleep(2)
+                continue
+            else:
+                return {"error": f"API 错误: {response.status_code}"}
+        except requests.exceptions.Timeout:
+            if attempt < 2:
+                continue
+            return {"error": "请求超时，请稍后重试"}
+        except Exception as e:
+            if attempt < 2:
+                time.sleep(1)
+                continue
+            return {"error": f"连接错误: {str(e)}"}
+    return {"error": "请稍后重试"}
+
+# 检查是否是 API 调用（通过 query params）
+query_params = st.query_params
+if "question" in query_params:
+    # API 模式：返回 JSON
+    question = query_params["question"]
+    hint_type = query_params.get("type", "default")
+
+    # 根据类型设置不同的 system prompt
+    system_prompts = {
+        "hint": "你是一个耐心的AI助教，给学生提供学习提示和引导。回复要简洁，不直接给答案。",
+        "error": "你是一个耐心的AI助教，指出学生的错误并给出正确思路。不要直接说答案。",
+        "discuss": "你是一个AI学习伙伴，与学生讨论他们的想法，给出鼓励和深入的问题。",
+        "summary": "你是AI学习报告生成器，根据学生的学习表现生成个性化报告。",
+        "default": "你是一个专业、耐心的深度学习助教，擅长讲解卷积核和计算机视觉相关知识。"
+    }
+
+    result = call_qwen_api(question, system_prompts.get(hint_type, system_prompts["default"]))
+    st.json(result)
+    st.stop()
 
 # 自定义 CSS 样式
 st.markdown("""
@@ -83,60 +157,6 @@ with tab2:
 with tab3:
     st.subheader("💬 AI 专属助教")
     st.info("💡 在这里可以问任何关于卷积核、计算机视觉的问题！")
-
-    # 千问 API 配置
-    DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY")
-    DASHSCOPE_BASE_URL = os.getenv("DASHSCOPE_BASE_URL", "https://dashscope.aliyuncs.com/api/v1")
-    QWEN_MODEL = os.getenv("QWEN_MODEL", "qwen-plus")
-
-    def call_qwen_api(prompt, system_prompt="你是一个专业、耐心的深度学习助教，擅长讲解卷积核和计算机视觉相关知识。"):
-        """调用千问 API"""
-        if not DASHSCOPE_API_KEY:
-            return "⚠️ 请先在 .env 文件中配置 DASHSCOPE_API_KEY"
-
-        url = f"{DASHSCOPE_BASE_URL}/services/aigc/text-generation/generation"
-
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {DASHSCOPE_API_KEY}"
-        }
-
-        body = {
-            "model": QWEN_MODEL,
-            "input": {
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": prompt}
-                ]
-            },
-            "parameters": {
-                "result_format": "message"
-            }
-        }
-
-        # 增加超时时间到60秒，并添加重试机制
-        for attempt in range(3):
-            try:
-                response = requests.post(url, headers=headers, json=body, timeout=60)
-                if response.ok:
-                    data = response.json()
-                    return data["output"]["choices"][0]["message"]["content"]
-                elif response.status_code == 429:
-                    # API限流，等待后重试
-                    time.sleep(2)
-                    continue
-                else:
-                    return f"❌ API 错误: {response.status_code}"
-            except requests.exceptions.Timeout:
-                if attempt < 2:
-                    continue
-                return "⏳ 请求超时，请稍后重试"
-            except Exception as e:
-                if attempt < 2:
-                    time.sleep(1)
-                    continue
-                return f"🔌 连接错误: {str(e)}"
-        return "⚠️ 请稍后重试"
 
     # 初始化聊天记录
     if "messages" not in st.session_state:
