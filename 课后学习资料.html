@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卷积核课后学习助手 · AI 增强版</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        .fullscreen-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 9999;
+            background: #3B82F6;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .fullscreen-btn:hover {
+            background: #2563EB;
+        }
+    </style>
+
+    <style>
+        :root {
+            --color-bg: #F8FAFC;
+            --color-surface: #FFFFFF;
+            --color-text-main: #1E293B;
+            --color-text-muted: #64748B;
+            --color-border: #E2E8F0;
+            --color-accent: #3B82F6;
+            --color-kernel: #F59E0B;
+            --color-image: #10B981;
+            --color-ai: #8B5CF6;
+            --color-success: #10B981;
+            --color-error: #EF4444;
+
+            --sidebar-width: 260px;
+            --space-6: 24px;
+            --space-8: 32px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', -apple-system, 'PingFang SC', sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text-main);
+            line-height: 1.6;
+        }
+
+        /* 布局 */
+        .app-layout { display: grid; grid-template-columns: var(--sidebar-width) 1fr; min-height: 100vh; }
+
+        /* 侧边栏 */
+        .sidebar {
+            background: white; border-right: 1px solid var(--color-border);
+            height: 100vh; position: sticky; top: 0; padding: var(--space-6);
+            display: flex; flex-direction: column;
+        }
+        .nav-menu { list-style: none; margin-top: 2rem; }
+        .nav-link {
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+            color: var(--color-text-muted); text-decoration: none; border-radius: 8px;
+            margin-bottom: 4px; font-weight: 500; transition: 0.2s;
+        }
+        .nav-link:hover { background: #F1F5F9; color: var(--color-accent); }
+        .nav-link.active { background: #EFF6FF; color: var(--color-accent); }
+
+        /* 内容区 */
+        .main-content { padding: 20px; display: flex; justify-content: center; }
+        .content-wrapper { max-width: 850px; width: 100%; }
+        section { margin-bottom: 40px; scroll-margin-top: 20px; }
+
+        /* 通用卡片 */
+        .card { background: white; border-radius: 16px; padding: 20px; border: 1px solid var(--color-border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h1 { font-size: 1.8rem; margin-bottom: 1rem; color: #0F172A; }
+        h2 { font-size: 1.2rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 10px; color: var(--color-accent); }
+
+        /* 练习题样式 */
+        .exercise-box { border: 2px solid #E0F2FE; transition: 0.3s; }
+        .exercise-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .options-grid { display: grid; gap: 10px; }
+        .option-btn {
+            background: #F8FAFC; border: 1px solid var(--color-border); padding: 12px;
+            border-radius: 12px; cursor: pointer; text-align: left; font-size: 0.95rem;
+            display: flex; align-items: center; gap: 12px; transition: 0.2s;
+        }
+        .option-btn:hover:not(:disabled) { border-color: var(--color-accent); background: #F0F9FF; }
+        .option-btn.correct { background: #ECFDF5; border-color: var(--color-success); color: #065F46; }
+        .option-btn.wrong { background: #FEF2F2; border-color: var(--color-error); color: #991B1B; }
+        .option-marker { width: 28px; height: 28px; background: #E2E8F0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+
+        /* AI 助手交互区 */
+        .ai-zone { margin-top: 15px; border-radius: 12px; background: #F5F3FF; padding: 12px; border: 1px solid #DDD6FE; }
+        .ai-hint-btn {
+            background: white; border: 1px solid #C4B5FD; color: #7C3AED; padding: 6px 12px;
+            border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;
+            font-size: 0.85rem; transition: 0.2s;
+        }
+        .ai-hint-btn:hover { background: #F5F3FF; transform: translateY(-1px); }
+
+        .ai-response {
+            background: white; border-radius: 8px; padding: 12px; margin-top: 10px;
+            border-left: 4px solid var(--color-ai); display: none;
+            animation: fadeIn 0.4s ease-out;
+            font-size: 0.9rem;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 加载动画 */
+        .loading-dots { display: inline-flex; gap: 4px; }
+        .dot { width: 6px; height: 6px; background: var(--color-ai); border-radius: 50%; animation: bounce 1.4s infinite ease-in-out; }
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        /* 进度条 */
+        .progress-bar { height: 6px; background: #E2E8F0; border-radius: 4px; overflow: hidden; margin: 8px 0; }
+        .progress-fill { height: 100%; background: var(--color-accent); width: 0%; transition: 0.4s; }
+
+        /* 公式与矩阵 */
+        .matrix-display {
+            background: #F1F5F9; font-family: monospace; padding: 10px; border-radius: 8px;
+            display: inline-block; line-height: 1.2; text-align: center; margin: 10px 0;
+            font-size: 0.9rem;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .app-layout { grid-template-columns: 1fr; }
+            .sidebar { display: none; }
+            .main-content { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <button class="fullscreen-btn" onclick="toggleFullscreen()">
+        <i class="fa-solid fa-expand"></i> <span id="fs-text">全屏</span>
+    </button>
+
+    <div class="app-layout">
+        <aside class="sidebar">
+            <h3 style="color: var(--color-accent);"><i class="fa-solid fa-brain"></i> 卷积核实验室</h3>
+            <nav class="nav-menu">
+                <a href="#intro" class="nav-link active"><i class="fa-solid fa-house"></i> 课程导读</a>
+                <a href="#exercise-1" class="nav-link"><i class="fa-solid fa-image"></i> 练习 1：图像本质</a>
+                <a href="#exercise-2" class="nav-link"><i class="fa-solid fa-calculator"></i> 练习 2：卷积计算</a>
+                <a href="#exercise-3" class="nav-link"><i class="fa-solid fa-filter"></i> 练习 3：特征提取</a>
+                <a href="#thought" class="nav-link"><i class="fa-solid fa-lightbulb"></i> 深度思考</a>
+                <a href="#summary" class="nav-link"><i class="fa-solid fa-trophy"></i> 学习总结</a>
+            </nav>
+
+            <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid #E2E8F0;">
+                <p style="font-size: 0.75rem; color: var(--color-text-muted);">当前学习进度</p>
+                <div class="progress-bar"><div class="progress-fill" id="overall-progress"></div></div>
+                <p style="font-size: 0.75rem; text-align: right;"><span id="progress-text">0/3</span> 已完成</p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+
+                <section id="intro">
+                    <h1>🎓 卷积核课后强化学习</h1>
+                    <p style="color: var(--color-text-muted); font-size: 1rem;">
+                        本模块由 <strong>通义千问 (Qwen) AI</strong> 提供全程辅助。遇到难题不要怕，点击 AI 助教获取引导。
+                    </p>
+                    <div class="card" style="margin-top: 20px; border-left: 4px solid var(--color-ai); background: #F5F3FF;">
+                        <p><strong>助教寄语：</strong> 卷积核是计算机视觉的眼睛。通过今天的练习，你将学会如何从一堆数字中"看"出线条和纹理。</p>
+                    </div>
+                </section>
+
+                <!-- 练习 1 -->
+                <section id="exercise-1">
+                    <h2><i class="fa-solid fa-circle-1"></i> 练习 1：图片的数字底色</h2>
+                    <div class="card exercise-box">
+                        <div class="exercise-header">
+                            <span style="font-weight: bold; color: var(--color-text-muted); font-size: 0.9rem;">单选题</span>
+                            <button class="ai-hint-btn" onclick="getAIHint(1)">
+                                <i class="fa-solid fa-robot"></i> 问问 AI 助教
+                            </button>
+                        </div>
+                        <p style="margin-bottom: 15px; font-size: 0.95rem;">在计算机内部，一张 28x28 像素的灰度图本质上是以什么形式存储的？</p>
+
+                        <div class="options-grid" id="options-1">
+                            <button class="option-btn" onclick="checkAnswer(1, 'A', false)">
+                                <span class="option-marker">A</span>
+                                <span>一系列描述形状的数学矢量方程</span>
+                            </button>
+                            <button class="option-btn" onclick="checkAnswer(1, 'B', true)">
+                                <span class="option-marker">B</span>
+                                <span>一个 28x28 的矩阵，元素值为 0-255</span>
+                            </button>
+                            <button class="option-btn" onclick="checkAnswer(1, 'C', false)">
+                                <span class="option-marker">C</span>
+                                <span>一个压缩后的二进制视频流</span>
+                            </button>
+                        </div>
+
+                        <div id="ai-response-1" class="ai-response"></div>
+                    </div>
+                </section>
+
+                <!-- 练习 2 -->
+                <section id="exercise-2">
+                    <h2><i class="fa-solid fa-circle-2"></i> 练习 2：动手算一算</h2>
+                    <div class="card exercise-box">
+                        <div class="exercise-header">
+                            <span style="font-weight: bold; color: var(--color-text-muted); font-size: 0.9rem;">计算题</span>
+                            <button class="ai-hint-btn" onclick="getAIHint(2)">
+                                <i class="fa-solid fa-robot"></i> 获取计算思路
+                            </button>
+                        </div>
+                        <p style="font-size: 0.95rem;">假设有一块 3x3 的图像区域 <b>I</b> 和一个 3x3 的卷积核 <b>K</b>：</p>
+                        <div style="display: flex; gap: 30px; justify-content: center; margin: 15px 0; flex-wrap: wrap;">
+                            <div>
+                                <p style="font-size: 0.75rem; text-align: center;">图像区域 I</p>
+                                <div class="matrix-display">
+                                    [1, 1, 1]<br>[0, 0, 0]<br>[2, 2, 2]
+                                </div>
+                            </div>
+                            <div>
+                                <p style="font-size: 0.75rem; text-align: center;">卷积核 K</p>
+                                <div class="matrix-display">
+                                    [-1, -1, -1]<br>[ 0,  0,  0]<br>[ 1,  1,  1]
+                                </div>
+                            </div>
+                        </div>
+                        <p style="margin-bottom: 15px; font-size: 0.95rem;">经过卷积运算（不加偏移项），该像素点的输出值是多少？</p>
+
+                        <div class="options-grid" id="options-2">
+                            <button class="option-btn" onclick="checkAnswer(2, 'A', false)">
+                                <span class="option-marker">A</span> <span>0</span>
+                            </button>
+                            <button class="option-btn" onclick="checkAnswer(2, 'B', false)">
+                                <span class="option-marker">B</span> <span>1</span>
+                            </button>
+                            <button class="option-btn" onclick="checkAnswer(2, 'C', true)">
+                                <span class="option-marker">C</span> <span>3</span>
+                            </button>
+                        </div>
+                        <div id="ai-response-2" class="ai-response"></div>
+                    </div>
+                </section>
+
+                <!-- 练习 3 -->
+                <section id="exercise-3">
+                    <h2><i class="fa-solid fa-circle-3"></i> 练习 3：卷积核的"超能力"</h2>
+                    <div class="card exercise-box">
+                        <div class="exercise-header">
+                            <span style="font-weight: bold; color: var(--color-text-muted); font-size: 0.9rem;">场景应用题</span>
+                            <button class="ai-hint-btn" onclick="getAIHint(3)">
+                                <i class="fa-solid fa-robot"></i> 听听 AI 解释
+                            </button>
+                        </div>
+                        <p style="margin-bottom: 15px; font-size: 0.95rem;">如果一个卷积核的权重是：左侧全是负数，中间全是零，右侧全是正数。它最可能在识别图像中的什么特征？</p>
+
+                        <div class="options-grid" id="options-3">
+                            <button class="option-btn" onclick="checkAnswer(3, 'A', false)">
+                                <span class="option-marker">A</span> <span>水平线条（地平线）</span>
+                            </button>
+                            <button class="option-btn" onclick="checkAnswer(3, 'B', true)">
+                                <span class="option-marker">B</span> <span>垂直边缘（大楼轮廓）</span>
+                            </button>
+                            <button class="option-btn" onclick="checkAnswer(3, 'C', false)">
+                                <span class="option-marker">C</span> <span>整张图片的亮度均值</span>
+                            </button>
+                        </div>
+                        <div id="ai-response-3" class="ai-response"></div>
+                    </div>
+                </section>
+
+                <!-- 深度思考 -->
+                <section id="thought">
+                    <h2><i class="fa-solid fa-comments"></i> 深度思考与讨论</h2>
+                    <div class="card" style="background: #F8FAFC;">
+                        <p style="margin-bottom: 12px; font-size: 0.95rem;"><strong>开放讨论：</strong> 为什么我们要用多层卷积？第一层卷积核看到的线条，和最后一层卷积核看到的"物体部件"之间有什么联系？</p>
+                        <textarea id="thought-input" style="width: 100%; height: 80px; padding: 10px; border-radius: 8px; border: 1px solid var(--color-border); margin-bottom: 10px; font-family: inherit; font-size: 0.9rem;" placeholder="写下你的想法，AI 助教将与你展开讨论..."></textarea>
+                        <button class="ai-hint-btn" style="background: var(--color-ai); color: white; border: none; width: 100%; justify-content: center; height: 40px;" onclick="discussWithAI()">
+                            <i class="fa-solid fa-paper-plane"></i> 提交并与 AI 交流
+                        </button>
+                        <div id="ai-discuss-response" class="ai-response"></div>
+                    </div>
+                </section>
+
+                <!-- 学习总结 -->
+                <section id="summary">
+                    <h2><i class="fa-solid fa-flag-checkered"></i> 结课学情分析</h2>
+                    <div class="card" style="text-align: center; padding: 30px;">
+                        <div id="summary-content">
+                            <p style="color: var(--color-text-muted); font-size: 0.9rem;">完成所有练习后，点击下方按钮生成你的 AI 个性化学习报告。</p>
+                            <button class="ai-hint-btn" style="margin: 15px auto; padding: 10px 25px;" onclick="generateSummary()">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> 生成报告
+                            </button>
+                        </div>
+                        <div id="ai-summary-report" class="ai-response" style="text-align: left;"></div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 全屏切换功能
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().then(() => {
+                    document.getElementById('fs-text').textContent = '退出全屏';
+                });
+            } else {
+                document.exitFullscreen().then(() => {
+                    document.getElementById('fs-text').textContent = '全屏';
+                });
+            }
+        }
+
+        const state = {
+            answers: { 1: null, 2: null, 3: null },
+            attempts: { 1: 0, 2: 0, 3: 0 },
+            hintsUsed: { 1: false, 2: false, 3: false },
+            startTime: Date.now()
+        };
+
+        // 预定义 AI 回复内容
+        const aiResponses = {
+            hints: {
+                1: "💡 提示：想一想，计算机最擅长存储什么样的数据结构呢？图像是由一个个小方块（像素）组成的，每个像素的亮度可以用一个数字表示...",
+                2: "💡 提示：卷积运算就是对应位置相乘再相加！试着算一算：(-1)×1 + (-1)×1 + (-1)×1 + 0×0 + ... + 1×2 + 1×2 + 1×2 = ?",
+                3: "💡 提示：想象一下，当这个卷积核从左到右滑过图像时，左侧暗右侧亮的地方会有什么反应？垂直边缘就是左右亮度差异很大的地方！"
+            },
+            errors: {
+                1: "🧐 别灰心！矢量方程通常用于描述像SVG这样的矢量图形，而照片这类像素图是用矩阵存储的哦～",
+                2: "🧐 再仔细算一遍！记住：对应位置先相乘，然后把所有结果加起来。第一行是 -3，第三行是 +6，加起来是多少呢？",
+                3: "🧐 想一想：如果核是上下设计的（上负下正），那是检测水平边缘；现在是左右设计（左负右正），应该检测什么方向呢？"
+            },
+            discuss: "💡 你的想法很有深度！确实，多层卷积就像我们的视觉系统：第一层看到线条和边缘，第二层看到形状和纹理，第三层就能识别物体部件了！这就是'分级特征提取'的神奇之处～",
+            summary: "🏆 太棒了！你已经完成了所有练习！通过这三道题，你掌握了图像的矩阵表示、卷积运算的基本方法，以及卷积核如何提取特征。继续保持这种学习热情，你很快就能成为计算机视觉小专家！"
+        };
+
+        function checkAnswer(id, choice, isCorrect) {
+            if (state.answers[id] !== null) return;
+
+            state.answers[id] = choice;
+            state.attempts[id]++;
+
+            const btns = document.querySelectorAll(`#options-${id} .option-btn`);
+            btns.forEach(btn => {
+                const marker = btn.querySelector('.option-marker').innerText;
+                if (marker === choice) {
+                    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+                }
+                btn.disabled = true;
+            });
+
+            updateProgressUI();
+
+            if (!isCorrect) {
+                autoShowErrorAI(id, choice);
+            }
+        }
+
+        function updateProgressUI() {
+            const done = Object.values(state.answers).filter(v => v !== null).length;
+            const percent = (done / 3) * 100;
+            document.getElementById('overall-progress').style.width = percent + '%';
+            document.getElementById('progress-text').innerText = `${done}/3`;
+        }
+
+        async function getAIHint(id) {
+            const target = document.getElementById(`ai-response-${id}`);
+            target.style.display = "block";
+            target.innerHTML = `<div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div> AI 正在思考中...`;
+
+            state.hintsUsed[id] = true;
+
+            await new Promise(res => setTimeout(res, 800));
+            target.innerHTML = `<strong>🤖 AI 助教提示：</strong><br>${aiResponses.hints[id]}`;
+        }
+
+        async function autoShowErrorAI(id, userChoice) {
+            const target = document.getElementById(`ai-response-${id}`);
+            target.style.display = "block";
+            target.innerHTML = `正在分析你的错误原因...`;
+
+            await new Promise(res => setTimeout(res, 800));
+            target.innerHTML = `<strong>🧐 助教纠错：</strong><br>${aiResponses.errors[id]}`;
+        }
+
+        async function discussWithAI() {
+            const input = document.getElementById('thought-input').value;
+            const target = document.getElementById('ai-discuss-response');
+
+            if (!input.trim()) return;
+
+            target.style.display = "block";
+            target.innerHTML = `AI 正在深度分析你的见解...`;
+
+            await new Promise(res => setTimeout(res, 1000));
+            target.innerHTML = `<strong>💡 深度交流：</strong><br>${aiResponses.discuss}`;
+        }
+
+        async function generateSummary() {
+            const target = document.getElementById('ai-summary-report');
+            target.style.display = "block";
+            target.innerHTML = `正在聚合你的表现数据并生成专属报告...`;
+
+            await new Promise(res => setTimeout(res, 1200));
+            target.innerHTML = `<strong>🏆 你的 AI 学习报告：</strong><br>${aiResponses.summary}`;
+        }
+
+        window.addEventListener('scroll', () => {
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            let current = "";
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 60) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+    </script>
+</body>
+</html>
