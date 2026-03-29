@@ -140,6 +140,9 @@ with tab2:
     if os.path.exists(html_path):
         with open(html_path, "r", encoding="utf-8") as f:
             html_content = f.read()
+        # 把API key注入HTML，替换占位符
+        api_key = DASHSCOPE_API_KEY or ""
+        html_content = html_content.replace("__DASHSCOPE_API_KEY__", api_key)
         components.html(html_content, height=1200, scrolling=True)
     else:
         st.error(f"未找到 HTML 文件: {html_path}")

@@ -376,7 +376,7 @@
             document.getElementById('progress-text').innerText = `${done}/3`;
         }
 
-        // 调用后端 API
+        // 调用后端 API（通过Python后端转发）
         async function callAPI(question, type = 'default') {
             // 使用 parent.window 获取父窗口的 URL（因为 HTML 在 iframe 中）
             const parentLoc = window.parent !== window ? window.parent.location : window.location;
@@ -409,6 +409,51 @@
             }
         }
 
+        // 直接调用千问API（由Python注入API Key）
+        async function callQwenAPI(prompt, systemPrompt = "你是一个耐心的AI助教，擅长讲解卷积核和计算机视觉相关知识。") {
+            const apiKey = "__DASHSCOPE_API_KEY__";
+
+            if (!apiKey || apiKey === "None" || apiKey === "") {
+                return '⚠️ 请确保已在Streamlit Secrets中配置DASHSCOPE_API_KEY';
+            }
+
+            const url = "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation";
+
+            const body = {
+                model: "qwen-plus",
+                input: {
+                    messages: [
+                        {"role": "system", "content": systemPrompt},
+                        {"role": "user", "content": prompt}
+                    ]
+                },
+                parameters: {
+                    result_format: "message"
+                }
+            };
+
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify(body),
+                    signal: AbortSignal.timeout(60000)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    return data.output.choices[0].message.content;
+                } else {
+                    return `❌ API错误: ${response.status}`;
+                }
+            } catch (e) {
+                return `🔌 连接错误: ${e.message}`;
+            }
+        }
+
         async function getAIHint(id) {
             const target = document.getElementById(`ai-response-${id}`);
             target.style.display = "block";
@@ -423,7 +468,8 @@
                 3: "这道题是关于卷积核检测边缘的方向。请给我一个提示，帮助学生理解这个卷积核检测的是什么方向的边缘。"
             };
 
-            const answer = await callAPI(questions[id], 'hint');
+            const systemPrompt = "你是一个耐心的AI助教，给学生提供学习提示和引导。回复要简洁，不直接给答案。";
+            const answer = await callQwenAPI(questions[id], systemPrompt);
             target.innerHTML = `<strong>🤖 AI 助教提示：</strong><br>${answer}`;
         }
 
@@ -438,7 +484,8 @@
                 3: `学生选择了错误的方向。请给出纠错提示，引导学生理解这个左右结构的卷积核检测的是垂直边缘。`
             };
 
-            const answer = await callAPI(questions[id], 'error');
+            const systemPrompt = "你是一个耐心的AI助教，指出学生的错误并给出正确思路。不要直接说答案。";
+            const answer = await callQwenAPI(questions[id], systemPrompt);
             target.innerHTML = `<strong>🧐 助教纠错：</strong><br>${answer}`;
         }
 
@@ -451,7 +498,8 @@
             target.style.display = "block";
             target.innerHTML = `AI 正在深度分析你的见解...`;
 
-            const answer = await callAPI("请与学生进行深度讨论，主题是：" + input, 'discuss');
+            const systemPrompt = "你是一个AI学习伙伴，与学生讨论他们的想法，给出鼓励和深入的问题。";
+            const answer = await callQwenAPI("请与学生进行深度讨论，主题是：" + input, systemPrompt);
             target.innerHTML = `<strong>💡 深度交流：</strong><br>${answer}`;
         }
 
@@ -466,7 +514,8 @@
                 `题目2: ${state.answers[2] || '未回答'}, 尝试次数: ${state.attempts[2] || 0}\n` +
                 `题目3: ${state.answers[3] || '未回答'}, 尝试次数: ${state.attempts[3] || 0}`;
 
-            const answer = await callAPI(summary, 'summary');
+            const systemPrompt = "你是AI学习报告生成器，根据学生的学习表现生成个性化报告。";
+            const answer = await callQwenAPI(summary, systemPrompt);
             target.innerHTML = `<strong>🏆 你的 AI 学习报告：</strong><br>${answer}`;
         }
 
