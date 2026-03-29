@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import requests
+import time
 from dotenv import load_dotenv
 import streamlit.components.v1 as components
 
@@ -113,15 +114,29 @@ with tab3:
             }
         }
 
-        try:
-            response = requests.post(url, headers=headers, json=body, timeout=30)
-            if response.ok:
-                data = response.json()
-                return data["output"]["choices"][0]["message"]["content"]
-            else:
-                return f"❌ API 错误: {response.status_code}"
-        except Exception as e:
-            return f"🔌 连接错误: {str(e)}"
+        # 增加超时时间到60秒，并添加重试机制
+        for attempt in range(3):
+            try:
+                response = requests.post(url, headers=headers, json=body, timeout=60)
+                if response.ok:
+                    data = response.json()
+                    return data["output"]["choices"][0]["message"]["content"]
+                elif response.status_code == 429:
+                    # API限流，等待后重试
+                    time.sleep(2)
+                    continue
+                else:
+                    return f"❌ API 错误: {response.status_code}"
+            except requests.exceptions.Timeout:
+                if attempt < 2:
+                    continue
+                return "⏳ 请求超时，请稍后重试"
+            except Exception as e:
+                if attempt < 2:
+                    time.sleep(1)
+                    continue
+                return f"🔌 连接错误: {str(e)}"
+        return "⚠️ 请稍后重试"
 
     # 初始化聊天记录
     if "messages" not in st.session_state:
