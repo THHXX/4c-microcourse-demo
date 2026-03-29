@@ -136,77 +136,69 @@ with tab1:
 # ================= 标签页 2：课后学习资料 =================
 with tab2:
     st.subheader("📖 课后学习资料")
-
-    # 显示原有HTML内容
     html_path = "课后学习资料.html"
     if os.path.exists(html_path):
         with open(html_path, "r", encoding="utf-8") as f:
             html_content = f.read()
-        # 只显示HTML的学习内容部分，不包含交互（交互由下方Streamlit接管）
         components.html(html_content, height=1200, scrolling=True)
     else:
         st.error(f"未找到 HTML 文件: {html_path}")
 
-    # 在下方添加AI学习助手（Streamlit原生实现）
     st.markdown("---")
     st.markdown("### 🤖 AI 学习助手")
-    st.info("💡 在这里可以获取学习提示、纠错帮助，或与AI讨论学习心得！")
 
-    # 初始化Tab2的session_state
-    if "tab2_response" not in st.session_state:
-        st.session_state["tab2_response"] = None
+    # ✅ 初始化所有状态
+    for key in ["tab2_result", "tab2_mode"]:
+        if key not in st.session_state:
+            st.session_state[key] = None
 
-    # 选择功能类型
-    ai_mode = st.selectbox("选择功能：", ["💡 获取提示", "❌ 错题解析", "💬 学习讨论", "📊 学习报告"], key="ai_mode_tab2")
+    ai_mode = st.selectbox("选择功能：", ["💡 获取提示", "❌ 错题解析", "💬 学习讨论", "📊 学习报告"])
 
+    # ✅ 切换模式时清空上次结果
+    if ai_mode != st.session_state.get("tab2_mode"):
+        st.session_state["tab2_result"] = None
+        st.session_state["tab2_mode"] = ai_mode
+
+    # ✅ 根据模式渲染输入区
     if ai_mode == "💡 获取提示":
-        topic = st.selectbox("选择主题：", ["图像表示", "卷积运算", "边缘检测", "其他问题"], key="topic_tab2")
-        if st.button("获取AI提示", key="btn_hint"):
+        topic = st.selectbox("选择主题：", ["图像表示", "卷积运算", "边缘检测", "其他问题"])
+        if st.button("获取AI提示"):
             prompts = {
-                "图像表示": "请给我一个关于'图像在计算机中如何表示'的简洁提示，帮助学生理解像素和矩阵的概念。",
-                "卷积运算": "请给我一个关于'卷积运算如何进行'的简洁提示，引导学生理解滑动窗口和点积的概念。",
-                "边缘检测": "请给我一个关于'卷积核如何检测边缘'的简洁提示，帮助学生理解不同方向核的作用。",
+                "图像表示": "请给我一个关于'图像在计算机中如何表示'的简洁提示。",
+                "卷积运算": "请给我一个关于'卷积运算如何进行'的简洁提示。",
+                "边缘检测": "请给我一个关于'卷积核如何检测边缘'的简洁提示。",
                 "其他问题": "请给我一个学习卷积核的提示。"
             }
             with st.spinner("AI正在思考..."):
                 result = call_qwen_api(prompts[topic])
-                st.session_state["tab2_response"] = result.get("content") or result.get("error", "未知错误")
-                st.rerun()
+                # ✅ 正确解包 + 存入state
+                st.session_state["tab2_result"] = result.get("content") or result.get("error", "请求失败")
 
     elif ai_mode == "❌ 错题解析":
-        wrong_topic = st.text_input("输入你做错的题目或知识点：", key="wrong_topic")
-        if st.button("获取错题解析", key="btn_error"):
-            if wrong_topic:
-                with st.spinner("AI正在分析..."):
-                    prompt = f"请分析以下学习难点，给出详细的错题解析和正确思路：{wrong_topic}"
-                    result = call_qwen_api(prompt)
-                    st.session_state["tab2_response"] = result.get("content") or result.get("error", "未知错误")
-                    st.rerun()
+        wrong_topic = st.text_input("输入你做错的题目或知识点：")
+        if st.button("获取错题解析") and wrong_topic:
+            with st.spinner("AI正在分析..."):
+                result = call_qwen_api(f"请分析以下学习难点：{wrong_topic}")
+                st.session_state["tab2_result"] = result.get("content") or result.get("error", "请求失败")
 
     elif ai_mode == "💬 学习讨论":
-        thought = st.text_area("写下你的学习心得或疑问：", key="thought_tab2")
-        if st.button("与AI讨论", key="btn_discuss"):
-            if thought:
-                with st.spinner("AI正在与你讨论..."):
-                    prompt = f"请与学生进行友好的学习讨论，给出鼓励和深入的引导，主题是：{thought}"
-                    result = call_qwen_api(prompt)
-                    st.session_state["tab2_response"] = result.get("content") or result.get("error", "未知错误")
-                    st.rerun()
+        thought = st.text_area("写下你的学习心得或疑问：")
+        if st.button("与AI讨论") and thought:
+            with st.spinner("AI正在与你讨论..."):
+                result = call_qwen_api(f"请与学生讨论：{thought}")
+                st.session_state["tab2_result"] = result.get("content") or result.get("error", "请求失败")
 
     elif ai_mode == "📊 学习报告":
-        if st.button("生成学习报告", key="btn_report"):
+        if st.button("生成学习报告"):
             with st.spinner("正在生成个性化报告..."):
-                prompt = "请根据学生的学习情况，生成一份个性化学习报告，包括学习进度、掌握程度和建议。"
-                result = call_qwen_api(prompt)
-                st.session_state["tab2_response"] = result.get("content") or result.get("error", "未知错误")
-                st.rerun()
+                result = call_qwen_api("请生成一份卷积核学习的个性化报告。")
+                st.session_state["tab2_result"] = result.get("content") or result.get("error", "请求失败")
 
-    # 渲染结果（在按钮外部，重跑后依然存在）
-    if st.session_state["tab2_response"]:
-        if "错误" in st.session_state["tab2_response"] or "请" in st.session_state["tab2_response"]:
-            st.error(st.session_state["tab2_response"])
-        else:
-            st.success(st.session_state["tab2_response"])
+    # ✅ 在按钮之外渲染结果，重跑后结果不消失
+    if st.session_state["tab2_result"]:
+        st.markdown("---")
+        st.markdown("**AI 回复：**")
+        st.success(st.session_state["tab2_result"])
 
 # ================= 标签页 3：AI 助教 =================
 with tab3:
