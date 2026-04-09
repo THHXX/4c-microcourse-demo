@@ -273,6 +273,10 @@ async def index():
                         <button class="send-btn" onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
                     </div>
                 </div>
+                <div class="export-buttons">
+                    <button class="btn-export doc-btn" onclick="exportAIChat('word')"><i class="fas fa-file-word"></i> 导出 Word</button>
+                    <button class="btn-export pdf-btn" onclick="exportAIChat('pdf')"><i class="fas fa-file-pdf"></i> 导出 PDF</button>
+                </div>
             </div>
         </div>
 
@@ -885,6 +889,71 @@ async def index():
                             await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
                         }
                     }
+                }
+            }
+
+            // 保存AI聊天历史，用于导出
+            let aiChatHistory = [
+                { role: 'assistant', content: '你好！我是你的AI学习助手，有任何关于卷积核的问题都可以问我哦！' }
+            ];
+
+            // 重写addChatMessage函数，保存历史
+            const originalAddChatMessage = addChatMessage;
+            addChatMessage = function(content, role) {
+                // 保存到历史，跳过加载和错误消息
+                if (!content.includes('loading-dots') && !content.includes('❌ 错误') && !content.includes('请求失败')) {
+                    aiChatHistory.push({ role, content });
+                }
+                return originalAddChatMessage(content, role);
+            };
+
+            // 导出AI聊天记录
+            async function exportAIChat(type) {
+                if (aiChatHistory.length === 0) {
+                    alert('没有聊天记录可以导出哦~');
+                    return;
+                }
+
+                // 组装聊天内容
+                let content = '';
+                aiChatHistory.forEach(msg => {
+                    const roleName = msg.role === 'user' ? '你' : 'AI助手';
+                    const formattedContent = msg.role === 'assistant' ? parseMarkdown(msg.content) : msg.content;
+                    content += `<h3>${roleName}:</h3><div>${formattedContent}</div><br/>`;
+                });
+
+                if (type === 'word') {
+                    // 导出Word - 调用现有的导出接口
+                    try {
+                        const res = await fetch('/api/export-notes-word', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                content: `<h1 style="text-align:center; color: #a855f7;">AI学习助手对话记录</h1><hr/>${content}`
+                            })
+                        });
+                        const data = await res.json();
+                        if(data.success) window.open(data.url, '_blank');
+                        else alert('导出失败');
+                    } catch(e) { alert('导出错误: ' + e.message); }
+                } else if (type === 'pdf') {
+                    // 导出PDF - 调用现有的导出接口
+                    try {
+                        const res = await fetch('/api/export-notes-pdf', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                content: `<h1 style="text-align:center; color: #a855f7;">AI学习助手对话记录</h1><hr/>${content}`
+                            })
+                        });
+                        const data = await res.json();
+                        if(data.success) {
+                            const win = window.open(data.url, '_blank');
+                            // 提示用户使用浏览器的打印功能保存为 PDF
+                            setTimeout(() => alert('提示：在弹出的页面中，请使用快捷键 Ctrl+P (或 Cmd+P)，并选择"另存为 PDF"即可！'), 500);
+                        }
+                        else alert('导出失败');
+                    } catch(e) { alert('导出错误: ' + e.message); }
                 }
             }
 

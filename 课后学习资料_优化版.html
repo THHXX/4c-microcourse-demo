@@ -1634,12 +1634,16 @@
             <div class="panel-header">
                 <h3><i class="fa-solid fa-robot"></i> AI 学习助手</h3>
             </div>
-            <div class="panel-content">
+            <div class="panel-content ai-panel-content">
                 <div id="chatMessages" class="chat-messages">
                     <div class="message assistant">
                         <span class="avatar"><i class="fa-solid fa-robot"></i></span>
                         <div class="message-content">你好！我是你的卷积核学习助手，有什么问题都可以问我哦~</div>
                     </div>
+                </div>
+                <div class="export-buttons">
+                    <button class="btn-export doc-btn" onclick="exportAIChat('word')"><i class="fa-solid fa-file-word"></i> 导出 Word</button>
+                    <button class="btn-export pdf-btn" onclick="exportAIChat('pdf')"><i class="fa-solid fa-file-pdf"></i> 导出 PDF</button>
                 </div>
                 <div class="chat-input-container">
                     <input type="text" id="chatInput" placeholder="输入你的问题..." onkeypress="handleChatKeyPress(event)">
@@ -1822,6 +1826,51 @@
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
+        }
+
+        /* AI面板内容布局 */
+        .ai-panel-content {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .ai-panel-content .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* 导出按钮样式 */
+        .export-buttons {
+            padding: 12px 16px;
+            border-top: 1px solid #E5E7EB;
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .btn-export {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-export.doc-btn {
+            background: #2b579a;
+        }
+        .btn-export.pdf-btn {
+            background: #c9302c;
+        }
+        .btn-export:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
         }
 
         .panel-action-btn:hover {
@@ -2086,6 +2135,17 @@
             // 滚动到顶部
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
+            // 如果进入学习总结页面，自动标记所有模块为完成
+            if (sectionId === 'summary') {
+                state.modulesCompleted = {
+                    intro: true,
+                    visualizer: true,
+                    exercises: true,
+                    challenge: true,
+                    discussion: true
+                };
+            }
+
             // 更新进度
             updateOverallProgress();
         }
@@ -2100,6 +2160,47 @@
             startTime: Date.now(),
             modulesCompleted: { intro: true, visualizer: false, exercises: false, challenge: false, discussion: false }
         };
+
+        // 本地持久化存储相关函数
+        function saveStateToLocalStorage() {
+            try {
+                localStorage.setItem('convolutionKernelLearningState', JSON.stringify(state));
+            } catch (e) {
+                console.error('保存学习状态失败:', e);
+            }
+        }
+
+        function loadStateFromLocalStorage() {
+            try {
+                const saved = localStorage.getItem('convolutionKernelLearningState');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    // 合并保存的数据到当前state
+                    Object.assign(state, parsed);
+                    // 更新界面显示
+                    updateOverallProgress();
+                }
+            } catch (e) {
+                console.error('加载保存的学习状态失败:', e);
+            }
+        }
+
+        // 重置学习状态（可选，如果需要重置功能的话）
+        function resetLearningState() {
+            if (confirm('确定要重置所有学习进度吗？这会清除所有做题记录和完成状态！')) {
+                localStorage.removeItem('convolutionKernelLearningState');
+                // 重置为初始状态
+                state.answers = { 1: null, 2: null, 3: null, 4: null, 5: null };
+                state.attempts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+                state.hintsUsed = { 1: false, 2: false, 3: false, visualization: false, challenge: false, discussion: false };
+                state.scores = [null, null, null, null, null];
+                state.vizCount = 0;
+                state.startTime = Date.now();
+                state.modulesCompleted = { intro: true, visualizer: false, exercises: false, challenge: false, discussion: false };
+                updateOverallProgress();
+                alert('学习进度已重置！');
+            }
+        }
 
         // 卷积可视化相关代码
         // 图像数据
@@ -2276,7 +2377,7 @@
                 '当前：[行' + or + ',列' + oc + ']  第' + (step + 1) + '/9步';
             state.vizCount = step + 1;
 
-            if (step === 8) {
+            if (step >= 0) { // 只要操作过至少1步就算完成
                 state.modulesCompleted.visualizer = true;
                 updateOverallProgress();
             }
@@ -2407,7 +2508,7 @@
         // 检查练习模块是否完成
         function checkExercisesCompleted() {
             const done = Object.values(state.answers).filter(v => v !== null).length;
-            if (done === 5) {
+            if (done >= 3) { // 只要完成3道题及以上就算完成
                 state.modulesCompleted.exercises = true;
                 updateOverallProgress();
             }
@@ -2482,7 +2583,7 @@
 
             var prompt = prompts[n].replace('{ANS}', ans);
             var result = await callAI(prompt);
-            document.getElementById('t' + n).textContent = result;
+            document.getElementById('t' + n).innerHTML = parseMarkdown(result);
 
             var sc = parseScore(result);
             if (sc !== null) {
@@ -2525,7 +2626,7 @@
 
             const prompt = `学生对“为什么需要多层卷积”发表了以下看法：\n"${input}"\n请针对其观点进行深度互动，给出肯定，并引申出“分级特征提取”的知识点。`;
             const response = await callAI(prompt);
-            target.innerHTML = `<strong>💡 AI 深度交流：</strong><br>${response}`;
+            target.innerHTML = `<strong>💡 AI 深度交流：</strong><br>${parseMarkdown(response)}`;
             state.modulesCompleted.discussion = true;
             updateOverallProgress();
         }
@@ -2551,7 +2652,7 @@
 
             const prompt = `请根据该学生的卷积核学习数据生成一份详细的个性化学情总结报告。数据如下：${dataStr}。要求：包含“知识掌握情况”、“学习效率分析”和“后续建议”三个部分。语气要鼓励性，符合教育场景。`;
             const response = await callAI(prompt);
-            target.innerHTML = `<strong>🏆 AI 学习报告：</strong><br>${response.replace(/\n/g, '<br>')}`;
+            target.innerHTML = `<strong>🏆 AI 学习报告：</strong><br>${parseMarkdown(response)}`;
         }
 
         // 更新整体进度
@@ -2574,6 +2675,9 @@
             }
             const duration = Math.floor((Date.now() - state.startTime) / 1000);
             document.getElementById('sumTime').textContent = `${Math.floor(duration / 60)}分`;
+
+            // 保存状态到本地存储
+            saveStateToLocalStorage();
         }
 
         // AI 调用相关函数
@@ -2618,7 +2722,7 @@
         }
 
         function parseScore(txt) {
-            var m = txt.match(/理解度[:：\s]*(\d+)\s*\/\s*10/);
+            var m = txt.match(/理解度[:：\s]*\**\s*(\d+)\s*\/\s*10\s*\**/);
             return m ? parseInt(m[1], 10) : null;
         }
 
@@ -2651,7 +2755,7 @@
                 explanation: response
             };
 
-            target.innerHTML = `<strong>🧐 AI 助教纠错：</strong><br>${response}
+            target.innerHTML = `<strong>🧐 AI 助教纠错：</strong><br>${parseMarkdown(response)}
                 <div style="margin-top: 10px;">
                     <button class="ai-hint-btn" style="font-size: 0.75rem; background: #EF4444; color: white; border: none;" onclick="addToWrongBook(${id})">
                         <i class="fa-solid fa-bookmark"></i> 加入错题本
@@ -2762,6 +2866,15 @@
 
         // 初始化加载
         document.addEventListener('DOMContentLoaded', () => {
+            // 加载之前保存的学习状态
+            loadStateFromLocalStorage();
+
+            // 自动检查并补全进度
+            const doneCount = Object.values(state.answers).filter(v => v !== null).length;
+            if (doneCount >= 3) state.modulesCompleted.exercises = true;
+            if (state.vizCount >= 1) state.modulesCompleted.visualizer = true;
+            updateOverallProgress();
+
             const noteEditor = document.getElementById('globalNote');
             noteEditor.innerHTML = notes;
             renderWrongQuestions();
@@ -2986,6 +3099,75 @@
         function handleChatKeyPress(event) {
             if (event.key === 'Enter') {
                 sendChatMessage();
+            }
+        }
+
+        // 保存AI聊天历史，用于导出
+        let aiChatHistory = [
+            { role: 'assistant', content: '你好！我是你的卷积核学习助手，有什么问题都可以问我哦~' }
+        ];
+
+        // 重写addChatMessage函数，保存历史
+        const originalAddChatMessage = addChatMessage;
+        addChatMessage = function(content, role) {
+            // 保存到历史，跳过加载和错误消息
+            if (!content.includes('loading-dots') && !content.includes('抱歉，网络异常')) {
+                aiChatHistory.push({ role, content });
+            }
+            return originalAddChatMessage(content, role);
+        };
+
+        // 导出AI聊天记录
+        async function exportAIChat(type) {
+            if (aiChatHistory.length === 0) {
+                alert('没有聊天记录可以导出哦~');
+                return;
+            }
+
+            // 组装聊天内容
+            let content = '';
+            aiChatHistory.forEach(msg => {
+                const roleName = msg.role === 'user' ? '你' : 'AI助手';
+                // 简单解析Markdown
+                let formattedContent = msg.content
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\n/g, '<br>')
+                    .replace(/`(.*?)`/g, '<code style="background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 4px; font-family: monospace;">$1</code>');
+                content += `<h3 style="color: ${msg.role === 'user' ? '#3B82F6' : '#8B5CF6'}; margin: 15px 0 5px 0;">${roleName}:</h3><div>${formattedContent}</div>`;
+            });
+
+            if (type === 'word') {
+                // 导出Word - 调用现有的导出接口
+                try {
+                    const res = await fetch('/api/export-notes-word', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            content: `<h1 style="text-align:center; color: #8B5CF6; margin-bottom: 20px;">AI学习助手对话记录</h1><hr/>${content}`
+                        })
+                    });
+                    const data = await res.json();
+                    if(data.success) window.open(data.url, '_blank');
+                    else alert('导出失败');
+                } catch(e) { alert('导出错误: ' + e.message); }
+            } else if (type === 'pdf') {
+                // 导出PDF - 调用现有的导出接口
+                try {
+                    const res = await fetch('/api/export-notes-pdf', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            content: `<h1 style="text-align:center; color: #8B5CF6; margin-bottom: 20px;">AI学习助手对话记录</h1><hr/>${content}`
+                        })
+                    });
+                    const data = await res.json();
+                    if(data.success) {
+                        const win = window.open(data.url, '_blank');
+                        // 提示用户使用浏览器的打印功能保存为 PDF
+                        setTimeout(() => alert('提示：在弹出的页面中，请使用快捷键 Ctrl+P (或 Cmd+P)，并选择"另存为 PDF"即可！'), 500);
+                    }
+                    else alert('导出失败');
+                } catch(e) { alert('导出错误: ' + e.message); }
             }
         }
 
