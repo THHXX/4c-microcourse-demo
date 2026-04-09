@@ -27,6 +27,33 @@
         .fullscreen-btn:hover {
             background: #2563EB;
         }
+
+        /* 返回首页按钮 */
+        .home-btn {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 9999;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--color-text-main);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border: 1px solid var(--color-border);
+            transition: all 0.2s ease;
+            backdrop-filter: blur(4px);
+        }
+        .home-btn:hover {
+            background: #F1F5F9;
+            color: var(--color-accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
     </style>
 
     <style>
@@ -133,15 +160,360 @@
             font-size: 0.9rem;
         }
 
+        /* 右侧侧边栏 */
+        .right-sidebar-buttons {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 9998;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            background: white;
+            border-radius: 12px 0 0 12px;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+            border: 1px solid var(--color-border);
+            border-right: none;
+            transition: right 0.3s ease;
+        }
+        .right-sidebar-buttons.collapsed {
+            right: 350px;
+        }
+        .sidebar-toggle-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            background: transparent;
+            color: var(--color-text-muted);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            transition: 0.2s;
+        }
+        .sidebar-toggle-btn:first-child {
+            border-radius: 12px 0 0 0;
+        }
+        .sidebar-toggle-btn:last-child {
+            border-radius: 0 0 0 12px;
+        }
+        .sidebar-toggle-btn:hover {
+            background: #F1F5F9;
+            color: var(--color-accent);
+        }
+        .sidebar-toggle-btn.active {
+            background: #EFF6FF;
+            color: var(--color-accent);
+        }
+        .sidebar-toggle-btn i {
+            font-size: 1.1rem;
+        }
+
+        .right-sidebar {
+            position: fixed;
+            right: -350px;
+            top: 0;
+            width: 350px;
+            height: 100vh;
+            background: white;
+            border-left: 1px solid var(--color-border);
+            box-shadow: -2px 0 15px rgba(0,0,0,0.1);
+            z-index: 9999;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .right-sidebar.open {
+            right: 0;
+        }
+        .sidebar-panel {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            height: 100%;
+        }
+        .sidebar-panel.active {
+            display: flex;
+        }
+        .panel-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #F8FAFC;
+        }
+        .panel-header h3 {
+            font-size: 1.1rem;
+            color: var(--color-accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .panel-close {
+            background: none;
+            border: none;
+            color: var(--color-text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.2s;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .panel-close:hover {
+            background: #E2E8F0;
+            color: var(--color-error);
+        }
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 笔记面板样式 */
+        .note-editor {
+            margin-bottom: 15px;
+        }
+        .note-editor textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: vertical;
+            outline: none;
+            background: #F8FAFC;
+        }
+        .note-editor textarea:focus {
+            border-color: var(--color-accent);
+            background: white;
+        }
+        .note-actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .note-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            background: white;
+            color: var(--color-text-main);
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+        .note-btn:hover {
+            background: #F1F5F9;
+        }
+        .note-btn.primary {
+            background: var(--color-accent);
+            color: white;
+            border-color: var(--color-accent);
+        }
+        .note-btn.primary:hover {
+            background: #2563EB;
+        }
+        .empty-note {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--color-text-muted);
+        }
+        .empty-note i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #CBD5E1;
+        }
+        .empty-wrong {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--color-text-muted);
+        }
+        .empty-wrong i {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: #CBD5E1;
+        }
+        .wrong-item {
+            background: #FFF1F2;
+            border: 1px solid #FECDD3;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+        .wrong-item h4 {
+            font-size: 0.95rem;
+            margin-bottom: 10px;
+            color: #991B1B;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .wrong-item .del-wrong-btn {
+            background: none;
+            border: none;
+            color: #EF4444;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: 0.2s;
+        }
+        .wrong-item .del-wrong-btn:hover {
+            background: #FEE2E2;
+        }
+        .wrong-item p {
+            font-size: 0.85rem;
+            color: #7F1D1D;
+            margin-bottom: 8px;
+        }
+        .wrong-item .correct-answer {
+            background: #ECFDF5;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #065F46;
+            border-left: 3px solid #10B981;
+        }
+
+        /* AI聊天样式 */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        .message {
+            display: flex;
+            gap: 10px;
+            max-width: 90%;
+        }
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+        .message .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.8rem;
+        }
+        .message.user .avatar {
+            background: var(--color-accent);
+            color: white;
+        }
+        .message.assistant .avatar {
+            background: var(--color-ai);
+            color: white;
+        }
+        .message-content {
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .message.user .message-content {
+            background: var(--color-accent);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        .message.assistant .message-content {
+            background: #F5F3FF;
+            color: var(--color-text-main);
+            border-bottom-left-radius: 4px;
+            border: 1px solid #DDD6FE;
+        }
+        .chat-input-area {
+            display: flex;
+            gap: 8px;
+            padding-top: 10px;
+            border-top: 1px solid var(--color-border);
+        }
+        .chat-input-area input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+        .chat-input-area input:focus {
+            border-color: var(--color-ai);
+        }
+        .send-btn {
+            padding: 0 16px;
+            background: var(--color-ai);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .send-btn:hover {
+            background: #7C3AED;
+        }
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .loading-dots {
+            display: inline-flex;
+            gap: 4px;
+        }
+        .loading-dots .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--color-ai);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+        .loading-dots .dot:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots .dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
         /* 移动端适配 */
         @media (max-width: 768px) {
             .app-layout { grid-template-columns: 1fr; }
             .sidebar { display: none; }
             .main-content { padding: 15px; }
+            .right-sidebar {
+                width: 100%;
+                right: -100%;
+            }
+            .right-sidebar-buttons.collapsed {
+                right: 100%;
+            }
         }
     </style>
 </head>
 <body>
+
+    <!-- 返回首页按钮 -->
+    <a href="/" class="home-btn">
+        <i class="fa-solid fa-arrow-left"></i> 返回首页
+    </a>
 
     <button class="fullscreen-btn" onclick="toggleFullscreen()">
         <i class="fa-solid fa-expand"></i> <span id="fs-text">全屏</span>
@@ -310,6 +682,94 @@
         </main>
     </div>
 
+    <!-- 右侧侧边栏按钮组 -->
+    <div class="right-sidebar-buttons" id="rightSidebarButtons">
+        <button class="sidebar-toggle-btn active" onclick="switchPanel('notes')" title="我的笔记">
+            <i class="fa-solid fa-book"></i>
+            <span>笔记</span>
+        </button>
+        <button class="sidebar-toggle-btn" onclick="switchPanel('ai')" title="AI助手">
+            <i class="fa-solid fa-robot"></i>
+            <span>AI</span>
+        </button>
+        <button class="sidebar-toggle-btn" onclick="switchPanel('wrong')" title="错题本">
+            <i class="fa-solid fa-bookmark"></i>
+            <span>错题</span>
+        </button>
+        <button class="sidebar-toggle-btn" onclick="toggleRightSidebar()" title="收起侧边栏">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+    </div>
+
+    <!-- 右侧侧边栏面板 -->
+    <div class="right-sidebar" id="rightSidebar">
+        <!-- 笔记面板 -->
+        <div class="sidebar-panel active" id="notesPanel">
+            <div class="panel-header">
+                <h3><i class="fa-solid fa-book"></i> 我的笔记</h3>
+                <button class="panel-close" onclick="toggleRightSidebar()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="panel-content">
+                <div class="note-editor">
+                    <textarea id="globalNote" placeholder="在这里记录你的学习笔记，支持Markdown格式..." oninput="saveNotes()"></textarea>
+                </div>
+                <div class="note-actions">
+                    <button class="note-btn" onclick="clearNotes()"><i class="fa-solid fa-trash"></i> 清空</button>
+                    <button class="note-btn primary" onclick="exportNotes()"><i class="fa-solid fa-download"></i> 导出</button>
+                </div>
+                <div class="note-list" id="noteList">
+                    <div class="empty-note">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        <p>学习过程中随时记录心得</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI助手面板 -->
+        <div class="sidebar-panel" id="aiPanel">
+            <div class="panel-header">
+                <h3><i class="fa-solid fa-robot"></i> AI学习助手</h3>
+                <button class="panel-close" onclick="toggleRightSidebar()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="panel-content">
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message assistant">
+                        <span class="avatar"><i class="fa-solid fa-robot"></i></span>
+                        <div class="message-content">
+                            你好！我是你的AI学习助手，有任何关于卷积核的问题都可以问我哦！
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <input type="text" id="chatInput" placeholder="输入你的问题..." onkeypress="handleChatKeyPress(event)">
+                    <button class="send-btn" onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 错题本面板 -->
+        <div class="sidebar-panel" id="wrongPanel">
+            <div class="panel-header">
+                <h3><i class="fa-solid fa-bookmark"></i> 我的错题本</h3>
+                <button class="panel-close" onclick="toggleRightSidebar()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="panel-content">
+                <div class="wrong-actions" style="margin-bottom: 15px; display: flex; gap: 10px;">
+                    <button class="note-btn" onclick="clearWrongQuestions()"><i class="fa-solid fa-trash"></i> 清空</button>
+                    <button class="note-btn" onclick="exportWrongWord()"><i class="fa-solid fa-file-word"></i> 导出Word</button>
+                    <button class="note-btn primary" onclick="exportWrongPDF()"><i class="fa-solid fa-file-pdf"></i> 导出PDF</button>
+                </div>
+                <div class="wrong-list" id="wrongList">
+                    <div class="empty-wrong">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <p>你还没有错题哦，继续加油！</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // 全屏切换功能
         function toggleFullscreen() {
@@ -376,80 +836,35 @@
             document.getElementById('progress-text').innerText = `${done}/3`;
         }
 
-        // 调用后端 API（通过Python后端转发）
+        // 调用 FastAPI 后端 API
         async function callAPI(question, type = 'default') {
-            // 使用 parent.window 获取父窗口的 URL（因为 HTML 在 iframe 中）
-            const parentLoc = window.parent !== window ? window.parent.location : window.location;
-            const baseUrl = parentLoc.origin + parentLoc.pathname;
-            const params = new URLSearchParams({
-                question: question,
-                type: type
-            });
-            const url = baseUrl + '?' + params.toString();
-
-            console.log('API URL:', url);  // 调试日志
-
             try {
-                const response = await fetch(url);
-                const contentType = response.headers.get('content-type');
-                if (!contentType || !contentType.includes('application/json')) {
-                    // 返回的是HTML而非JSON，说明API调用失败
-                    const text = await response.text();
-                    console.error('API返回非JSON:', text.substring(0, 200));
-                    return '⚠️ 请确保已在Streamlit Secrets中配置DASHSCOPE_API_KEY';
-                }
-                const data = await response.json();
-                if (data.error) {
-                    return '⚠️ ' + data.error;
-                }
-                return data.content || '暂无回复';
-            } catch (e) {
-                console.error('API错误:', e);  // 调试日志
-                return '🔌 连接错误: ' + e.message;
+                const resp = await fetch('/api/ask', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({question: question, type: type})
+                });
+                const data = await resp.json();
+                return data.content || data.error || '暂无回复';
+            } catch(e) {
+                return '连接错误: ' + e.message;
             }
         }
 
-        // 直接调用千问API（由Python注入API Key）
+        // 统一的 AI 调用函数
         async function callQwenAPI(prompt, systemPrompt = "你是一个耐心的AI助教，擅长讲解卷积核和计算机视觉相关知识。") {
-            const apiKey = "__DASHSCOPE_API_KEY__";
-
-            if (!apiKey || apiKey === "None" || apiKey === "") {
-                return '⚠️ 请确保已在Streamlit Secrets中配置DASHSCOPE_API_KEY';
-            }
-
-            const url = "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation";
-
-            const body = {
-                model: "qwen-plus",
-                input: {
-                    messages: [
-                        {"role": "system", "content": systemPrompt},
-                        {"role": "user", "content": prompt}
-                    ]
-                },
-                parameters: {
-                    result_format: "message"
-                }
-            };
-
             try {
-                const response = await fetch(url, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${apiKey}`
-                    },
-                    body: JSON.stringify(body),
-                    signal: AbortSignal.timeout(60000)
+                const resp = await fetch('/api/ask', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        question: prompt,
+                        system_prompt: systemPrompt
+                    })
                 });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    return data.output.choices[0].message.content;
-                } else {
-                    return `❌ API错误: ${response.status}`;
-                }
-            } catch (e) {
+                const data = await resp.json();
+                return data.content || data.error || '暂无回复';
+            } catch(e) {
                 return `🔌 连接错误: ${e.message}`;
             }
         }
@@ -473,6 +888,9 @@
             target.innerHTML = `<strong>🤖 AI 助教提示：</strong><br>${answer}`;
         }
 
+        // 临时存储当前错题的AI解释
+        let currentAiExplanation = {};
+
         async function autoShowErrorAI(id, userChoice) {
             const target = document.getElementById(`ai-response-${id}`);
             target.style.display = "block";
@@ -486,7 +904,19 @@
 
             const systemPrompt = "你是一个耐心的AI助教，指出学生的错误并给出正确思路。不要直接说答案。";
             const answer = await callQwenAPI(questions[id], systemPrompt);
-            target.innerHTML = `<strong>🧐 助教纠错：</strong><br>${answer}`;
+
+            // 保存AI解释和用户选择
+            currentAiExplanation[id] = {
+                userChoice: userChoice,
+                explanation: answer
+            };
+
+            target.innerHTML = `<strong>🧐 助教纠错：</strong><br>${answer}
+                <div style="margin-top: 10px;">
+                    <button class="ai-hint-btn" style="font-size: 0.75rem; background: #EF4444; color: white; border: none;" onclick="addToWrongBook(${id})">
+                        <i class="fa-solid fa-bookmark"></i> 加入错题本
+                    </button>
+                </div>`;
         }
 
         async function discussWithAI() {
@@ -517,6 +947,287 @@
             const systemPrompt = "你是AI学习报告生成器，根据学生的学习表现生成个性化报告。";
             const answer = await callQwenAPI(summary, systemPrompt);
             target.innerHTML = `<strong>🏆 你的 AI 学习报告：</strong><br>${answer}`;
+        }
+
+        // ========== 右侧侧边栏功能 ==========
+        let currentPanel = 'notes';
+        let notes = localStorage.getItem('convolution_notes') || '';
+        let wrongQuestions = JSON.parse(localStorage.getItem('convolution_wrong_questions')) || [];
+
+        // 题目数据
+        const questionData = {
+            1: {
+                title: "练习1：图片的数字底色",
+                question: "在计算机内部，一张28x28像素的灰度图本质上是以什么形式存储的？",
+                options: [
+                    "A. 一系列描述形状的数学矢量方程",
+                    "B. 一个28x28的矩阵，元素值为0-255",
+                    "C. 一个压缩后的二进制视频流"
+                ],
+                correctAnswer: "B. 一个28x28的矩阵，元素值为0-255"
+            },
+            2: {
+                title: "练习2：动手算一算",
+                question: "假设有一块3x3的图像区域I和一个3x3的卷积核K，经过卷积运算（不加偏移项），该像素点的输出值是多少？",
+                options: [
+                    "A. 0",
+                    "B. 1",
+                    "C. 3"
+                ],
+                correctAnswer: "C. 3"
+            },
+            3: {
+                title: "练习3：卷积核的\"超能力\"",
+                question: "如果一个卷积核的权重是：左侧全是负数，中间全是零，右侧全是正数。它最可能在识别图像中的什么特征？",
+                options: [
+                    "A. 水平线条（地平线）",
+                    "B. 垂直边缘（大楼轮廓）",
+                    "C. 整张图片的亮度均值"
+                ],
+                correctAnswer: "B. 垂直边缘（大楼轮廓）"
+            }
+        };
+
+        // 初始化加载
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('globalNote').value = notes;
+            renderWrongQuestions();
+        });
+
+        // 切换侧边栏显示/隐藏
+        function toggleRightSidebar() {
+            const sidebar = document.getElementById('rightSidebar');
+            const buttons = document.getElementById('rightSidebarButtons');
+            sidebar.classList.toggle('open');
+            buttons.classList.toggle('collapsed');
+        }
+
+        // 切换面板
+        function switchPanel(panelName) {
+            // 打开侧边栏
+            const sidebar = document.getElementById('rightSidebar');
+            const buttons = document.getElementById('rightSidebarButtons');
+            sidebar.classList.add('open');
+            buttons.classList.add('collapsed');
+
+            // 更新按钮状态
+            document.querySelectorAll('.sidebar-toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+
+            // 切换面板显示
+            document.querySelectorAll('.sidebar-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.getElementById(`${panelName}Panel`).classList.add('active');
+            currentPanel = panelName;
+
+            // 如果是AI面板，聚焦输入框
+            if (panelName === 'ai') {
+                setTimeout(() => document.getElementById('chatInput').focus(), 100);
+            }
+        }
+
+        // 保存笔记
+        function saveNotes() {
+            notes = document.getElementById('globalNote').value;
+            localStorage.setItem('convolution_notes', notes);
+        }
+
+        // 清空笔记
+        function clearNotes() {
+            if (confirm('确定要清空所有笔记吗？此操作不可恢复。')) {
+                notes = '';
+                document.getElementById('globalNote').value = '';
+                localStorage.removeItem('convolution_notes');
+            }
+        }
+
+        // 导出笔记
+        function exportNotes() {
+            if (!notes.trim()) {
+                alert('没有笔记内容可以导出哦~');
+                return;
+            }
+            const blob = new Blob([notes], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `卷积核学习笔记_${new Date().toLocaleDateString()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // AI聊天功能
+        function addChatMessage(content, role) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+
+            const icon = role === 'user' ? 'user' : 'robot';
+            messageDiv.innerHTML = `
+                <span class="avatar"><i class="fa-solid fa-${icon}"></i></span>
+                <div class="message-content">${content}</div>
+            `;
+
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            return messageDiv;
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            // 添加用户消息
+            addChatMessage(message, 'user');
+            input.value = '';
+
+            // 显示加载状态
+            const loadingMsg = addChatMessage('<div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>', 'assistant');
+
+            try {
+                const systemPrompt = "你是一个专业的卷积核和计算机视觉课程助教，专门回答学生关于卷积核、图像处理、计算机视觉的相关问题。回答要通俗易懂，适合初学者理解，不要使用太专业的术语，如果有必要可以举例子说明。如果问题和卷积核或计算机视觉无关，礼貌地引导用户回到课程相关的话题。";
+                const answer = await callQwenAPI(message, systemPrompt);
+
+                // 移除加载消息
+                loadingMsg.remove();
+                // 添加AI回复
+                addChatMessage(answer, 'assistant');
+            } catch (e) {
+                loadingMsg.remove();
+                addChatMessage('抱歉，网络异常，请稍后重试。', 'assistant');
+            }
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        // ========== 错题本功能 ==========
+        function addToWrongBook(questionId) {
+            // 检查是否已经加入过
+            if (wrongQuestions.some(q => q.id === questionId)) {
+                alert('这道题已经在错题本中了哦~');
+                return;
+            }
+
+            const question = questionData[questionId];
+            const aiData = currentAiExplanation[questionId] || {};
+            wrongQuestions.push({
+                id: questionId,
+                ...question,
+                userChoice: aiData.userChoice || '未知',
+                aiExplanation: aiData.explanation || '暂无解析',
+                addTime: new Date().toLocaleString()
+            });
+
+            localStorage.setItem('convolution_wrong_questions', JSON.stringify(wrongQuestions));
+            renderWrongQuestions();
+            alert('已成功加入错题本！');
+        }
+
+        function renderWrongQuestions() {
+            const wrongList = document.getElementById('wrongList');
+            if (wrongQuestions.length === 0) {
+                wrongList.innerHTML = `
+                    <div class="empty-wrong">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <p>你还没有错题哦，继续加油！</p>
+                    </div>
+                `;
+                return;
+            }
+
+            wrongList.innerHTML = wrongQuestions.map(q => `
+                <div class="wrong-item">
+                    <h4>
+                        ${q.title}
+                        <button class="del-wrong-btn" onclick="deleteWrongQuestion(${q.id})" title="删除">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </h4>
+                    <p style="font-weight: 500;">${q.question}</p>
+                    <div style="margin: 10px 0;">
+                        ${q.options.map(opt => `
+                            <div style="font-size: 0.85rem; margin-bottom: 4px; ${opt === q.correctAnswer ? 'color: #065F46; font-weight: 500;' : (opt.startsWith(q.userChoice) ? 'color: #991B1B; text-decoration: line-through;' : '')}">
+                                ${opt} ${opt === q.correctAnswer ? '✅' : (opt.startsWith(q.userChoice) ? '❌' : '')}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="correct-answer" style="margin-bottom: 10px;">
+                        <strong>你的选择：</strong>${q.userChoice}<br>
+                        <strong>正确答案：</strong>${q.correctAnswer}
+                    </div>
+                    <div style="background: #F5F3FF; padding: 10px; border-radius: 6px; font-size: 0.85rem; border-left: 3px solid #8B5CF6; margin-bottom: 8px;">
+                        <strong>🤖 AI解析：</strong><br>${q.aiExplanation}
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--color-text-muted);">
+                        添加时间：${q.addTime}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteWrongQuestion(id) {
+            if (confirm('确定要删除这道错题吗？')) {
+                wrongQuestions = wrongQuestions.filter(q => q.id !== id);
+                localStorage.setItem('convolution_wrong_questions', JSON.stringify(wrongQuestions));
+                renderWrongQuestions();
+            }
+        }
+
+        function clearWrongQuestions() {
+            if (wrongQuestions.length === 0) {
+                alert('错题本已经是空的啦~');
+                return;
+            }
+            if (confirm('确定要清空所有错题吗？此操作不可恢复。')) {
+                wrongQuestions = [];
+                localStorage.removeItem('convolution_wrong_questions');
+                renderWrongQuestions();
+            }
+        }
+
+        async function exportWrongWord() {
+            if (wrongQuestions.length === 0) {
+                alert('没有错题可以导出哦~');
+                return;
+            }
+            try {
+                const res = await fetch('/api/export-wrong-word', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ wrongQuestions: wrongQuestions })
+                });
+                const data = await res.json();
+                if(data.success) window.open(data.url, '_blank');
+                else alert('导出失败');
+            } catch(e) { alert('导出错误'); }
+        }
+
+        async function exportWrongPDF() {
+            if (wrongQuestions.length === 0) {
+                alert('没有错题可以导出哦~');
+                return;
+            }
+            try {
+                const res = await fetch('/api/export-wrong-pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ wrongQuestions: wrongQuestions })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    const win = window.open(data.url, '_blank');
+                    setTimeout(() => alert('提示：在弹出的页面中，请使用快捷键 Ctrl+P (或 Cmd+P)，并选择"另存为 PDF"即可！'), 500);
+                }
+                else alert('导出失败');
+            } catch(e) { alert('导出错误'); }
         }
 
         window.addEventListener('scroll', () => {

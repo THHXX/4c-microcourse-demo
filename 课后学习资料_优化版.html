@@ -1,0 +1,3122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卷积核课后学习助手 · AI 增强版</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* 返回首页按钮 */
+        .home-btn {
+            background: none;
+            border: none;
+            color: var(--color-text-muted-light);
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+        .home-btn:hover {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--color-accent);
+        }
+        body.dark .home-btn {
+            color: var(--color-text-muted-dark);
+        }
+        body.dark .home-btn:hover {
+            color: var(--color-accent-dark);
+        }
+
+        :root {
+            /* 双主题配色 */
+            --color-bg-light: #F8FAFC;
+            --color-surface-light: #FFFFFF;
+            --color-text-main-light: #1E293B;
+            --color-text-muted-light: #64748B;
+            --color-border-light: #E2E8F0;
+
+            --color-bg-dark: #06101E;
+            --color-surface-dark: #0B1A2E;
+            --color-card-dark: #0F2040;
+            --color-text-main-dark: #F1F5F9;
+            --color-text-muted-dark: #94A3B8;
+            --color-border-dark: #1E3A5F;
+
+            --color-accent: #3B82F6;
+            --color-accent-dark: #38BDF8;
+            --color-kernel: #F59E0B;
+            --color-image: #10B981;
+            --color-ai: #8B5CF6;
+            --color-success: #10B981;
+            --color-error: #EF4444;
+            --color-amber: #FBBF24;
+            --color-purple: #818CF8;
+
+            --sidebar-width: 220px;
+            --space-6: 24px;
+            --space-8: 32px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Inter', -apple-system, 'PingFang SC', sans-serif;
+            background-color: var(--color-bg-light);
+            color: var(--color-text-main-light);
+            line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark {
+            background-color: var(--color-bg-dark);
+            color: var(--color-text-main-dark);
+        }
+
+        /* 顶部导航栏 */
+        .top-nav {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 0 28px;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.95);
+            border-bottom: 1px solid var(--color-border-light);
+            backdrop-filter: blur(8px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        body.dark .top-nav {
+            background: rgba(11, 26, 46, 0.95);
+            border-color: var(--color-border-dark);
+        }
+
+        .nav-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--color-accent);
+            box-shadow: 0 0 8px var(--color-accent);
+        }
+
+        .nav-title {
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-title span {
+            color: var(--color-accent);
+        }
+
+        .nav-badge {
+            margin-left: 4px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            background: rgba(37, 99, 235, 0.25);
+            border: 1px solid var(--color-accent);
+            color: var(--color-accent);
+            font-size: 12px;
+            cursor: default;
+        }
+
+        .nav-right {
+            margin-left: auto;
+            font-size: 13px;
+            color: var(--color-text-muted-light);
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        body.dark .nav-right {
+            color: var(--color-text-muted-dark);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            color: inherit;
+        }
+
+        /* 布局 */
+        .app-layout {
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            min-height: calc(100vh - 56px);
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            background: white;
+            border-right: 1px solid var(--color-border-light);
+            height: calc(100vh - 56px);
+            position: sticky;
+            top: 56px;
+            padding: var(--space-6);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        body.dark .sidebar {
+            background: var(--color-surface-dark);
+            border-color: var(--color-border-dark);
+        }
+
+        .nav-menu { list-style: none; margin-top: 2rem; }
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--color-text-muted-light);
+            text-decoration: none;
+            border-radius: 8px;
+            margin-bottom: 4px;
+            font-weight: 500;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+
+        body.dark .nav-link {
+            color: var(--color-text-muted-dark);
+        }
+
+        .nav-link:hover {
+            background: #F1F5F9;
+            color: var(--color-accent);
+        }
+
+        body.dark .nav-link:hover {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--color-accent-dark);
+        }
+
+        .nav-link.active {
+            background: #EFF6FF;
+            color: var(--color-accent);
+        }
+
+        body.dark .nav-link.active {
+            background: rgba(56, 189, 248, 0.12);
+            color: var(--color-accent-dark);
+        }
+
+        /* 内容区 */
+        .main-content {
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .content-wrapper {
+            max-width: min(1000px, 100%);
+            width: 100%;
+        }
+
+        section {
+            margin-bottom: 80px;
+            scroll-margin-top: 80px;
+            display: none;
+        }
+
+        section.active {
+            display: block;
+        }
+
+        /* 通用卡片 */
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--color-border-light);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            margin-bottom: 24px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        body.dark .card {
+            background: var(--color-surface-dark);
+            border-color: var(--color-border-dark);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #0F172A;
+            transition: color 0.3s;
+        }
+
+        body.dark h1 {
+            color: var(--color-text-main-dark);
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--color-accent);
+        }
+
+        body.dark h2 {
+            color: var(--color-accent-dark);
+        }
+
+        /* 卷积可视化样式 */
+        .kpills {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .kpill {
+            padding: 8px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--color-border-light);
+            background: var(--color-surface-light);
+            color: var(--color-text-muted-light);
+            cursor: pointer;
+            font-size: 13px;
+            font-family: inherit;
+            transition: all 0.18s;
+        }
+
+        body.dark .kpill {
+            border-color: var(--color-border-dark);
+            background: var(--color-card-dark);
+            color: var(--color-text-muted-dark);
+        }
+
+        .kpill:hover {
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+        }
+
+        body.dark .kpill:hover {
+            border-color: var(--color-accent-dark);
+            color: var(--color-accent-dark);
+        }
+
+        .kpill.on {
+            background: rgba(59, 130, 246, 0.12);
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+            font-weight: 600;
+        }
+
+        body.dark .kpill.on {
+            background: rgba(56, 189, 248, 0.12);
+            border-color: var(--color-accent-dark);
+            color: var(--color-accent-dark);
+        }
+
+        .kern-info {
+            background: #F8FAFC;
+            border: 1px solid var(--color-border-light);
+            border-radius: 10px;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        body.dark .kern-info {
+            background: var(--color-card-dark);
+            border-color: var(--color-border-dark);
+        }
+
+        .kern-info-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+
+        body.dark .kern-info-name {
+            color: var(--color-accent-dark);
+        }
+
+        .kern-info-desc {
+            font-size: 13px;
+            color: var(--color-text-muted-light);
+            flex: 1;
+        }
+
+        body.dark .kern-info-desc {
+            color: var(--color-text-muted-dark);
+        }
+
+        .vis-layout {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr auto 1fr;
+            align-items: center;
+            gap: 18px;
+            margin: 20px 0;
+        }
+
+        .vis-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .vis-label {
+            font-size: 12px;
+            color: var(--color-text-muted-light);
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        body.dark .vis-label {
+            color: var(--color-text-muted-dark);
+        }
+
+        .vis-sublabel {
+            font-size: 11px;
+            color: var(--color-text-muted-light);
+            text-align: center;
+        }
+
+        body.dark .vis-sublabel {
+            color: var(--color-text-muted-dark);
+        }
+
+        .opsym {
+            font-size: 28px;
+            color: var(--color-border-light);
+            font-weight: 300;
+        }
+
+        body.dark .opsym {
+            color: var(--color-border-dark);
+        }
+
+        .mat {
+            display: inline-grid;
+            gap: 3px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .cell {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 600;
+            width: 52px;
+            height: 42px;
+            transition: background 0.15s, color 0.15s;
+            border-radius: 3px;
+        }
+
+        .c-img {
+            background: #EFF6FF;
+            color: #2563EB;
+        }
+
+        body.dark .c-img {
+            background: #0D2544;
+            color: #7DD3FC;
+        }
+
+        .c-kern {
+            background: #ECFDF5;
+            color: #059669;
+        }
+
+        body.dark .c-kern {
+            background: #0D3B2A;
+            color: #6EE7B7;
+        }
+
+        .c-out {
+            background: #FFFBEB;
+            color: #92400E;
+        }
+
+        body.dark .c-out {
+            background: #1A1A0A;
+            color: #44403C;
+        }
+
+        .c-out.done {
+            background: #FEF3C7;
+            color: #D97706;
+        }
+
+        body.dark .c-out.done {
+            background: #3D2900;
+            color: var(--color-amber);
+        }
+
+        .c-hl {
+            background: #DBEAFE !important;
+            color: #1D4ED8 !important;
+            outline: 2px solid var(--color-accent);
+            outline-offset: -1px;
+        }
+
+        body.dark .c-hl {
+            background: #0C3B6B !important;
+            color: var(--color-accent-dark) !important;
+        }
+
+        .c-edit {
+            background: #ECFDF5;
+            color: #059669;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        body.dark .c-edit {
+            background: #0D3B2A;
+            color: #6EE7B7;
+        }
+
+        .c-edit:hover {
+            background: #D1FAE5;
+        }
+
+        body.dark .c-edit:hover {
+            background: #145236;
+        }
+
+        .calcbox {
+            background: #F8FAFC;
+            border: 1px solid var(--color-border-light);
+            border-radius: 10px;
+            padding: 16px 18px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13px;
+            color: #1E40AF;
+            min-height: 60px;
+            line-height: 1.9;
+            margin-top: 16px;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
+
+        body.dark .calcbox {
+            background: var(--color-card-dark);
+            border-color: var(--color-border-dark);
+            color: #93C5FD;
+        }
+
+        .rval {
+            color: #D97706;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        body.dark .rval {
+            color: var(--color-amber);
+        }
+
+        .rpos {
+            color: #059669;
+        }
+
+        body.dark .rpos {
+            color: var(--color-success);
+        }
+
+        .btns {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 9px 20px;
+            border-radius: 9px;
+            border: none;
+            font-size: 13px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.15s;
+            font-weight: 500;
+        }
+
+        .btn-p {
+            background: var(--color-accent);
+            color: #fff;
+        }
+
+        .btn-p:hover {
+            background: #2563EB;
+        }
+
+        .btn-s {
+            background: var(--color-surface-light);
+            color: var(--color-accent);
+            border: 1px solid var(--color-accent);
+        }
+
+        body.dark .btn-s {
+            background: var(--color-card-dark);
+            color: var(--color-accent-dark);
+            border-color: var(--color-accent-dark);
+        }
+
+        .btn-s:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        body.dark .btn-s:hover {
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        .btn-a {
+            background: rgba(251, 191, 36, 0.1);
+            color: #D97706;
+            border: 1px solid var(--color-amber);
+        }
+
+        body.dark .btn-a {
+            color: var(--color-amber);
+        }
+
+        .btn-a:hover {
+            background: rgba(251, 191, 36, 0.2);
+        }
+
+        .stepinfo {
+            font-size: 12px;
+            color: var(--color-text-muted-light);
+            margin-top: 10px;
+        }
+
+        body.dark .stepinfo {
+            color: var(--color-text-muted-dark);
+        }
+
+        /* 练习题样式 */
+        .exercise-box {
+            border: 2px solid #E0F2FE;
+            transition: 0.3s;
+        }
+
+        body.dark .exercise-box {
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .exercise-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: #F8FAFC;
+            border: 1px solid var(--color-border-light);
+            padding: 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: 0.2s;
+            color: var(--color-text-main-light);
+        }
+
+        body.dark .option-btn {
+            background: var(--color-card-dark);
+            border-color: var(--color-border-dark);
+            color: var(--color-text-main-dark);
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--color-accent);
+            background: #F0F9FF;
+        }
+
+        body.dark .option-btn:hover:not(:disabled) {
+            border-color: var(--color-accent-dark);
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        .option-btn.correct {
+            background: #ECFDF5;
+            border-color: var(--color-success);
+            color: #065F46;
+        }
+
+        body.dark .option-btn.correct {
+            background: rgba(16, 185, 129, 0.1);
+            color: #34D399;
+        }
+
+        .option-btn.wrong {
+            background: #FEF2F2;
+            border-color: var(--color-error);
+            color: #991B1B;
+        }
+
+        body.dark .option-btn.wrong {
+            background: rgba(248, 113, 113, 0.1);
+            color: #F87171;
+        }
+
+        .option-marker {
+            width: 32px;
+            height: 32px;
+            background: #E2E8F0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        body.dark .option-marker {
+            background: var(--color-border-dark);
+        }
+
+        /* 主观题样式 */
+        .qbox {
+            background: #F0F9FF;
+            border-left: 3px solid var(--color-accent);
+            border-radius: 0 10px 10px 0;
+            padding: 16px 18px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            line-height: 1.7;
+            transition: background-color 0.3s;
+        }
+
+        body.dark .qbox {
+            background: var(--color-card-dark);
+            border-left-color: var(--color-accent-dark);
+        }
+
+        .qnum {
+            color: var(--color-accent);
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        body.dark .qnum {
+            color: var(--color-accent-dark);
+        }
+
+        textarea {
+            width: 100%;
+            background: #F8FAFC;
+            border: 1px solid var(--color-border-light);
+            border-radius: 10px;
+            color: var(--color-text-main-light);
+            font-family: inherit;
+            font-size: 14px;
+            padding: 14px;
+            resize: vertical;
+            margin-top: 10px;
+            line-height: 1.7;
+            transition: border 0.2s, background-color 0.3s, color 0.3s;
+        }
+
+        body.dark textarea {
+            background: var(--color-card-dark);
+            border-color: var(--color-border-dark);
+            color: var(--color-text-main-dark);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--color-accent);
+        }
+
+        body.dark textarea:focus {
+            border-color: var(--color-accent-dark);
+        }
+
+        textarea::placeholder {
+            color: var(--color-text-muted-light);
+        }
+
+        body.dark textarea::placeholder {
+            color: var(--color-text-muted-dark);
+        }
+
+        .sbar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--color-border-light);
+        }
+
+        body.dark .sbar {
+            border-color: var(--color-border-dark);
+        }
+
+        .slbl {
+            font-size: 12px;
+            color: var(--color-text-muted-light);
+        }
+
+        body.dark .slbl {
+            color: var(--color-text-muted-dark);
+        }
+
+        .strack {
+            flex: 1;
+            height: 8px;
+            background: #E2E8F0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        body.dark .strack {
+            background: var(--color-bg-dark);
+        }
+
+        .sfill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.7s ease;
+        }
+
+        .snum {
+            font-size: 13px;
+            font-weight: 700;
+            min-width: 38px;
+        }
+
+        /* AI 助手交互区 */
+        .ai-zone {
+            margin-top: 20px;
+            border-radius: 12px;
+            background: #F5F3FF;
+            padding: 16px;
+            border: 1px solid #DDD6FE;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        body.dark .ai-zone {
+            background: rgba(139, 92, 246, 0.1);
+            border-color: rgba(139, 92, 246, 0.3);
+        }
+
+        .ai-hint-btn {
+            background: white;
+            border: 1px solid #C4B5FD;
+            color: #7C3AED;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+
+        body.dark .ai-hint-btn {
+            background: var(--color-card-dark);
+            border-color: var(--color-purple);
+            color: var(--color-purple);
+        }
+
+        .ai-hint-btn:hover {
+            background: #F5F3FF;
+            transform: translateY(-1px);
+        }
+
+        body.dark .ai-hint-btn:hover {
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .ai-response {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 12px;
+            border-left: 4px solid var(--color-ai);
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+            transition: background-color 0.3s;
+        }
+
+        body.dark .ai-response {
+            background: var(--color-card-dark);
+        }
+
+        .air {
+            background: #F5F3FF;
+            border: 1px solid #DDD6FE;
+            border-radius: 12px;
+            padding: 18px;
+            margin-top: 16px;
+            display: none;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        body.dark .air {
+            background: var(--color-card-dark);
+            border-color: var(--color-border-dark);
+        }
+
+        .air.show {
+            display: block;
+        }
+
+        .air-hdr {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .air-av {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            background: linear-gradient(135deg, #7C3AED, #8B5CF6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .air-name {
+            font-size: 12px;
+            color: var(--color-ai);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .air-txt {
+            font-size: 14px;
+            line-height: 1.85;
+            color: var(--color-text-main-light);
+            white-space: pre-wrap;
+        }
+
+        body.dark .air-txt {
+            color: var(--color-text-main-dark);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 加载动画 */
+        .loading-dots {
+            display: inline-flex;
+            gap: 4px;
+        }
+
+        .dots {
+            display: inline-flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .dot, .dots .dot {
+            width: 6px;
+            height: 6px;
+            background: var(--color-ai);
+            border-radius: 50%;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        .dot:nth-child(2), .dots .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .dot:nth-child(3), .dots .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+            0%, 80%, 100% {
+                transform: scale(0);
+            }
+            40% {
+                transform: scale(1);
+            }
+        }
+
+        /* 进度条 */
+        .progress-bar {
+            height: 8px;
+            background: #E2E8F0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        body.dark .progress-bar {
+            background: var(--color-border-dark);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--color-accent);
+            width: 0%;
+            transition: 0.4s;
+        }
+
+        .prog {
+            margin-bottom: 20px;
+        }
+
+        .progtrack {
+            height: 5px;
+            background: #E2E8F0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        body.dark .progtrack {
+            background: var(--color-card-dark);
+        }
+
+        .progfill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-accent), var(--color-ai));
+            border-radius: 3px;
+            transition: width 0.4s;
+        }
+
+        .proglbl {
+            font-size: 11px;
+            color: var(--color-text-muted-light);
+            margin-top: 5px;
+        }
+
+        body.dark .proglbl {
+            color: var(--color-text-muted-dark);
+        }
+
+        /* 公式与矩阵 */
+        .matrix-display {
+            background: #F1F5F9;
+            font-family: monospace;
+            padding: 12px;
+            border-radius: 8px;
+            display: inline-block;
+            line-height: 1.2;
+            text-align: center;
+            margin: 10px 0;
+            transition: background-color 0.3s;
+        }
+
+        body.dark .matrix-display {
+            background: var(--color-card-dark);
+        }
+
+        /* 总结面板 */
+        .sumgrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .sumcard {
+            background: #F8FAFC;
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+            border: 1px solid var(--color-border-light);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        body.dark .sumcard {
+            background: var(--color-card-dark);
+            border-color: var(--color-border-dark);
+        }
+
+        .sumcard .big {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+
+        .sumcard .lbl {
+            font-size: 12px;
+            color: var(--color-text-muted-light);
+            margin-top: 5px;
+        }
+
+        body.dark .sumcard .lbl {
+            color: var(--color-text-muted-dark);
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .app-layout { grid-template-columns: 1fr; }
+            .sidebar { display: none; }
+            .main-content { padding: 20px; }
+            .vis-layout {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .opsym {
+                transform: rotate(90deg);
+            }
+            .cell {
+                width: 40px;
+                height: 34px;
+                font-size: 11px;
+            }
+            .nav-title {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部导航栏 -->
+    <nav class="top-nav">
+        <a href="/" class="home-btn">
+            <i class="fa-solid fa-arrow-left"></i> 返回首页
+        </a>
+        <div class="nav-dot"></div>
+        <div class="nav-title">卷积核课后学习助手 · <span>AI 增强版</span></div>
+        <div class="nav-badge">交互式微课</div>
+        <div class="nav-right">
+            <span>卷积核知识点巩固学习</span>
+            <button type="button"class="theme-toggle" onclick="toggleTheme()">
+                <i class="fa-solid fa-moon" id="theme-icon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <div class="app-layout">
+        <aside class="sidebar">
+            <h3 style="color: var(--color-accent);"><i class="fa-solid fa-brain"></i> 卷积核实验室</h3>
+            <nav class="nav-menu">
+                <a href="javascript:void(0)" class="nav-link active" onclick="goToSection('intro')"><i class="fa-solid fa-house"></i> 课程导读</a>
+                <a href="javascript:void(0)" class="nav-link" onclick="goToSection('visualizer')"><i class="fa-solid fa-magnifying-glass"></i> 卷积可视化</a>
+                <a href="javascript:void(0)" class="nav-link" onclick="goToSection('exercises')"><i class="fa-solid fa-pen-to-square"></i> 巩固练习</a>
+                <a href="javascript:void(0)" class="nav-link" onclick="goToSection('challenge')"><i class="fa-solid fa-lightbulb"></i> 设计挑战</a>
+                <a href="javascript:void(0)" class="nav-link" onclick="goToSection('discussion')"><i class="fa-solid fa-comments"></i> 深度思考</a>
+                <a href="javascript:void(0)" class="nav-link" onclick="goToSection('summary')"><i class="fa-solid fa-trophy"></i> 学习总结</a>
+            </nav>
+
+            <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--color-border-light);">
+                <p style="font-size: 0.8rem; color: var(--color-text-muted-light);">当前学习进度</p>
+                <div class="progress-bar"><div class="progress-fill" id="overall-progress"></div></div>
+                <p style="font-size: 0.8rem; text-align: right;"><span id="progress-text">0/4</span> 模块已完成</p>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="content-wrapper">
+
+                <!-- 课程导读 -->
+                <section id="intro" class="active">
+                    <h1>🎓 卷积核课后强化学习</h1>
+                    <p style="color: var(--color-text-muted-light); font-size: 1.1rem; margin-bottom: 16px;">
+                        本模块是卷积核知识点的配套课后学习资源，由 <strong>AI 助教</strong> 提供全程辅助。通过交互式可视化、针对性练习和个性化反馈，帮助你彻底掌握卷积核的核心概念和实际应用。
+                    </p>
+
+                    <div class="card" style="border-left: 4px solid var(--color-accent);">
+                        <h3 style="margin-bottom: 12px; color: var(--color-accent);">🤔 什么是卷积核？</h3>
+                        <p>
+                            卷积核（Convolution Kernel）是卷积神经网络（CNN）的核心组件，本质上是一个小型的数值矩阵。它就像一个"特征过滤器"，在图像上滑动时通过加权求和的方式，能够自动提取出图像中的边缘、纹理、形状等视觉特征，是AI"看懂"世界的基础。
+                        </p>
+                        <p style="margin-top: 10px;">
+                            从手机的人脸解锁、自动驾驶的车辆识别，到AI绘画的图像生成，背后都离不开卷积核的工作。掌握卷积核原理，是理解整个计算机视觉技术体系的第一步。
+                        </p>
+                    </div>
+
+                    <div class="card" style="margin-top: 24px; border-left: 4px solid var(--color-ai); background: #F5F3FF;">
+                        <p><strong>助教寄语：</strong> 卷积核是计算机视觉的"眼睛"。通过今天的学习，你将理解如何从一堆数字中"看"出线条、纹理和物体特征，为后续学习深度学习打下坚实基础。</p>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-bottom: 16px;">📚 学习目标</h3>
+                        <div style="display: grid; gap: 12px;">
+                            <div style="display: flex; gap: 10px; align-items: flex-start;">
+                                <div style="color: var(--color-success); margin-top: 3px;"><i class="fa-solid fa-check-circle"></i></div>
+                                <div>理解卷积核的基本概念和滑动计算原理</div>
+                            </div>
+                            <div style="display: flex; gap: 10px; align-items: flex-start;">
+                                <div style="color: var(--color-success); margin-top: 3px;"><i class="fa-solid fa-check-circle"></i></div>
+                                <div>掌握5种经典卷积核（边缘检测、模糊、锐化、对角线检测）的功能和应用场景</div>
+                            </div>
+                            <div style="display: flex; gap: 10px; align-items: flex-start;">
+                                <div style="color: var(--color-success); margin-top: 3px;"><i class="fa-solid fa-check-circle"></i></div>
+                                <div>能够独立手动计算卷积运算的过程和结果</div>
+                            </div>
+                            <div style="display: flex; gap: 10px; align-items: flex-start;">
+                                <div style="color: var(--color-success); margin-top: 3px;"><i class="fa-solid fa-check-circle"></i></div>
+                                <div>理解多层卷积网络"从简单特征到复杂物体"的分级提取机制</div>
+                            </div>
+                            <div style="display: flex; gap: 10px; align-items: flex-start;">
+                                <div style="color: var(--color-success); margin-top: 3px;"><i class="fa-solid fa-check-circle"></i></div>
+                                <div>能够根据需求设计简单的自定义卷积核</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3 style="margin-bottom: 16px;">🗺️ 学习路径指南</h3>
+                        <div style="display: grid; gap: 16px;">
+                            <div style="display: flex; gap: 12px; align-items: flex-start;">
+                                <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--color-accent); color: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">1</div>
+                                <div>
+                                    <strong>卷积可视化</strong>
+                                    <p style="color: var(--color-text-muted-light); font-size: 0.9rem; margin-top: 4px;">通过动态演示直观理解卷积核的滑动计算过程，观察不同卷积核对图像的作用效果</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 12px; align-items: flex-start;">
+                                <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--color-accent); color: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">2</div>
+                                <div>
+                                    <strong>巩固练习</strong>
+                                    <p style="color: var(--color-text-muted-light); font-size: 0.9rem; margin-top: 4px;">通过客观题和主观题结合的方式，检验对知识点的理解程度，获得AI的个性化反馈</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 12px; align-items: flex-start;">
+                                <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--color-accent); color: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">3</div>
+                                <div>
+                                    <strong>设计挑战</strong>
+                                    <p style="color: var(--color-text-muted-light); font-size: 0.9rem; margin-top: 4px;">动手设计自己的卷积核，获得AI的专业分析和改进建议，做到学以致用</p>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 12px; align-items: flex-start;">
+                                <div style="width: 28px; height: 28px; border-radius: 50%; background: var(--color-accent); color: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">4</div>
+                                <div>
+                                    <strong>深度思考</strong>
+                                    <p style="color: var(--color-text-muted-light); font-size: 0.9rem; margin-top: 4px;">思考多层卷积的工作机制，建立对卷积神经网络的整体认知</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="btns" style="margin-top: 30px; justify-content: center;">
+                        <button type="button"class="btn btn-p" onclick="goToSection('visualizer')">
+                            <i class="fa-solid fa-play"></i> 开始学习
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 卷积可视化模块 -->
+                <section id="visualizer">
+                    <h2><i class="fa-solid fa-magnifying-glass"></i> 交互式卷积可视化</h2>
+
+                    <div class="card">
+                        <div class="card-title" style="font-size: 15px; font-weight: 700; color: var(--color-accent); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-filter"></i> 选择卷积核类型
+                        </div>
+                        <div class="kpills" id="kpills">
+                            <button type="button"class="kpill on" onclick="moveKernel(0)">水平边缘检测</button>
+                            <button type="button"class="kpill" onclick="moveKernel(1)">垂直边缘检测</button>
+                            <button type="button"class="kpill" onclick="moveKernel(2)">模糊核（均值）</button>
+                            <button type="button"class="kpill" onclick="moveKernel(3)">锐化核</button>
+                            <button type="button"class="kpill" onclick="moveKernel(4)">对角线检测</button>
+                        </div>
+
+                        <div class="kern-info" id="kernInfo">
+                            <div class="kern-info-name" id="kernName"></div>
+                            <div class="kern-info-desc" id="kernDesc"></div>
+                        </div>
+
+                        <div class="vis-layout">
+                            <div class="vis-col">
+                                <div class="vis-label">输入图像 (5×5)</div>
+                                <div class="vis-sublabel">蓝色 = 当前计算区域</div>
+                                <div class="mat" id="matImg" style="grid-template-columns:repeat(5,52px)"></div>
+                            </div>
+                            <div class="opsym">&times;</div>
+                            <div class="vis-col">
+                                <div class="vis-label" id="kernMatLabel">卷积核 (3×3)</div>
+                                <div class="mat" id="matKern" style="grid-template-columns:repeat(3,52px)"></div>
+                            </div>
+                            <div class="opsym">&rarr;</div>
+                            <div class="vis-col">
+                                <div class="vis-label">输出特征图 (3×3)</div>
+                                <div class="vis-sublabel">橙色 = 已计算</div>
+                                <div class="mat" id="matOut" style="grid-template-columns:repeat(3,52px)"></div>
+                            </div>
+                        </div>
+
+                        <div class="calcbox" id="calcbox">点击 "下一步" 开始演示卷积核滑动计算过程 &rarr;</div>
+
+                        <div class="btns">
+                            <button type="button"class="btn btn-p" onclick="doStep()">&#x25B6; 下一步</button>
+                            <button type="button"class="btn btn-s" onclick="doAuto()" id="autoBtn">&#x23F5; 自动播放</button>
+                            <button type="button"class="btn btn-s" onclick="doFullScan()" id="scanBtn">&#x1F50D; 自动扫描全图</button>
+                            <button type="button"class="btn btn-s" onclick="doReset()">&#x21BA; 重置</button>
+                            <button type="button"class="btn btn-a" onclick="getAIHint('visualization')">&#x1F916; AI 解释这一步</button>
+                        </div>
+                        <div class="stepinfo" id="stepinfo">当前：未开始 · 共 9 个计算位置</div>
+                    </div>
+
+                    <div class="air" id="hintBox">
+                        <div class="air-hdr">
+                            <div class="air-av">&#10022;</div>
+                            <div class="air-name">AI 实时解释</div>
+                        </div>
+                        <div class="air-txt" id="hintTxt"></div>
+                    </div>
+
+                    <div class="btns" style="justify-content: space-between; margin-top: 30px;">
+                        <button type="button"class="btn btn-s" onclick="goToSection('intro')">
+                            <i class="fa-solid fa-arrow-left"></i> 返回上一模块
+                        </button>
+                        <button type="button"class="btn btn-p" onclick="goToSection('exercises')">
+                            前往练习模块 <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 巩固练习模块 -->
+                <section id="exercises">
+                    <h2><i class="fa-solid fa-pen-to-square"></i> 知识点巩固练习</h2>
+
+                    <div class="prog">
+                        <div class="progtrack"><div class="progfill" id="quiz-progress" style="width:0%"></div></div>
+                        <div class="proglbl" id="quiz-prog-text">已完成 0 / 5 题</div>
+                    </div>
+
+                    <!-- 练习 1 -->
+                    <div class="card exercise-box">
+                        <div class="exercise-header">
+                            <span style="font-weight: bold; color: var(--color-text-muted-light);">单选题 · 基础概念</span>
+                            <button type="button"class="ai-hint-btn" onclick="getAIHint(1)">
+                                <i class="fa-solid fa-robot"></i> 问问 AI 助教
+                            </button>
+                        </div>
+                        <p style="margin-bottom: 20px;">在计算机内部，一张 28x28 像素的灰度图本质上是以什么形式存储的？</p>
+
+                        <div class="options-grid" id="options-1">
+                            <button type="button"class="option-btn" onclick="checkAnswer(1, 'A', false)">
+                                <span class="option-marker">A</span>
+                                <span>一系列描述形状的数学矢量方程</span>
+                            </button>
+                            <button type="button"class="option-btn" onclick="checkAnswer(1, 'B', true)">
+                                <span class="option-marker">B</span>
+                                <span>一个 28x28 的矩阵，元素值为 0-255</span>
+                            </button>
+                            <button type="button"class="option-btn" onclick="checkAnswer(1, 'C', false)">
+                                <span class="option-marker">C</span>
+                                <span>一个压缩后的二进制视频流</span>
+                            </button>
+                        </div>
+
+                        <div id="ai-response-1" class="ai-response"></div>
+                    </div>
+
+                    <!-- 练习 2 -->
+                    <div class="card exercise-box">
+                        <div class="exercise-header">
+                            <span style="font-weight: bold; color: var(--color-text-muted-light);">计算题 · 卷积运算</span>
+                            <button type="button"class="ai-hint-btn" onclick="getAIHint(2)">
+                                <i class="fa-solid fa-robot"></i> 获取计算思路
+                            </button>
+                        </div>
+                        <p>假设有一块 3x3 的图像区域 <b>I</b> 和一个 3x3 的卷积核 <b>K</b>：</p>
+                        <div style="display: flex; gap: 40px; justify-content: center; margin: 20px 0; flex-wrap: wrap;">
+                            <div>
+                                <p style="font-size: 0.8rem; text-align: center;">图像区域 I</p>
+                                <div class="matrix-display">
+                                    [1, 1, 1]<br>[0, 0, 0]<br>[2, 2, 2]
+                                </div>
+                            </div>
+                            <div>
+                                <p style="font-size: 0.8rem; text-align: center;">卷积核 K</p>
+                                <div class="matrix-display">
+                                    [-1, -1, -1]<br>[ 0,  0,  0]<br>[ 1,  1,  1]
+                                </div>
+                            </div>
+                        </div>
+                        <p style="margin-bottom: 20px;">经过卷积运算（不加偏移项），该像素点的输出值是多少？</p>
+
+                        <div class="options-grid" id="options-2">
+                            <button type="button"class="option-btn" onclick="checkAnswer(2, 'A', false)">
+                                <span class="option-marker">A</span> <span>0</span>
+                            </button>
+                            <button type="button"class="option-btn" onclick="checkAnswer(2, 'B', false)">
+                                <span class="option-marker">B</span> <span>1</span>
+                            </button>
+                            <button type="button"class="option-btn" onclick="checkAnswer(2, 'C', true)">
+                                <span class="option-marker">C</span> <span>3</span>
+                            </button>
+                        </div>
+                        <div id="ai-response-2" class="ai-response"></div>
+                    </div>
+
+                    <!-- 练习 3 -->
+                    <div class="card exercise-box">
+                        <div class="exercise-header">
+                            <span style="font-weight: bold; color: var(--color-text-muted-light);">场景应用题 · 特征提取</span>
+                            <button type="button"class="ai-hint-btn" onclick="getAIHint(3)">
+                                <i class="fa-solid fa-robot"></i> 听听 AI 解释
+                            </button>
+                        </div>
+                        <p style="margin-bottom: 20px;">如果一个卷积核的权重是：左侧全是负数，中间全是零，右侧全是正数。它最可能在识别图像中的什么特征？</p>
+
+                        <div class="options-grid" id="options-3">
+                            <button type="button"class="option-btn" onclick="checkAnswer(3, 'A', false)">
+                                <span class="option-marker">A</span> <span>水平线条（地平线）</span>
+                            </button>
+                            <button type="button"class="option-btn" onclick="checkAnswer(3, 'B', true)">
+                                <span class="option-marker">B</span> <span>垂直边缘（大楼轮廓）</span>
+                            </button>
+                            <button type="button"class="option-btn" onclick="checkAnswer(3, 'C', false)">
+                                <span class="option-marker">C</span> <span>整张图片的亮度均值</span>
+                            </button>
+                        </div>
+                        <div id="ai-response-3" class="ai-response"></div>
+                    </div>
+
+                    <!-- 练习 4 主观题 -->
+                    <div class="card">
+                        <div class="card-title" style="font-size: 15px; font-weight: 700; color: var(--color-accent); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-message"></i> 简答题 · 概念理解
+                        </div>
+                        <div class="qbox">
+                            <div class="qnum">CONCEPT</div>
+                            用你自己的话，解释什么是"卷积核"？它在图像处理中起什么作用？不需要用公式，描述你的直觉理解即可。
+                        </div>
+                        <textarea id="a4" rows="4" placeholder="在这里写下你的理解……"></textarea>
+                        <div class="btns">
+                            <button type="button"class="btn btn-p" onclick="submitQ(4)">提交给 AI 评估</button>
+                        </div>
+                        <div class="air" id="r4">
+                            <div class="air-hdr">
+                                <div class="air-av">&#10022;</div>
+                                <div class="air-name">AI 评估反馈</div>
+                            </div>
+                            <div class="air-txt" id="t4"></div>
+                            <div class="sbar">
+                                <span class="slbl">理解程度</span>
+                                <div class="strack">
+                                    <div class="sfill" id="f4" style="width: 0%"></div>
+                                </div>
+                                <span class="snum" id="s4">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 练习 5 主观题 -->
+                    <div class="card">
+                        <div class="card-title" style="font-size: 15px; font-weight: 700; color: var(--color-accent); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-brain"></i> 分析题 · 深度思考
+                        </div>
+                        <div class="qbox">
+                            <div class="qnum">ANALYSIS</div>
+                            一个卷积层通常包含几十个甚至上百个不同的卷积核，而不是只有一个。为什么需要这么多？如果只用一个会有什么问题？
+                        </div>
+                        <textarea id="a5" rows="4" placeholder="写出你的思考……"></textarea>
+                        <div class="btns">
+                            <button type="button"class="btn btn-p" onclick="submitQ(5)">提交给 AI 评估</button>
+                        </div>
+                        <div class="air" id="r5">
+                            <div class="air-hdr">
+                                <div class="air-av">&#10022;</div>
+                                <div class="air-name">AI 评估反馈</div>
+                            </div>
+                            <div class="air-txt" id="t5"></div>
+                            <div class="sbar">
+                                <span class="slbl">理解程度</span>
+                                <div class="strack">
+                                    <div class="sfill" id="f5" style="width: 0%"></div>
+                                </div>
+                                <span class="snum" id="s5">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="btns" style="justify-content: space-between; margin-top: 30px;">
+                        <button type="button"class="btn btn-s" onclick="goToSection('visualizer')">
+                            <i class="fa-solid fa-arrow-left"></i> 返回上一模块
+                        </button>
+                        <button type="button"class="btn btn-p" onclick="goToSection('challenge')">
+                            前往设计挑战 <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 设计挑战模块 -->
+                <section id="challenge">
+                    <h2><i class="fa-solid fa-lightbulb"></i> 卷积核设计挑战</h2>
+
+                    <div class="card">
+                        <div class="card-title" style="font-size: 15px; font-weight: 700; color: var(--color-accent); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-wrench"></i> 设计你自己的卷积核
+                        </div>
+                        <p style="color: var(--color-text-muted-light); font-size: 14px; line-height: 1.75; margin-bottom: 18px;">
+                            你已经了解了五种卷积核的工作方式。现在尝试自己设计一个 3×3 卷积核——点击矩阵中的任意数字可以修改它的值。
+                            设计完成后写下你的思路，让 AI 分析这个卷积核会响应什么样的图像特征。
+                        </p>
+                        <div style="display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap;">
+                            <div>
+                                <div style="font-size: 12px; color: var(--color-text-muted-light); margin-bottom: 8px;">你的卷积核（点击数字编辑）</div>
+                                <div class="mat" id="matCustom" style="grid-template-columns:repeat(3,56px)"></div>
+                            </div>
+                            <div style="flex: 1; min-width: 220px;">
+                                <div style="font-size: 12px; color: var(--color-text-muted-light); margin-bottom: 8px;">说明你的设计思路</div>
+                                <textarea id="chalReason" rows="6" placeholder="为什么这样设计？你认为这组数值能检测什么特征？"></textarea>
+                            </div>
+                        </div>
+                        <div class="btns" style="margin-top: 18px;">
+                            <button type="button"class="btn btn-p" onclick="submitChal()">&#x1F916; 让 AI 分析我的设计</button>
+                            <button type="button"class="btn btn-s" onclick="fillDemo()">&#x1F4A1; 填入对角线示例</button>
+                        </div>
+                        <div class="air" id="rChal">
+                            <div class="air-hdr">
+                                <div class="air-av">&#10022;</div>
+                                <div class="air-name">AI 分析报告</div>
+                            </div>
+                            <div class="air-txt" id="tChal"></div>
+                        </div>
+                    </div>
+
+                    <div class="btns" style="justify-content: space-between; margin-top: 30px;">
+                        <button type="button"class="btn btn-s" onclick="goToSection('exercises')">
+                            <i class="fa-solid fa-arrow-left"></i> 返回上一模块
+                        </button>
+                        <button type="button"class="btn btn-p" onclick="goToSection('discussion')">
+                            前往深度思考 <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 深度思考 -->
+                <section id="discussion">
+                    <h2><i class="fa-solid fa-comments"></i> 深度思考与讨论</h2>
+                    <div class="card" style="background: #F8FAFC;">
+                        <p style="margin-bottom: 15px;"><strong>开放讨论：</strong> 为什么我们要用多层卷积？第一层卷积核看到的线条，和最后一层卷积核看到的"物体部件"之间有什么联系？</p>
+                        <textarea id="thought-input" style="width: 100%; height: 100px; padding: 12px; border-radius: 8px; border: 1px solid var(--color-border-light); margin-bottom: 12px; font-family: inherit;" placeholder="写下你的想法，AI 助教将与你展开讨论..."></textarea>
+                        <button type="button"class="ai-hint-btn" style="background: var(--color-ai); color: white; border: none; width: 100%; justify-content: center; height: 45px;" onclick="discussWithAI()">
+                            <i class="fa-solid fa-paper-plane"></i> 提交并与 AI 交流
+                        </button>
+                        <div id="ai-discuss-response" class="ai-response"></div>
+                    </div>
+
+                    <div class="btns" style="justify-content: space-between; margin-top: 30px;">
+                        <button type="button"class="btn btn-s" onclick="goToSection('challenge')">
+                            <i class="fa-solid fa-arrow-left"></i> 返回上一模块
+                        </button>
+                        <button type="button"class="btn btn-p" onclick="goToSection('summary')">
+                            查看学习总结 <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 学习总结 -->
+                <section id="summary">
+                    <h2><i class="fa-solid fa-flag-checkered"></i> 结课学情分析</h2>
+
+                    <div class="card">
+                        <div class="card-title" style="font-size: 15px; font-weight: 700; color: var(--color-accent); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-chart-simple"></i> 学习成果总结
+                        </div>
+                        <div class="sumgrid">
+                            <div class="sumcard">
+                                <div class="big" id="sumViz" style="color: var(--color-accent)">—</div>
+                                <div class="lbl">可视化演示步骤</div>
+                            </div>
+                            <div class="sumcard">
+                                <div class="big" id="sumQ" style="color: var(--color-success)">0/5</div>
+                                <div class="lbl">练习题完成数</div>
+                            </div>
+                            <div class="sumcard">
+                                <div class="big" id="sumAvg" style="color: var(--color-amber)">—</div>
+                                <div class="lbl">平均理解得分</div>
+                            </div>
+                            <div class="sumcard">
+                                <div class="big" id="sumTime" style="color: var(--color-ai)">—</div>
+                                <div class="lbl">学习时长</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="text-align: center; padding: 40px;">
+                        <div id="summary-content">
+                            <p style="color: var(--color-text-muted-light);">完成所有练习后，点击下方按钮生成你的 AI 个性化学习报告。</p>
+                            <button type="button"class="ai-hint-btn" style="margin: 20px auto; padding: 12px 30px;" onclick="generateSummary()">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> 生成学习报告
+                            </button>
+                        </div>
+                        <div id="ai-summary-report" class="ai-response" style="text-align: left;"></div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- 右侧侧边栏按钮组 -->
+    <div id="rightSidebarButtons" class="right-sidebar-buttons">
+        <button class="sidebar-toggle-btn active" onclick="switchPanel('notes')" title="笔记">
+            <i class="fa-solid fa-note-sticky"></i>
+            <span>笔记</span>
+        </button>
+        <button class="sidebar-toggle-btn" onclick="switchPanel('ai')" title="AI 助手">
+            <i class="fa-solid fa-robot"></i>
+            <span>AI 助手</span>
+        </button>
+        <button class="sidebar-toggle-btn" onclick="switchPanel('wrong')" title="错题本">
+            <i class="fa-solid fa-bookmark"></i>
+            <span>错题本</span>
+        </button>
+        <button class="sidebar-toggle-btn-expand" onclick="toggleRightSidebar()" title="展开/收起">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+    </div>
+
+    <!-- 右侧侧边栏内容 -->
+    <div id="rightSidebar" class="right-sidebar">
+        <!-- 拖拽调整手柄 -->
+        <div id="sidebarResizeHandle" class="sidebar-resize-handle"></div>
+        <!-- 笔记面板 -->
+        <div id="notesPanel" class="sidebar-panel active">
+            <div class="panel-header">
+                <h3><i class="fa-solid fa-note-sticky"></i> 学习笔记</h3>
+                <div class="panel-actions">
+                    <button class="panel-action-btn" onclick="saveNotes()" title="保存笔记">
+                        <i class="fa-solid fa-save"></i>
+                    </button>
+                    <button class="panel-action-btn" onclick="clearNotes()" title="清空笔记">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                    <button class="panel-action-btn" onclick="exportNotesWord()" title="导出Word">
+                        <i class="fa-solid fa-file-word"></i>
+                    </button>
+                    <button class="panel-action-btn" onclick="exportNotesPDF()" title="导出PDF">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="panel-content">
+                <div id="globalNote" class="note-editor" contenteditable="true" placeholder="在这里记录你的学习笔记，支持粘贴截图和Markdown格式..."></div>
+            </div>
+        </div>
+
+        <!-- AI助手面板 -->
+        <div id="aiPanel" class="sidebar-panel">
+            <div class="panel-header">
+                <h3><i class="fa-solid fa-robot"></i> AI 学习助手</h3>
+            </div>
+            <div class="panel-content">
+                <div id="chatMessages" class="chat-messages">
+                    <div class="message assistant">
+                        <span class="avatar"><i class="fa-solid fa-robot"></i></span>
+                        <div class="message-content">你好！我是你的卷积核学习助手，有什么问题都可以问我哦~</div>
+                    </div>
+                </div>
+                <div class="chat-input-container">
+                    <input type="text" id="chatInput" placeholder="输入你的问题..." onkeypress="handleChatKeyPress(event)">
+                    <button onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 错题本面板 -->
+        <div id="wrongPanel" class="sidebar-panel">
+            <div class="panel-header">
+                <h3><i class="fa-solid fa-bookmark"></i> 错题本</h3>
+                <div class="panel-actions">
+                    <button class="panel-action-btn" onclick="clearWrongQuestions()" title="清空错题">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                    <button class="panel-action-btn" onclick="exportWrongWord()" title="导出Word">
+                        <i class="fa-solid fa-file-word"></i>
+                    </button>
+                    <button class="panel-action-btn" onclick="exportWrongPDF()" title="导出PDF">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="panel-content">
+                <div id="wrongList" class="wrong-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* 右侧侧边栏样式 */
+        .right-sidebar-buttons {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            background: white;
+            border-radius: 12px 0 0 12px;
+            box-shadow: -2px 0 12px rgba(0,0,0,0.1);
+            padding: 12px 8px;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: right 0.3s ease;
+        }
+
+        .right-sidebar-buttons.collapsed {
+            right: var(--right-sidebar-width, 400px);
+        }
+
+        .sidebar-toggle-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 12px 8px;
+            border: none;
+            background: transparent;
+            color: #6B7280;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+
+        .sidebar-toggle-btn:hover,
+        .sidebar-toggle-btn.active {
+            background: #F5F3FF;
+            color: #8B5CF6;
+        }
+
+        .sidebar-toggle-btn i {
+            font-size: 1.25rem;
+        }
+
+        .sidebar-toggle-btn-expand {
+            padding: 8px;
+            border: none;
+            background: #F3F4F6;
+            color: #6B7280;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            margin-top: 8px;
+        }
+
+        .sidebar-toggle-btn-expand:hover {
+            background: #E5E7EB;
+        }
+
+        .right-sidebar {
+            position: fixed;
+            right: calc(-1 * var(--right-sidebar-width, 400px));
+            top: 0;
+            width: var(--right-sidebar-width, 400px);
+            min-width: 280px;
+            max-width: 600px;
+            height: 100vh;
+            background: white;
+            box-shadow: -2px 0 15px rgba(0,0,0,0.1);
+            z-index: 998;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-sidebar.open {
+            right: 0;
+        }
+
+        /* 拖拽调整手柄 */
+        .sidebar-resize-handle {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background: transparent;
+            cursor: col-resize;
+            z-index: 10;
+            transition: background 0.2s ease;
+        }
+
+        .sidebar-resize-handle:hover,
+        .sidebar-resize-handle.dragging {
+            background: #8B5CF6;
+        }
+
+        /* 侧边栏打开时body整体缩进，所有内容避让 */
+        body.right-sidebar-open {
+            padding-right: var(--right-sidebar-width, 400px);
+            transition: padding-right 0.3s ease;
+        }
+
+        .sidebar-panel {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .sidebar-panel.active {
+            display: flex;
+        }
+
+        .panel-header {
+            padding: 20px 16px 12px;
+            border-bottom: 1px solid #E5E7EB;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: #1F2937;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .panel-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .panel-action-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: #F3F4F6;
+            color: #6B7280;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .panel-action-btn:hover {
+            background: #E5E7EB;
+            color: #1F2937;
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .note-editor {
+            width: 100%;
+            height: 100%;
+            min-height: 500px;
+            border: none;
+            font-family: inherit;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            background: transparent;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .note-editor:focus {
+            outline: none;
+        }
+
+        .note-editor:empty:before {
+            content: attr(placeholder);
+            color: var(--color-text-muted-light);
+            pointer-events: none;
+        }
+
+        body.dark .note-editor:empty:before {
+            color: var(--color-text-muted-dark);
+        }
+
+        .note-editor img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 8px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        /* AI聊天样式 */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 400px;
+        }
+
+        .message {
+            display: flex;
+            gap: 10px;
+            max-width: 90%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #8B5CF6;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .message.user .avatar {
+            background: #3B82F6;
+        }
+
+        .message-content {
+            background: #F3F4F6;
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .message.user .message-content {
+            background: #8B5CF6;
+            color: white;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+        }
+
+        .chat-input-container input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1px solid #D1D5DB;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .chat-input-container input:focus {
+            outline: none;
+            border-color: #8B5CF6;
+        }
+
+        .chat-input-container button {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: #8B5CF6;
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease;
+        }
+
+        .chat-input-container button:hover {
+            background: #7C3AED;
+        }
+
+        /* 错题本样式 */
+        .wrong-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .wrong-item {
+            background: #F9FAFB;
+            border-radius: 8px;
+            padding: 12px;
+            border-left: 3px solid #EF4444;
+        }
+
+        .wrong-item h4 {
+            margin: 0 0 8px 0;
+            font-size: 0.9rem;
+            color: #1F2937;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .del-wrong-btn {
+            background: #FEE2E2;
+            color: #DC2626;
+            border: none;
+            border-radius: 4px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+
+        .del-wrong-btn:hover {
+            background: #FECACA;
+        }
+
+        .wrong-item p {
+            margin: 0 0 10px 0;
+            font-size: 0.85rem;
+            color: #374151;
+        }
+
+        .correct-answer {
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+        }
+
+        .empty-wrong {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9CA3AF;
+        }
+
+        .empty-wrong i {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        /* 加载动画 */
+        .loading-dots {
+            display: inline-flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .loading-dots .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: dotPulse 1.4s infinite ease-in-out both;
+        }
+
+        .loading-dots .dot:nth-child(1) { animation-delay: -0.32s; }
+        .loading-dots .dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes dotPulse {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
+
+    <script>
+        // 主题切换功能
+        function toggleTheme() {
+            document.body.classList.toggle('dark');
+            const icon = document.getElementById('theme-icon');
+            if (document.body.classList.contains('dark')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // 加载保存的主题
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark');
+            document.getElementById('theme-icon').classList.replace('fa-moon', 'fa-sun');
+        }
+
+        // 页面导航
+        function goToSection(sectionId) {
+            // 隐藏所有章节
+            document.querySelectorAll('section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // 显示目标章节
+            document.getElementById(sectionId).classList.add('active');
+
+            // 更新侧边栏激活状态
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            document.querySelector(`.nav-link[onclick="goToSection('${sectionId}')"]`).classList.add('active');
+
+            // 滚动到顶部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // 更新进度
+            updateOverallProgress();
+        }
+
+        // 学习状态追踪
+        const state = {
+            answers: { 1: null, 2: null, 3: null, 4: null, 5: null },
+            attempts: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+            hintsUsed: { 1: false, 2: false, 3: false, visualization: false, challenge: false, discussion: false },
+            scores: [null, null, null, null, null],
+            vizCount: 0,
+            startTime: Date.now(),
+            modulesCompleted: { intro: true, visualizer: false, exercises: false, challenge: false, discussion: false }
+        };
+
+        // 卷积可视化相关代码
+        // 图像数据
+        var IMG = [
+            [ 10,  10,  10,  10,  10],
+            [ 10,  10,  10,  10,  10],
+            [200, 200, 200, 200, 200],
+            [200, 200, 200, 200, 200],
+            [200, 200, 200, 200, 200]
+        ];
+
+        // 卷积核定义
+        var KERNS = [
+            {
+                data: [[-1,-1,-1],[0,0,0],[1,1,1]],
+                blur: false,
+                name: '水平边缘检测核',
+                desc: '检测图像中从暗到亮的水平过渡（上暗下亮），激活值越大表示水平边缘越明显'
+            },
+            {
+                data: [[-1,0,1],[-1,0,1],[-1,0,1]],
+                blur: false,
+                name: '垂直边缘检测核',
+                desc: '检测图像中从暗到亮的垂直过渡（左暗右亮），激活值越大表示垂直边缘越明显'
+            },
+            {
+                data: [[1,1,1],[1,1,1],[1,1,1]],
+                blur: true,
+                name: '均值模糊核',
+                desc: '对每个像素周围3×3区域取平均值，产生平滑模糊效果，可应用于去除图像噪声'
+            },
+            {
+                data: [[0,-1,0],[-1,5,-1],[0,-1,0]],
+                blur: false,
+                name: '锐化核',
+                desc: '增强中心像素与周围像素的对比，使图像细节更清晰，边缘更锐利'
+            },
+            {
+                data: [[-1,0,1],[0,0,0],[1,0,-1]],
+                blur: false,
+                name: '对角线检测核',
+                desc: '检测 135° 方向的边缘（左上到右下），响应对称从暗到亮的梯度过渡'
+            }
+        ];
+
+        var kIdx = 0;
+        var step = -1;
+        var outGrid = [[null,null,null],[null,null,null],[null,null,null]];
+        var autoTmr = null;
+        var customData = [[0,0,0],[0,0,0],[0,0,0]];
+
+        // 渲染图像
+        function renderImg(hlr, hlc) {
+            var el = document.getElementById('matImg');
+            el.innerHTML = '';
+            for (var r = 0; r < 5; r++) {
+                for (var c = 0; c < 5; c++) {
+                    var d = document.createElement('div');
+                    d.className = 'cell c-img';
+                    if (hlr >= 0 && r >= hlr && r < hlr + 3 && c >= hlc && c < hlc + 3) {
+                        d.className += ' c-hl';
+                    }
+                    d.textContent = String(IMG[r][c]);
+                    el.appendChild(d);
+                }
+            }
+        }
+
+        // 渲染卷积核
+        function renderKern() {
+            var k = KERNS[kIdx];
+            var el = document.getElementById('matKern');
+            el.innerHTML = '';
+            document.getElementById('kernMatLabel').textContent = '卷积核 (3×3)';
+            document.getElementById('kernName').textContent = k.name;
+            document.getElementById('kernDesc').textContent = k.desc;
+            for (var r = 0; r < 3; r++) {
+                for (var c = 0; c < 3; c++) {
+                    var d = document.createElement('div');
+                    d.className = 'cell c-kern';
+                    d.textContent = k.blur ? '1/9' : String(k.data[r][c]);
+                    el.appendChild(d);
+                }
+            }
+        }
+
+        // 渲染输出
+        function renderOut() {
+            var el = document.getElementById('matOut');
+            el.innerHTML = '';
+            for (var r = 0; r < 3; r++) {
+                for (var c = 0; c < 3; c++) {
+                    var d = document.createElement('div');
+                    var v = outGrid[r][c];
+                    if (v !== null) {
+                        d.className = 'cell c-out done';
+                        d.textContent = String(v);
+                    } else {
+                        d.className = 'cell c-out';
+                        d.textContent = '?';
+                    }
+                    el.appendChild(d);
+                }
+            }
+        }
+
+        // 编辑自定义卷积核单元格
+        function editCell(row, col) {
+            var v = prompt('输入整数：', String(customData[row][col]));
+            if (v !== null) {
+                var n = parseInt(v, 10);
+                if (!isNaN(n)) {
+                    customData[row][col] = n;
+                    renderCustom();
+                }
+            }
+        }
+
+        // 渲染自定义卷积核
+        function renderCustom() {
+            var el = document.getElementById('matCustom');
+            el.innerHTML = '';
+            for (var r = 0; r < 3; r++) {
+                for (var c = 0; c < 3; c++) {
+                    var d = document.createElement('div');
+                    d.className = 'cell c-edit';
+                    d.style.width = '56px';
+                    d.style.height = '46px';
+                    d.style.fontSize = '15px';
+                    d.setAttribute('onclick', 'editCell(' + r + ',' + c + ')');
+                    d.textContent = String(customData[r][c]);
+                    el.appendChild(d);
+                }
+            }
+        }
+
+        // 卷积计算
+        function calcConv(imgR, imgC) {
+            var k = KERNS[kIdx];
+            var sum = 0;
+            var parts = [];
+            for (var r = 0; r < 3; r++) {
+                for (var c = 0; c < 3; c++) {
+                    var iv = IMG[imgR + r][imgC + c];
+                    var kv = k.blur ? (1 / 9) : k.data[r][c];
+                    sum += iv * kv;
+                    var kvStr = k.blur ? '1/9' : String(kv);
+                    parts.push('(' + iv + '×' + kvStr + ')');
+                }
+            }
+            return { sum: Math.round(sum), parts: parts };
+        }
+
+        // 执行一步计算
+        function doStep() {
+            step++;
+            if (step >= 9) { step = 8; return; }
+            var or = Math.floor(step / 3);
+            var oc = step % 3;
+            var res = calcConv(or, oc);
+            outGrid[or][oc] = res.sum;
+            renderImg(or, oc);
+            renderOut();
+            var row1 = res.parts.slice(0, 3).join(' + ');
+            var row2 = res.parts.slice(3, 6).join(' + ');
+            var row3 = res.parts.slice(6, 9).join(' + ');
+            document.getElementById('calcbox').innerHTML =
+                '<span class="rpos">位置 [' + or + ',' + oc + ']</span><br>'
+                + row1 + '<br>'
+                + '+ ' + row2 + '<br>'
+                + '+ ' + row3 + '<br>'
+                + '= <span class="rval">' + res.sum + '</span>';
+            document.getElementById('stepinfo').textContent =
+                '当前：[行' + or + ',列' + oc + ']  第' + (step + 1) + '/9步';
+            state.vizCount = step + 1;
+
+            if (step === 8) {
+                state.modulesCompleted.visualizer = true;
+                updateOverallProgress();
+            }
+        }
+
+        // 重置
+        function doReset() {
+            if (autoTmr) {
+                clearInterval(autoTmr);
+                autoTmr = null;
+            }
+            document.getElementById('autoBtn').textContent = '⏵ 自动播放';
+            step = -1;
+            outGrid = [[null,null,null],[null,null,null],[null,null,null]];
+            renderImg(-1, -1);
+            renderOut();
+            document.getElementById('calcbox').textContent =
+                '点击 "下一步" 开始演示卷积核滑动计算过程 →';
+            document.getElementById('stepinfo').textContent =
+                '当前：未开始 · 共 9 个计算位置';
+            document.getElementById('hintBox').classList.remove('show');
+        }
+
+        // 自动播放
+        function doAuto() {
+            if (autoTmr) {
+                clearInterval(autoTmr);
+                autoTmr = null;
+                document.getElementById('autoBtn').textContent = '⏵ 自动播放';
+                return;
+            }
+            document.getElementById('autoBtn').textContent = '⏸ 暂停';
+            autoTmr = setInterval(function() {
+                doStep();
+                if (step >= 8) {
+                    clearInterval(autoTmr);
+                    autoTmr = null;
+                    document.getElementById('autoBtn').textContent = '⏵ 自动播放';
+                }
+            }, 1100);
+        }
+
+        // 全图扫描
+        function doFullScan() {
+            if (autoTmr) {
+                clearInterval(autoTmr);
+                autoTmr = null;
+            }
+            doReset();
+
+            var scanBtn = document.getElementById('scanBtn');
+            scanBtn.textContent = '⏳ 扫描中…';
+            scanBtn.disabled = true;
+
+            var pos = 0;
+            var DELAY = 900;
+
+            var tmr = setInterval(function() {
+                doStep();
+                pos++;
+                if (pos >= 9) {
+                    clearInterval(tmr);
+                    scanBtn.textContent = '✓ 扫描完成';
+                    scanBtn.disabled = false;
+                    setTimeout(function() {
+                        scanBtn.textContent = '🔍 自动扫描全图';
+                    }, 1500);
+                }
+            }, DELAY);
+        }
+
+        // 切换卷积核
+        function moveKernel(i) {
+            kIdx = i;
+            document.querySelectorAll('#kpills .kpill').forEach(function(p, idx) {
+                p.classList.toggle('on', idx === i);
+            });
+            doReset();
+            renderKern();
+        }
+
+        // 填充示例卷积核
+        function fillDemo() {
+            customData = [[-1, 0, 1], [0, 0, 0], [1, 0, -1]];
+            renderCustom();
+            document.getElementById('chalReason').value =
+                '对角线边缘核：左上和右下权重为负，右上和左下权重为正，用来检测 135° 方向的亮度变化。';
+        }
+
+        // 练习题相关代码
+        // 检查客观题答案
+        function checkAnswer(id, choice, isCorrect) {
+            if (state.answers[id] !== null) return; // 已答过
+
+            state.answers[id] = choice;
+            state.attempts[id]++;
+
+            const btns = document.querySelectorAll(`#options-${id} .option-btn`);
+            btns.forEach(btn => {
+                const marker = btn.querySelector('.option-marker').innerText;
+                if (marker === choice) {
+                    btn.classList.add(isCorrect ? 'correct' : 'wrong');
+                }
+                btn.disabled = true;
+            });
+
+            updateQuizProgress();
+
+            // 如果答错了，自动触发 AI 纠错引导
+            if (!isCorrect) {
+                autoShowErrorAI(id, choice);
+            } else {
+                state.scores[id - 1] = 10; // 客观题答对得满分
+            }
+
+            // 检查是否所有题都完成了
+            checkExercisesCompleted();
+        }
+
+        // 更新练习进度
+        function updateQuizProgress() {
+            const done = Object.values(state.answers).filter(v => v !== null).length;
+            const percent = (done / 5) * 100;
+            document.getElementById('quiz-progress').style.width = percent + '%';
+            document.getElementById('quiz-prog-text').innerText = `已完成 ${done}/5 题`;
+        }
+
+        // 检查练习模块是否完成
+        function checkExercisesCompleted() {
+            const done = Object.values(state.answers).filter(v => v !== null).length;
+            if (done === 5) {
+                state.modulesCompleted.exercises = true;
+                updateOverallProgress();
+            }
+        }
+
+        // 获取 AI 提示
+        async function getAIHint(id) {
+            const target = id === 'visualization' ? document.getElementById('hintTxt') : document.getElementById(`ai-response-${id}`);
+            const container = id === 'visualization' ? document.getElementById('hintBox') : target;
+
+            if (id === 'visualization') {
+                container.classList.add('show');
+            } else {
+                target.style.display = "block";
+            }
+
+            target.innerHTML = `<div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div> AI 正在思考中...`;
+
+            state.hintsUsed[id] = true;
+
+            let prompt = "";
+
+            if (id === 'visualization') {
+                if (step < 0) {
+                    prompt = "请先点击'下一步'开始演示卷积计算过程，我会为你解释每一步的原理。";
+                    target.textContent = prompt;
+                    return;
+                }
+                var or = Math.floor(step / 3);
+                var oc = step % 3;
+                var res = calcConv(or, oc);
+                var kname = KERNS[kIdx].name;
+                prompt = `学生正在观看卷积演示。当前使用的卷积核是 "${kname}"。输出位置 [${or}, ${oc}]，计算得到的值是 ${res.sum}。请用2-3句话解释这个值在图像特征检测中的物理意义，直观说明为什么这个值是大/小/零。`;
+            } else {
+                const context = {
+                    1: "问题是关于图像在计算机中的存储方式。学生想知道灰度图是如何表示的。",
+                    2: "问题是计算 3x3 图像和 3x3 卷积核的加权和。图像是两行1和2，中间0；核是顶部-1底部1。",
+                    3: "问题是关于卷积核提取垂直特征的原理。核的设计是左负右正。"
+                };
+                prompt = `学生正在做第 ${id} 题。背景是：${context[id]}。请给出一个启发式的提示，不要直接给答案。`;
+            }
+
+            const response = await callAI(prompt);
+            target.innerHTML = id === 'visualization' ? parseMarkdown(response) : `<strong>🤖 AI 助教提示：</strong><br>${parseMarkdown(response)}`;
+        }
+
+        // 自动错误引导
+        async function autoShowErrorAI(id, userChoice) {
+            const target = document.getElementById(`ai-response-${id}`);
+            target.style.display = "block";
+            target.innerHTML = `正在分析你的错误原因...`;
+
+            const prompt = `在第 ${id} 题中，学生选了错误选项 ${userChoice}。请委婉地指出为什么这个思路可能不对，并引导其回顾相关概念。`;
+            const response = await callAI(prompt);
+            target.innerHTML = `<strong>🧐 AI 助教纠错：</strong><br>${parseMarkdown(response)}`;
+        }
+
+        // 提交主观题
+        async function submitQ(n) {
+            var ans = document.getElementById('a' + n).value.trim();
+            if (!ans) {
+                alert('请先写下你的答案再提交');
+                return;
+            }
+            document.getElementById('r' + n).classList.add('show');
+            showLoad('t' + n);
+
+            const prompts = {
+                4: '学生被问到：用自己的话解释什么是"卷积核"，它在图像处理中起什么作用？学生回答："{ANS}"。请评估回答，首先给出整体评价（正确/部分正确/需要补充），然后指出优点和不足，最后以"理解度：X/10"的格式给出评分，X是0-10的整数。',
+                5: '学生被问到：为什么卷积层需要多个卷积核而不是一个？如果只用一个会有什么问题？学生回答："{ANS}"。请评估回答，首先给出整体评价（正确/部分正确/需要补充），然后指出优点和不足，最后以"理解度：X/10"的格式给出评分，X是0-10的整数。'
+            };
+
+            var prompt = prompts[n].replace('{ANS}', ans);
+            var result = await callAI(prompt);
+            document.getElementById('t' + n).textContent = result;
+
+            var sc = parseScore(result);
+            if (sc !== null) {
+                var col = scoreColor(sc);
+                document.getElementById('f' + n).style.width = (sc * 10) + '%';
+                document.getElementById('f' + n).style.background = col;
+                document.getElementById('s' + n).textContent = sc + '/10';
+                document.getElementById('s' + n).style.color = col;
+                state.scores[n - 1] = sc;
+                state.answers[n] = ans;
+                updateQuizProgress();
+                checkExercisesCompleted();
+            }
+        }
+
+        // 提交设计挑战
+        async function submitChal() {
+            var reason = document.getElementById('chalReason').value.trim();
+            document.getElementById('rChal').classList.add('show');
+            showLoad('tChal');
+            var kStr = JSON.stringify(customData);
+            var prompt = '学生设计了一个 3x3 卷积核：' + kStr
+                + '。他们的设计思路是："' + (reason || '未提供') + '"。'
+                + '请分析：(1) 这个卷积核在数学上会响应什么样的图像特征，'
+                + '(2) 设计思路是否合理，(3) 给出改进建议或肯定。不需要评分。';
+            document.getElementById('tChal').textContent = await callAI(prompt);
+            state.modulesCompleted.challenge = true;
+            updateOverallProgress();
+        }
+
+        // 深度思考讨论
+        async function discussWithAI() {
+            const input = document.getElementById('thought-input').value;
+            const target = document.getElementById('ai-discuss-response');
+
+            if (!input.trim()) return;
+
+            target.style.display = "block";
+            target.innerHTML = `AI 正在深度分析你的见解...`;
+
+            const prompt = `学生对“为什么需要多层卷积”发表了以下看法：\n"${input}"\n请针对其观点进行深度互动，给出肯定，并引申出“分级特征提取”的知识点。`;
+            const response = await callAI(prompt);
+            target.innerHTML = `<strong>💡 AI 深度交流：</strong><br>${response}`;
+            state.modulesCompleted.discussion = true;
+            updateOverallProgress();
+        }
+
+        // 生成最终学情报告
+        async function generateSummary() {
+            const target = document.getElementById('ai-summary-report');
+            target.style.display = "block";
+            target.innerHTML = `正在聚合你的表现数据并生成专属报告...`;
+
+            const duration = Math.floor((Date.now() - state.startTime) / 1000);
+            const correctCount = Object.values(state.answers).filter(v => v !== null).length;
+            const validScores = state.scores.filter(s => s !== null);
+            const avgScore = validScores.length > 0 ? Math.round(validScores.reduce((a, b) => a + b, 0) / validScores.length) : null;
+
+            const dataStr = JSON.stringify({
+                correctCount: `${correctCount}/5`,
+                averageScore: avgScore ? `${avgScore}/10` : '未完成',
+                visualizationSteps: state.vizCount,
+                timeSpent: `${Math.floor(duration / 60)}分${duration % 60}秒`,
+                hintsUsed: state.hintsUsed
+            });
+
+            const prompt = `请根据该学生的卷积核学习数据生成一份详细的个性化学情总结报告。数据如下：${dataStr}。要求：包含“知识掌握情况”、“学习效率分析”和“后续建议”三个部分。语气要鼓励性，符合教育场景。`;
+            const response = await callAI(prompt);
+            target.innerHTML = `<strong>🏆 AI 学习报告：</strong><br>${response.replace(/\n/g, '<br>')}`;
+        }
+
+        // 更新整体进度
+        function updateOverallProgress() {
+            const completed = Object.values(state.modulesCompleted).filter(v => v).length;
+            const total = Object.keys(state.modulesCompleted).length;
+            const percent = (completed / total) * 100;
+            document.getElementById('overall-progress').style.width = percent + '%';
+            document.getElementById('progress-text').innerText = `${completed}/${total}`;
+
+            // 更新总结面板
+            document.getElementById('sumViz').textContent = state.vizCount > 0 ? (state.vizCount + '步') : '—';
+            const doneCount = Object.values(state.answers).filter(v => v !== null).length;
+            document.getElementById('sumQ').textContent = `${doneCount}/5`;
+            const validScores = state.scores.filter(s => s !== null);
+            if (validScores.length > 0) {
+                const avg = Math.round(validScores.reduce((a, b) => a + b, 0) / validScores.length);
+                document.getElementById('sumAvg').textContent = avg + '/10';
+                document.getElementById('sumAvg').style.color = scoreColor(avg);
+            }
+            const duration = Math.floor((Date.now() - state.startTime) / 1000);
+            document.getElementById('sumTime').textContent = `${Math.floor(duration / 60)}分`;
+        }
+
+        // AI 调用相关函数
+        function showLoad(elId) {
+            document.getElementById(elId).innerHTML =
+                '<div class="dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>'
+                + ' AI 正在评估中……';
+        }
+
+        // 统一的 AI 调用函数
+        async function callQwenAPI(prompt, systemPrompt = "你是一个耐心的AI助教，擅长讲解卷积核和计算机视觉相关知识。", retries = 3, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const resp = await fetch('/api/ask', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            question: prompt,
+                            system_prompt: systemPrompt
+                        }),
+                        signal: AbortSignal.timeout(20000) // 20秒超时
+                    });
+                    const data = await resp.json();
+                    return data.content || data.error || '暂无回复';
+                } catch(e) {
+                    // 如果是最后一次重试，返回错误
+                    if (i === retries - 1) {
+                        if (e.name === 'TimeoutError') {
+                            return `⏱️ 请求超时，请稍后重试。已尝试 ${retries} 次连接。`;
+                        }
+                        return `🔌 连接错误: ${e.message}`;
+                    }
+                    // 等待一段时间后重试
+                    await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+                }
+            }
+        }
+
+        // 兼容原来的callAI函数
+        async function callAI(userMsg, systemPrompt = "你是一个专业、耐心的深度学习助教，专注于卷积神经网络教学。总是用简体中文回答，简洁准确，具有鼓励性。") {
+            return await callQwenAPI(userMsg, systemPrompt);
+        }
+
+        function parseScore(txt) {
+            var m = txt.match(/理解度[:：\s]*(\d+)\s*\/\s*10/);
+            return m ? parseInt(m[1], 10) : null;
+        }
+
+        function scoreColor(n) {
+            if (n >= 8) return '#10B981';
+            if (n >= 5) return '#F59E0B';
+            return '#EF4444';
+        }
+
+        // 监听滚动更新侧边栏（如果需要）
+        window.addEventListener('scroll', () => {
+            // 由于我们使用了章节切换，这里不需要自动更新导航
+        });
+
+        // 临时存储当前错题的AI解释
+        let currentAiExplanation = {};
+
+        // 修改autoShowErrorAI，保存AI解释
+        async function autoShowErrorAI(id, userChoice) {
+            const target = document.getElementById(`ai-response-${id}`);
+            target.style.display = "block";
+            target.innerHTML = `正在分析你的错误原因...`;
+
+            const prompt = `在第 ${id} 题中，学生选了错误选项 ${userChoice}。请委婉地指出为什么这个思路可能不对，并引导其回顾相关概念。`;
+            const response = await callAI(prompt);
+
+            // 保存AI解释和用户选择
+            currentAiExplanation[id] = {
+                userChoice: userChoice,
+                explanation: response
+            };
+
+            target.innerHTML = `<strong>🧐 AI 助教纠错：</strong><br>${response}
+                <div style="margin-top: 10px;">
+                    <button class="ai-hint-btn" style="font-size: 0.75rem; background: #EF4444; color: white; border: none;" onclick="addToWrongBook(${id})">
+                        <i class="fa-solid fa-bookmark"></i> 加入错题本
+                    </button>
+                </div>`;
+        }
+
+        // ========== 右侧侧边栏功能 ==========
+        let currentPanel = 'notes';
+        let notes = localStorage.getItem('convolution_notes') || '';
+        let wrongQuestions = JSON.parse(localStorage.getItem('convolution_wrong_questions')) || [];
+
+        // 题目数据（适配优化版的5道题）
+        const questionData = {
+            1: {
+                title: "练习1：图片的数字底色",
+                question: "在计算机内部，一张28x28像素的灰度图本质上是以什么形式存储的？",
+                options: [
+                    "A. 一系列描述形状的数学矢量方程",
+                    "B. 一个28x28的矩阵，元素值为0-255",
+                    "C. 一个压缩后的二进制视频流"
+                ],
+                correctAnswer: "B. 一个28x28的矩阵，元素值为0-255"
+            },
+            2: {
+                title: "练习2：动手算一算",
+                question: "假设有一块3x3的图像区域I和一个3x3的卷积核K，经过卷积运算（不加偏移项），该像素点的输出值是多少？",
+                options: [
+                    "A. 0",
+                    "B. 1",
+                    "C. 3"
+                ],
+                correctAnswer: "C. 3"
+            },
+            3: {
+                title: "练习3：卷积核的\"超能力\"",
+                question: "如果一个卷积核的权重是：左侧全是负数，中间全是零，右侧全是正数。它最可能在识别图像中的什么特征？",
+                options: [
+                    "A. 水平线条（地平线）",
+                    "B. 垂直边缘（大楼轮廓）",
+                    "C. 整张图片的亮度均值"
+                ],
+                correctAnswer: "B. 垂直边缘（大楼轮廓）"
+            },
+            4: {
+                title: "练习4：卷积核概念",
+                question: "用自己的话解释什么是\"卷积核\"，它在图像处理中起什么作用？",
+                options: ["主观题"],
+                correctAnswer: "卷积核是一个小的权重矩阵，用于在图像上滑动提取特征，不同的卷积核可以提取不同的特征如边缘、纹理等。"
+            },
+            5: {
+                title: "练习5：多卷积核的作用",
+                question: "为什么卷积层需要多个卷积核而不是一个？如果只用一个会有什么问题？",
+                options: ["主观题"],
+                correctAnswer: "多个卷积核可以提取不同类型的特征，只用一个只能提取单一特征，无法全面识别图像内容。"
+            }
+        };
+
+        // 侧边栏拖拽调整功能
+        let isResizing = false;
+        const resizeHandle = document.getElementById('sidebarResizeHandle');
+        const sidebar = document.getElementById('rightSidebar');
+        const mainContent = document.querySelector('main');
+
+        // 设置初始宽度变量
+        document.documentElement.style.setProperty('--right-sidebar-width', '400px');
+
+        resizeHandle.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            resizeHandle.classList.add('dragging');
+            document.body.style.cursor = 'col-resize';
+            // 禁用选择，避免拖拽时选中文本
+            document.body.style.userSelect = 'none';
+
+            // 移除过渡效果，让拖拽更流畅
+            sidebar.style.transition = 'none';
+            mainContent.style.transition = 'none';
+
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+
+            // 计算新宽度：屏幕宽度 - 鼠标X位置
+            const newWidth = window.innerWidth - e.clientX;
+
+            // 限制最小和最大宽度
+            if (newWidth >= 280 && newWidth <= 600) {
+                document.documentElement.style.setProperty('--right-sidebar-width', newWidth + 'px');
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                resizeHandle.classList.remove('dragging');
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+
+                // 恢复过渡效果
+                setTimeout(() => {
+                    sidebar.style.transition = 'right 0.3s ease';
+                    mainContent.style.transition = 'margin-right 0.3s ease';
+                }, 100);
+            }
+        });
+
+        // 初始化加载
+        document.addEventListener('DOMContentLoaded', () => {
+            const noteEditor = document.getElementById('globalNote');
+            noteEditor.innerHTML = notes;
+            renderWrongQuestions();
+
+            // 粘贴截图功能
+            noteEditor.addEventListener('paste', function(e) {
+                e.preventDefault();
+                const items = (e.clipboardData || window.clipboardData).items;
+                for (let item of items) {
+                    if (item.kind === 'file' && item.type.indexOf('image/') !== -1) {
+                        const file = item.getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = function(event) {
+                            const img = document.createElement('img');
+                            img.src = event.target.result;
+
+                            // 插入图片到光标位置
+                            const selection = window.getSelection();
+                            if (selection.rangeCount > 0) {
+                                const range = selection.getRangeAt(0);
+                                range.deleteContents();
+                                range.insertNode(img);
+
+                                // 移动光标到图片后面
+                                range.setStartAfter(img);
+                                range.collapse(true);
+                                selection.removeAllRanges();
+                                selection.addRange(range);
+                            } else {
+                                noteEditor.appendChild(img);
+                            }
+
+                            saveNotes();
+                        };
+                        reader.readAsDataURL(file);
+                    } else if (item.kind === 'string' && item.type === 'text/plain') {
+                        // 处理文本粘贴
+                        item.getAsString(function(text) {
+                            document.execCommand('insertText', false, text);
+                            saveNotes();
+                        });
+                    }
+                }
+            });
+
+            // 输入时自动保存
+            noteEditor.addEventListener('input', saveNotes);
+        });
+
+        // 切换侧边栏显示/隐藏
+        function toggleRightSidebar() {
+            const sidebar = document.getElementById('rightSidebar');
+            const buttons = document.getElementById('rightSidebarButtons');
+            sidebar.classList.toggle('open');
+            buttons.classList.toggle('collapsed');
+
+            // 给body加/缩进位类
+            if (sidebar.classList.contains('open')) {
+                document.body.classList.add('right-sidebar-open');
+            } else {
+                document.body.classList.remove('right-sidebar-open');
+            }
+        }
+
+        // 切换面板
+        function switchPanel(panelName) {
+            // 打开侧边栏
+            const sidebar = document.getElementById('rightSidebar');
+            const buttons = document.getElementById('rightSidebarButtons');
+            sidebar.classList.add('open');
+            buttons.classList.add('collapsed');
+            // 给body加缩进位类
+            document.body.classList.add('right-sidebar-open');
+
+            // 更新按钮状态
+            document.querySelectorAll('.sidebar-toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+
+            // 切换面板显示
+            document.querySelectorAll('.sidebar-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.getElementById(`${panelName}Panel`).classList.add('active');
+            currentPanel = panelName;
+
+            // 如果是AI面板，聚焦输入框
+            if (panelName === 'ai') {
+                setTimeout(() => document.getElementById('chatInput').focus(), 100);
+            }
+        }
+
+        // 保存笔记
+        function saveNotes() {
+            notes = document.getElementById('globalNote').innerHTML;
+            localStorage.setItem('convolution_notes', notes);
+        }
+
+        // 清空笔记
+        function clearNotes() {
+            if (confirm('确定要清空所有笔记吗？此操作不可恢复。')) {
+                notes = '';
+                document.getElementById('globalNote').innerHTML = '';
+                localStorage.removeItem('convolution_notes');
+            }
+        }
+
+        // 导出笔记为Word
+        async function exportNotesWord() {
+            if (!notes || notes.trim() === '') {
+                alert('没有笔记内容可以导出哦~');
+                return;
+            }
+            try {
+                const res = await fetch('/api/export-notes-word', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: notes })
+                });
+                const data = await res.json();
+                if(data.success) window.open(data.url, '_blank');
+                else alert('导出失败：' + (data.error || '未知错误'));
+            } catch(e) {
+                alert('导出错误：' + e.message);
+            }
+        }
+
+        // 导出笔记为PDF
+        async function exportNotesPDF() {
+            if (!notes || notes.trim() === '') {
+                alert('没有笔记内容可以导出哦~');
+                return;
+            }
+            try {
+                const res = await fetch('/api/export-notes-pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: notes })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    const win = window.open(data.url, '_blank');
+                    setTimeout(() => alert('提示：在弹出的页面中，请使用快捷键 Ctrl+P (或 Cmd+P)，并选择"另存为 PDF"即可！'), 500);
+                }
+                else alert('导出失败：' + (data.error || '未知错误'));
+            } catch(e) {
+                alert('导出错误：' + e.message);
+            }
+        }
+
+        // AI聊天功能
+        // 简单Markdown解析函数，适合初中生阅读的轻量格式
+        function parseMarkdown(text) {
+            // **加粗**
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+            // 标题 ## 或 ###
+            text = text.replace(/^### (.*?)$/gm, '<h4 style="margin: 10px 0; color: var(--color-accent);">$1</h4>');
+            text = text.replace(/^## (.*?)$/gm, '<h3 style="margin: 12px 0; color: var(--color-accent);">$1</h3>');
+
+            // 有序列表 1. 2.
+            text = text.replace(/^(\d+)\. (.*?)$/gm, '<div style="margin: 5px 0 5px 20px;"><strong>$1.</strong> $2</div>');
+
+            // 无序列表 - 或 *
+            text = text.replace(/^[-*] (.*?)$/gm, '<div style="margin: 5px 0 5px 20px;">• $1</div>');
+
+            // 换行
+            text = text.replace(/\n/g, '<br>');
+
+            // 代码块 ``
+            text = text.replace(/`(.*?)`/g, '<code style="background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace;">$1</code>');
+
+            return text;
+        }
+
+        function addChatMessage(content, role) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+
+            const icon = role === 'user' ? 'user' : 'robot';
+            // AI消息需要解析Markdown，用户消息不需要
+            const formattedContent = role === 'assistant' ? parseMarkdown(content) : content;
+
+            messageDiv.innerHTML = `
+                <span class="avatar"><i class="fa-solid fa-${icon}"></i></span>
+                <div class="message-content">${formattedContent}</div>
+            `;
+
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            return messageDiv;
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            // 添加用户消息
+            addChatMessage(message, 'user');
+            input.value = '';
+
+            // 显示加载状态
+            const loadingMsg = addChatMessage('<div class="loading-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>', 'assistant');
+
+            try {
+                const systemPrompt = "你是一个专业的卷积核和计算机视觉课程助教，专门回答学生关于卷积核、图像处理、计算机视觉的相关问题。回答要通俗易懂，适合初学者理解，不要使用太专业的术语，如果有必要可以举例子说明。如果问题和卷积核或计算机视觉无关，礼貌地引导用户回到课程相关的话题。";
+                const answer = await callQwenAPI(message, systemPrompt);
+
+                // 移除加载消息
+                loadingMsg.remove();
+                // 添加AI回复
+                addChatMessage(answer, 'assistant');
+            } catch (e) {
+                loadingMsg.remove();
+                addChatMessage('抱歉，网络异常，请稍后重试。', 'assistant');
+            }
+        }
+
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+
+        // ========== 错题本功能 ==========
+        function addToWrongBook(questionId) {
+            // 检查是否已经加入过
+            if (wrongQuestions.some(q => q.id === questionId)) {
+                alert('这道题已经在错题本中了哦~');
+                return;
+            }
+
+            const question = questionData[questionId];
+            const aiData = currentAiExplanation[questionId] || {};
+            wrongQuestions.push({
+                id: questionId,
+                ...question,
+                userChoice: aiData.userChoice || '未知',
+                aiExplanation: aiData.explanation || '暂无解析',
+                addTime: new Date().toLocaleString()
+            });
+
+            localStorage.setItem('convolution_wrong_questions', JSON.stringify(wrongQuestions));
+            renderWrongQuestions();
+            alert('已成功加入错题本！');
+        }
+
+        function renderWrongQuestions() {
+            const wrongList = document.getElementById('wrongList');
+            if (wrongQuestions.length === 0) {
+                wrongList.innerHTML = `
+                    <div class="empty-wrong">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                        <p>你还没有错题哦，继续加油！</p>
+                    </div>
+                `;
+                return;
+            }
+
+            wrongList.innerHTML = wrongQuestions.map(q => `
+                <div class="wrong-item">
+                    <h4>
+                        ${q.title}
+                        <button class="del-wrong-btn" onclick="deleteWrongQuestion(${q.id})" title="删除">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </h4>
+                    <p style="font-weight: 500;">${q.question}</p>
+                    <div style="margin: 10px 0;">
+                        ${q.options.map(opt => `
+                            <div style="font-size: 0.85rem; margin-bottom: 4px; ${opt === q.correctAnswer ? 'color: #065F46; font-weight: 500;' : (opt.startsWith(q.userChoice) ? 'color: #991B1B; text-decoration: line-through;' : '')}">
+                                ${opt} ${opt === q.correctAnswer ? '✅' : (opt.startsWith(q.userChoice) ? '❌' : '')}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="correct-answer" style="margin-bottom: 10px;">
+                        <strong>你的选择：</strong>${q.userChoice}<br>
+                        <strong>正确答案：</strong>${q.correctAnswer}
+                    </div>
+                    <div style="background: #F5F3FF; padding: 10px; border-radius: 6px; font-size: 0.85rem; border-left: 3px solid #8B5CF6; margin-bottom: 8px;">
+                        <strong>🤖 AI解析：</strong><br>${q.aiExplanation}
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--color-text-muted);">
+                        添加时间：${q.addTime}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteWrongQuestion(id) {
+            if (confirm('确定要删除这道错题吗？')) {
+                wrongQuestions = wrongQuestions.filter(q => q.id !== id);
+                localStorage.setItem('convolution_wrong_questions', JSON.stringify(wrongQuestions));
+                renderWrongQuestions();
+            }
+        }
+
+        function clearWrongQuestions() {
+            if (wrongQuestions.length === 0) {
+                alert('错题本已经是空的啦~');
+                return;
+            }
+            if (confirm('确定要清空所有错题吗？此操作不可恢复。')) {
+                wrongQuestions = [];
+                localStorage.removeItem('convolution_wrong_questions');
+                renderWrongQuestions();
+            }
+        }
+
+        async function exportWrongWord() {
+            if (wrongQuestions.length === 0) {
+                alert('没有错题可以导出哦~');
+                return;
+            }
+            try {
+                const res = await fetch('/api/export-wrong-word', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ wrongQuestions: wrongQuestions })
+                });
+                const data = await res.json();
+                if(data.success) window.open(data.url, '_blank');
+                else alert('导出失败');
+            } catch(e) { alert('导出错误'); }
+        }
+
+        async function exportWrongPDF() {
+            if (wrongQuestions.length === 0) {
+                alert('没有错题可以导出哦~');
+                return;
+            }
+            try {
+                const res = await fetch('/api/export-wrong-pdf', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ wrongQuestions: wrongQuestions })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    const win = window.open(data.url, '_blank');
+                    setTimeout(() => alert('提示：在弹出的页面中，请使用快捷键 Ctrl+P (或 Cmd+P)，并选择"另存为 PDF"即可！'), 500);
+                }
+                else alert('导出失败');
+            } catch(e) { alert('导出错误'); }
+        }
+
+        // 初始化
+        renderImg(-1, -1);
+        renderKern();
+        renderOut();
+        renderCustom();
+        updateOverallProgress();
+    </script>
+</body>
+</html>

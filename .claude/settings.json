@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"hookSpecificOutput\": {\"hookEventName\": \"UserPromptSubmit\", \"additionalContext\": \"每次要执行或者启动项目的操作前请注意：如果发现端口被系统进程占用，请强制杀死占用该端口的进程，项目不要频繁更换端口号\"}}'"
+          }
+        ]
+      }
+    ]
+  }
+}
