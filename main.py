@@ -65,13 +65,32 @@ async def index():
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>卷积核微课 - 虚拟实验室</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
         <style>
+            :root {{
+                --bg: #FFF4E6;
+                --c-coral: #C2410C;
+                --c-mint: #B45309;
+                --c-violet: #9A3412;
+                --c-yellow: #D97706;
+                --c-orange: #EA580C;
+                --text-main: #1F2937;
+                --text-muted: #6B7280;
+                --surface: rgba(31,41,55,0.06);
+                --surface-2: rgba(31,41,55,0.10);
+                --border: rgba(31,41,55,0.14);
+                --border-2: rgba(31,41,55,0.20);
+                --shadow: 0 20px 40px rgba(17,24,39,0.14);
+                --shadow-2: 0 10px 30px rgba(17,24,39,0.10);
+            }}
             * {{ box-sizing: border-box; margin: 0; padding: 0; }}
             body {{
-                font-family: 'Inter', -apple-system, 'PingFang SC', sans-serif;
-                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+                font-family: 'Nunito', 'PingFang SC', -apple-system, sans-serif;
+                background-color: var(--bg);
                 min-height: 100vh;
-                color: white;
+                color: var(--text-main);
             }}
             .container {{ max-width: min(1200px, 100%); margin: 0 auto; padding: 20px; transition: padding 0.3s ease; }}
             .header {{
@@ -79,14 +98,15 @@ async def index():
                 padding: 40px 0;
             }}
             .header h1 {{
+                font-family: 'Fredoka', 'PingFang SC', sans-serif;
                 font-size: 2.5rem;
                 margin-bottom: 10px;
-                background: linear-gradient(90deg, #00d9ff, #00ff88);
+                background: linear-gradient(90deg, var(--c-coral), var(--c-yellow));
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
             }}
             .header p {{
-                color: #8892b0;
+                color: var(--text-muted);
                 font-size: 1.1rem;
             }}
             .nav-cards {{
@@ -96,50 +116,53 @@ async def index():
                 margin-top: 40px;
             }}
             .nav-card {{
-                background: rgba(255,255,255,0.05);
-                border: 1px solid rgba(255,255,255,0.1);
+                background: var(--surface);
+                border: 1px solid var(--border);
                 border-radius: 16px;
                 padding: 30px;
                 text-decoration: none;
-                color: white;
+                color: var(--text-main);
                 transition: all 0.3s ease;
-                backdrop-filter: blur(10px);
             }}
             .nav-card:hover {{
                 transform: translateY(-5px);
-                background: rgba(255,255,255,0.1);
-                border-color: rgba(0,217,255,0.3);
-                box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+                background: var(--surface-2);
+                border-color: rgba(217,119,6,0.35);
+                box-shadow: var(--shadow);
             }}
             .nav-card i {{
                 font-size: 2.5rem;
                 margin-bottom: 20px;
             }}
             .nav-card h2 {{
+                font-family: 'Fredoka', 'PingFang SC', sans-serif;
                 font-size: 1.5rem;
                 margin-bottom: 10px;
             }}
             .nav-card p {{
-                color: #8892b0;
+                color: var(--text-muted);
                 line-height: 1.6;
             }}
-            .card-video i {{ color: #00d9ff; }}
-            .card-study i {{ color: #00ff88; }}
-            .card-ai i {{ color: #a855f7; }}
+            .card-video i {{ color: var(--c-yellow); }}
+            .card-study i {{ color: var(--c-coral); }}
+            .card-ai i {{ color: var(--c-mint); }}
             .video-player {{
                 margin-top: 40px;
-                background: rgba(0,0,0,0.3);
+                background: var(--surface);
+                border: 1px solid var(--border);
                 border-radius: 16px;
                 padding: 20px;
             }}
             .video-player h2 {{
+                font-family: 'Fredoka', 'PingFang SC', sans-serif;
+                color: var(--c-mint);
                 margin-bottom: 20px;
                 display: flex;
                 align-items: center;
                 gap: 10px;
             }}
             .video-wrapper {{
-                background: #000;
+                background: #1F2937;
                 border-radius: 12px;
                 overflow: hidden;
                 aspect-ratio: 16/9;
@@ -154,7 +177,7 @@ async def index():
                 align-items: center;
                 justify-content: center;
                 height: 400px;
-                color: #666;
+                color: var(--text-muted);
                 font-size: 1.1rem;
             }}
         </style>
@@ -210,7 +233,7 @@ async def index():
     # 使用纯文本拼接以避免破坏原有 f-string 逻辑
     html += """
                 <div class="video-actions" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
-                    <p style="color: #8892b0; font-size: 0.95rem;"><i class="fas fa-lightbulb"></i> 提示：遇到重点知识，可以随时截取画面并记录笔记</p>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;"><i class="fas fa-lightbulb"></i> 提示：遇到重点知识，可以随时截取画面并记录笔记</p>
                     <button class="btn-screenshot" onclick="takeScreenshot()"><i class="fas fa-camera"></i> 截屏记笔记</button>
                 </div>
             </div>
@@ -243,8 +266,8 @@ async def index():
                 </div>
                 <div class="panel-content" id="screenshotList">
                     <div class="empty-panel">
-                        <i class="fas fa-image" style="font-size: 3rem; color: #444; margin-bottom: 15px;"></i>
-                        <p style="color: #8892b0;">暂无笔记，点击视频下方的<br>"截屏记笔记"捕获画面</p>
+                        <i class="fas fa-image" style="font-size: 3rem; color: #B45309; margin-bottom: 15px;"></i>
+                        <p style="color: #6B7280;">暂无笔记，点击视频下方的<br>"截屏记笔记"捕获画面</p>
                     </div>
                 </div>
                 <div class="export-buttons">
@@ -291,12 +314,13 @@ async def index():
         <style>
             /* 截图功能配套样式 */
             .btn-screenshot {
-                background: linear-gradient(135deg, #00d9ff, #0073ff);
+                background: linear-gradient(135deg, var(--c-mint), var(--c-coral));
                 color: white; border: none; padding: 12px 24px; border-radius: 12px;
-                font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease;
+                font-family: 'Nunito', sans-serif;
+                font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.3s ease;
             }
-            .btn-screenshot:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 217, 255, 0.3); }
-            
+            .btn-screenshot:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(180,83,9,0.30); }
+
             /* 右侧侧边栏按钮组 */
             .right-sidebar-buttons {
                 position: fixed;
@@ -307,12 +331,13 @@ async def index():
                 display: flex;
                 flex-direction: column;
                 gap: 4px;
-                background: rgba(255,255,255,0.1);
+                background: rgba(255,244,230,0.92);
                 border-radius: 12px 0 0 12px;
-                border: 1px solid rgba(255,255,255,0.2);
+                border: 1px solid var(--border-2);
                 border-right: none;
                 backdrop-filter: blur(10px);
                 transition: right 0.3s ease;
+                box-shadow: var(--shadow-2);
             }
             .right-sidebar-buttons.collapsed {
                 right: var(--right-sidebar-width);
@@ -322,7 +347,7 @@ async def index():
                 height: 50px;
                 border: none;
                 background: transparent;
-                color: white;
+                color: var(--text-main);
                 cursor: pointer;
                 display: flex;
                 flex-direction: column;
@@ -339,12 +364,12 @@ async def index():
                 border-radius: 0 0 0 12px;
             }
             .sidebar-toggle-btn:hover {
-                background: rgba(255,255,255,0.2);
-                color: #00d9ff;
+                background: rgba(217,119,6,0.12);
+                color: var(--c-yellow);
             }
             .sidebar-toggle-btn.active {
-                background: rgba(0, 217, 255, 0.2);
-                color: #00d9ff;
+                background: rgba(217,119,6,0.15);
+                color: var(--c-yellow);
             }
             .sidebar-toggle-btn i {
                 font-size: 1.1rem;
@@ -356,10 +381,10 @@ async def index():
             .right-sidebar {
                 position: fixed; right: calc(-1 * var(--right-sidebar-width)); top: 0; width: var(--right-sidebar-width);
                 min-width: 280px; max-width: 600px; height: 100vh;
-                background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(15px);
-                border-left: 1px solid rgba(255,255,255,0.1); box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+                background: rgba(255,244,230,0.97); backdrop-filter: blur(15px);
+                border-left: 1px solid var(--border-2); box-shadow: -10px 0 30px rgba(17,24,39,0.14);
                 transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 1000;
-                display: flex; flex-direction: column;
+                display: flex; flex-direction: column; color: var(--text-main);
             }
 
             /* 拖拽调整手柄 */
@@ -375,7 +400,7 @@ async def index():
             }
             .sidebar-resize-handle:hover,
             .sidebar-resize-handle.dragging {
-                background: rgba(0, 217, 255, 0.5);
+                background: rgba(180,83,9,0.4);
             }
 
             /* 侧边栏打开时body整体缩进 */
@@ -394,55 +419,57 @@ async def index():
                 display: flex;
             }
             .panel-header {
-                padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1);
+                padding: 20px; border-bottom: 1px solid var(--border);
                 display: flex; justify-content: space-between; align-items: center;
             }
-            .panel-header h3 { color: #00d9ff; font-size: 1.2rem; }
-            .panel-close { background: none; border: none; color: #8892b0; font-size: 1.2rem; cursor: pointer; transition: 0.2s; }
-            .panel-close:hover { color: #ff4757; }
-            
+            .panel-header h3 { font-family: 'Fredoka', sans-serif; color: var(--c-mint); font-size: 1.2rem; }
+            .panel-close { background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; transition: 0.2s; }
+            .panel-close:hover { color: var(--c-coral); }
+
             .panel-content { flex: 1; overflow-y: auto; padding: 15px; }
             .screenshot-item {
-                background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+                background: var(--surface); border: 1px solid var(--border);
                 border-radius: 12px; margin-bottom: 20px; overflow: hidden;
             }
-            .screenshot-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; cursor: zoom-in; border-bottom: 1px solid rgba(255,255,255,0.1); }
+            .screenshot-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; cursor: zoom-in; border-bottom: 1px solid var(--border); }
             .screenshot-actions { padding: 10px; display: flex; gap: 8px; }
             .screenshot-actions button {
                 flex: 1; padding: 8px; border: none; border-radius: 6px; color: white;
-                font-size: 0.85rem; cursor: pointer; transition: 0.2s; font-weight: 500;
+                font-size: 0.85rem; cursor: pointer; transition: 0.2s; font-weight: 600;
+                font-family: 'Nunito', sans-serif;
             }
-            .btn-ai { background: linear-gradient(135deg, #a855f7, #7c3aed); }
-            .btn-del { background: rgba(255, 71, 87, 0.2); color: #ff4757; border: 1px solid rgba(255, 71, 87, 0.3); }
-            .btn-ai:hover { box-shadow: 0 4px 12px rgba(168, 85, 247, 0.4); }
-            .btn-del:hover { background: #ff4757; color: white; }
-            
+            .btn-ai { background: linear-gradient(135deg, var(--c-mint), var(--c-violet)); }
+            .btn-del { background: rgba(194,65,12,0.10); color: var(--c-coral); border: 1px solid rgba(194,65,12,0.25); }
+            .btn-ai:hover { box-shadow: 0 4px 12px rgba(180,83,9,0.30); }
+            .btn-del:hover { background: var(--c-coral); color: white; }
+
             .note-area { padding: 0 10px 10px 10px; }
             .note-input {
-                width: 100%; min-height: 60px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);
-                border-radius: 8px; color: white; padding: 10px; font-size: 0.9rem; resize: vertical; outline: none;
+                width: 100%; min-height: 60px; background: var(--surface); border: 1px solid var(--border);
+                border-radius: 8px; color: var(--text-main); padding: 10px; font-size: 0.9rem; resize: vertical; outline: none;
+                font-family: 'Nunito', sans-serif;
             }
-            .note-input:focus { border-color: #00d9ff; }
-            
+            .note-input:focus { border-color: var(--c-yellow); }
+
             .ai-result {
-                margin: 0 10px 10px 10px; padding: 12px; background: rgba(168, 85, 247, 0.1);
-                border-left: 3px solid #a855f7; border-radius: 0 8px 8px 0; font-size: 0.85rem;
-                line-height: 1.5; color: #e2e8f0; max-height: 150px; overflow-y: auto;
+                margin: 0 10px 10px 10px; padding: 12px; background: rgba(180,83,9,0.06);
+                border-left: 3px solid var(--c-mint); border-radius: 0 8px 8px 0; font-size: 0.85rem;
+                line-height: 1.5; color: var(--text-main); max-height: 150px; overflow-y: auto;
             }
-            
-            .export-buttons { padding: 15px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; gap: 10px; }
-            .btn-export { flex: 1; padding: 12px; border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; transition: 0.3s; }
+
+            .export-buttons { padding: 15px; border-top: 1px solid var(--border); display: flex; gap: 10px; }
+            .btn-export { flex: 1; padding: 12px; border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; transition: 0.3s; font-family: 'Nunito', sans-serif; }
             .doc-btn { background: #2b579a; }
             .pdf-btn { background: #c9302c; }
-            .btn-export:hover { filter: brightness(1.2); }
-            
+            .btn-export:hover { filter: brightness(1.15); transform: translateY(-1px); }
+
             .modal {
                 display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center;
+                background: rgba(17,24,39,0.75); z-index: 2000; justify-content: center; align-items: center;
                 backdrop-filter: blur(5px);
             }
             .modal.open { display: flex; }
-            .modal-content img { max-width: 90vw; max-height: 90vh; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+            .modal-content img { max-width: 90vw; max-height: 90vh; border-radius: 12px; box-shadow: var(--shadow); }
 
             /* AI聊天样式 */
             .chat-messages {
@@ -474,12 +501,12 @@ async def index():
                 font-size: 0.8rem;
             }
             .message.user .avatar {
-                background: rgba(0, 217, 255, 0.3);
-                color: white;
+                background: rgba(217,119,6,0.25);
+                color: var(--c-yellow);
             }
             .message.assistant .avatar {
-                background: rgba(168, 85, 247, 0.3);
-                color: white;
+                background: rgba(180,83,9,0.20);
+                color: var(--c-mint);
             }
             .message-content {
                 padding: 10px 14px;
@@ -488,47 +515,50 @@ async def index():
                 line-height: 1.5;
             }
             .message.user .message-content {
-                background: rgba(0, 217, 255, 0.2);
-                color: white;
+                background: rgba(217,119,6,0.15);
+                color: var(--text-main);
                 border-bottom-right-radius: 4px;
-                border: 1px solid rgba(0, 217, 255, 0.3);
+                border: 1px solid rgba(217,119,6,0.30);
             }
             .message.assistant .message-content {
-                background: rgba(168, 85, 247, 0.1);
-                color: #e2e8f0;
+                background: rgba(180,83,9,0.08);
+                color: var(--text-main);
                 border-bottom-left-radius: 4px;
-                border: 1px solid rgba(168, 85, 247, 0.3);
+                border: 1px solid rgba(180,83,9,0.18);
             }
             .chat-input-area {
                 display: flex;
                 gap: 8px;
                 padding: 15px;
-                border-top: 1px solid rgba(255,255,255,0.1);
+                border-top: 1px solid var(--border);
             }
             .chat-input-area input {
                 flex: 1;
                 padding: 10px 14px;
-                border: 1px solid rgba(255,255,255,0.2);
+                border: 1px solid var(--border-2);
                 border-radius: 8px;
-                background: rgba(255,255,255,0.05);
-                color: white;
+                background: var(--surface);
+                color: var(--text-main);
                 font-size: 0.9rem;
                 outline: none;
+                font-family: 'Nunito', sans-serif;
             }
             .chat-input-area input:focus {
-                border-color: #a855f7;
+                border-color: var(--c-yellow);
             }
             .send-btn {
                 padding: 0 16px;
-                background: linear-gradient(135deg, #a855f7, #7c3aed);
+                background: linear-gradient(135deg, var(--c-mint), var(--c-violet));
                 color: white;
                 border: none;
                 border-radius: 8px;
                 cursor: pointer;
                 transition: 0.2s;
+                font-family: 'Nunito', sans-serif;
             }
             .send-btn:hover {
-                filter: brightness(1.2);
+                filter: brightness(1.1);
+                transform: translateY(-1px);
             }
             .send-btn:disabled {
                 opacity: 0.5;
@@ -541,13 +571,15 @@ async def index():
             .loading-dots .dot {
                 width: 6px;
                 height: 6px;
-                background: #a855f7;
+                background: var(--c-mint);
                 border-radius: 50%;
                 animation: bounce 1.4s infinite ease-in-out;
             }
             .loading-dots .dot:nth-child(2) { animation-delay: 0.2s; }
             .loading-dots .dot:nth-child(3) { animation-delay: 0.4s; }
             @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+            .empty-panel { text-align: center; padding: 40px 20px; }
+            .empty-panel p { color: var(--text-muted); }
         </style>
 
         <script>
@@ -668,7 +700,7 @@ async def index():
                 if (notesData.length === 0) list.innerHTML = '';
                 
                 const tempId = 'loading-' + Date.now();
-                list.innerHTML += `<div class="screenshot-item" id="${tempId}" style="text-align:center; padding: 20px;"><i class="fas fa-spinner fa-spin" style="font-size:2rem; color:#00d9ff;"></i><p>正在保存截图...</p></div>`;
+                list.innerHTML += `<div class="screenshot-item" id="${tempId}" style="text-align:center; padding: 20px;"><i class="fas fa-spinner fa-spin" style="font-size:2rem; color:#B45309;"></i><p>正在保存截图...</p></div>`;
                 list.scrollTop = list.scrollHeight;
 
                 try {
@@ -701,7 +733,7 @@ async def index():
             function renderNotes() {
                 const list = document.getElementById('screenshotList');
                 if (notesData.length === 0) {
-                    list.innerHTML = `<div class="empty-panel"><i class="fas fa-image" style="font-size: 3rem; color: #444; margin-bottom: 15px;"></i><p style="color: #8892b0;">暂无笔记，点击视频下方的<br>"截屏记笔记"捕获画面</p></div>`;
+                    list.innerHTML = `<div class="empty-panel"><i class="fas fa-image" style="font-size: 3rem; color: #B45309; margin-bottom: 15px;"></i><p style="color: #6B7280;">暂无笔记，点击视频下方的<br>"截屏记笔记"捕获画面</p></div>`;
                     return;
                 }
                 
@@ -799,8 +831,8 @@ async def index():
                 text = text.replace(/\\*\\*(.*?)\\*\\*/g, '<strong>$1</strong>');
 
                 // 标题 ## 或 ###
-                text = text.replace(/^### (.*?)$/gm, '<h4 style="margin: 10px 0; color: #00d9ff;">$1</h4>');
-                text = text.replace(/^## (.*?)$/gm, '<h3 style="margin: 12px 0; color: #00d9ff;">$1</h3>');
+                text = text.replace(/^### (.*?)$/gm, '<h4 style="margin: 10px 0; color: #B45309;">$1</h4>');
+                text = text.replace(/^## (.*?)$/gm, '<h3 style="margin: 12px 0; color: #D97706;">$1</h3>');
 
                 // 有序列表 1. 2.
                 text = text.replace(/^(\\d+)\\. (.*?)$/gm, '<div style="margin: 5px 0 5px 20px;"><strong>$1.</strong> $2</div>');
@@ -997,16 +1029,33 @@ async def ai_tutor():
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>AI助教 - 卷积核微课</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
         <style>
+            :root {{
+                --bg: #FFF4E6;
+                --c-coral: #C2410C;
+                --c-mint: #B45309;
+                --c-violet: #9A3412;
+                --c-yellow: #D97706;
+                --text-main: #1F2937;
+                --text-muted: #6B7280;
+                --surface: rgba(31,41,55,0.06);
+                --surface-2: rgba(31,41,55,0.10);
+                --border: rgba(31,41,55,0.14);
+                --border-2: rgba(31,41,55,0.20);
+                --shadow: 0 20px 40px rgba(17,24,39,0.14);
+            }}
             * {{ box-sizing: border-box; margin: 0; padding: 0; }}
             html, body {{
-                font-family: 'Inter', -apple-system, 'PingFang SC', sans-serif;
-                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+                font-family: 'Nunito', 'PingFang SC', -apple-system, sans-serif;
+                background-color: var(--bg);
                 height: 100vh;
                 overflow: hidden;
-                color: white;
+                color: var(--text-main);
             }}
             .container {{
                 height: 100vh;
@@ -1021,30 +1070,33 @@ async def ai_tutor():
                 align-items: center;
                 justify-content: center;
                 padding: 12px 0;
-                border-bottom: 1px solid rgba(255,255,255,0.1);
+                border-bottom: 1px solid var(--border);
                 flex-shrink: 0;
                 position: relative;
             }}
             .header-bar h1 {{
+                font-family: 'Fredoka', 'PingFang SC', sans-serif;
                 font-size: 1.3rem;
                 font-weight: 600;
-                color: #a855f7;
+                color: var(--c-mint);
             }}
             .header h1 {{
+                font-family: 'Fredoka', 'PingFang SC', sans-serif;
                 font-size: 2rem;
                 margin-bottom: 10px;
+                color: var(--text-main);
             }}
-            .header h1 i {{ color: #a855f7; margin-right: 10px; }}
+            .header h1 i {{ color: var(--c-mint); margin-right: 10px; }}
             .back-link {{
                 display: inline-flex;
                 align-items: center;
                 gap: 8px;
-                color: #8892b0;
+                color: var(--text-muted);
                 text-decoration: none;
                 margin-bottom: 20px;
                 transition: 0.2s;
             }}
-            .back-link:hover {{ color: #00d9ff; }}
+            .back-link:hover {{ color: var(--c-yellow); }}
             .chat-messages {{
                 flex: 1;
                 overflow-y: auto;
@@ -1054,20 +1106,25 @@ async def ai_tutor():
                 gap: 12px;
             }}
             .message {{
-                max-width: 80%;
-                padding: 16px 20px;
-                border-radius: 16px;
+                max-width: 92%;
+                padding: 12px 16px;
+                border-radius: 12px;
                 line-height: 1.6;
+                font-size: 0.95rem;
             }}
             .message.user {{
                 align-self: flex-end;
-                background: linear-gradient(135deg, #3b82f6, #2563eb);
+                background: rgba(217,119,6,0.15);
                 border-bottom-right-radius: 4px;
+                border: 1px solid rgba(217,119,6,0.30);
+                color: var(--text-main);
             }}
             .message.assistant {{
                 align-self: flex-start;
-                background: rgba(255,255,255,0.1);
+                background: rgba(180,83,9,0.08);
                 border-bottom-left-radius: 4px;
+                border: 1px solid rgba(180,83,9,0.18);
+                color: var(--text-main);
             }}
             .message .avatar {{
                 width: 32px;
@@ -1080,41 +1137,46 @@ async def ai_tutor():
                 vertical-align: middle;
             }}
             .message.user .avatar {{
-                background: rgba(255,255,255,0.2);
+                background: rgba(217,119,6,0.20);
+                color: var(--c-yellow);
             }}
             .message.assistant .avatar {{
-                background: #a855f7;
+                background: rgba(180,83,9,0.18);
+                color: var(--c-mint);
             }}
             .chat-input-area {{
                 padding: 16px 0 0 0;
-                border-top: 1px solid rgba(255,255,255,0.1);
+                border-top: 1px solid var(--border);
                 display: flex;
                 gap: 12px;
             }}
             .chat-input {{
                 flex: 1;
                 padding: 14px 20px;
-                border: 1px solid rgba(255,255,255,0.2);
+                border: 1px solid var(--border-2);
                 border-radius: 12px;
-                background: rgba(255,255,255,0.05);
-                color: white;
+                background: var(--surface);
+                color: var(--text-main);
                 font-size: 1rem;
                 outline: none;
                 transition: 0.2s;
+                font-family: 'Nunito', sans-serif;
             }}
-            .chat-input::placeholder {{ color: #666; }}
-            .chat-input:focus {{ border-color: #a855f7; }}
+            .chat-input::placeholder {{ color: var(--text-muted); }}
+            .chat-input:focus {{ border-color: var(--c-yellow); }}
             .send-btn {{
                 padding: 14px 28px;
-                background: linear-gradient(135deg, #a855f7, #7c3aed);
+                background: linear-gradient(135deg, var(--c-mint), var(--c-violet));
                 border: none;
                 border-radius: 12px;
                 color: white;
                 font-size: 1rem;
+                font-weight: 700;
                 cursor: pointer;
                 transition: 0.2s;
+                font-family: 'Nunito', sans-serif;
             }}
-            .send-btn:hover {{ transform: scale(1.05); }}
+            .send-btn:hover {{ transform: scale(1.03); filter: brightness(1.1); }}
             .send-btn:disabled {{ opacity: 0.5; cursor: not-allowed; }}
             .no-api-key {{
                 text-align: center;
@@ -1122,16 +1184,16 @@ async def ai_tutor():
             }}
             .no-api-key i {{
                 font-size: 4rem;
-                color: #f59e0b;
+                color: var(--c-yellow);
                 margin-bottom: 20px;
             }}
-            .no-api-key h2 {{ margin-bottom: 10px; }}
-            .no-api-key p {{ color: #8892b0; }}
+            .no-api-key h2 {{ margin-bottom: 10px; font-family: 'Fredoka', sans-serif; color: var(--c-mint); }}
+            .no-api-key p {{ color: var(--text-muted); }}
             .loading {{
                 display: flex;
                 align-items: center;
                 gap: 10px;
-                color: #8892b0;
+                color: var(--text-muted);
             }}
             .loading i {{
                 animation: spin 1s linear infinite;
@@ -1143,50 +1205,29 @@ async def ai_tutor():
             .welcome-message {{
                 text-align: center;
                 padding: 40px;
-                color: #8892b0;
+                color: var(--text-muted);
             }}
             .welcome-message i {{
                 font-size: 3rem;
-                color: #a855f7;
+                color: var(--c-mint);
                 margin-bottom: 20px;
             }}
 
-            /* 自定义滚动条样式 - 适配深色主题 */
+            /* 自定义滚动条样式 - 适配暖色主题 */
             ::-webkit-scrollbar {{
                 width: 8px;
                 height: 8px;
             }}
             ::-webkit-scrollbar-track {{
-                background: rgba(255,255,255,0.05);
+                background: rgba(31,41,55,0.04);
                 border-radius: 4px;
             }}
             ::-webkit-scrollbar-thumb {{
-                background: rgba(168, 85, 247, 0.5);
+                background: rgba(180,83,9,0.28);
                 border-radius: 4px;
             }}
             ::-webkit-scrollbar-thumb:hover {{
-                background: rgba(168, 85, 247, 0.7);
-            }}
-
-            /* 优化消息内容排版 */
-            .message {{
-                max-width: 92%;
-                padding: 12px 16px;
-                border-radius: 12px;
-                line-height: 1.6;
-                font-size: 0.95rem;
-            }}
-            .message.assistant {{
-                align-self: flex-start;
-                background: rgba(255,255,255,0.08);
-                border-bottom-left-radius: 4px;
-                border: 1px solid rgba(255,255,255,0.1);
-            }}
-            .message.user {{
-                align-self: flex-end;
-                background: linear-gradient(135deg, #3b82f6, #2563eb);
-                border-bottom-right-radius: 4px;
-                border: 1px solid rgba(59, 130, 246, 0.3);
+                background: rgba(180,83,9,0.45);
             }}
 
             /* 操作按钮区域 */
@@ -1198,18 +1239,19 @@ async def ai_tutor():
             }}
             .action-btn {{
                 padding: 6px 12px;
-                background: rgba(255,255,255,0.05);
-                border: 1px solid rgba(255,255,255,0.1);
+                background: var(--surface);
+                border: 1px solid var(--border);
                 border-radius: 6px;
-                color: #8892b0;
+                color: var(--text-muted);
                 font-size: 0.85rem;
                 cursor: pointer;
                 transition: 0.2s;
+                font-family: 'Nunito', sans-serif;
             }}
             .action-btn:hover {{
-                background: rgba(168, 85, 247, 0.1);
-                color: #a855f7;
-                border-color: rgba(168, 85, 247, 0.3);
+                background: rgba(180,83,9,0.10);
+                color: var(--c-mint);
+                border-color: rgba(180,83,9,0.30);
             }}
 
             /* 响应式适配 */
@@ -1258,7 +1300,7 @@ async def ai_tutor():
     else:
         html += f"""
             <div class="header-bar">
-                <a href="/" class="back-link" style="position: absolute; left: 0; color: #8892b0; text-decoration: none; transition: 0.2s;"><i class="fas fa-arrow-left"></i> 返回首页</a>
+                <a href="/" class="back-link" style="position: absolute; left: 0; color: #6B7280; text-decoration: none; transition: 0.2s;"><i class="fas fa-arrow-left"></i> 返回首页</a>
                 <h1>AI助手</h1>
             </div>
             <div class="chat-messages" id="messages">
