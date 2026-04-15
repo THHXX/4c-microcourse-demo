@@ -584,6 +584,27 @@
         .btn-s:hover {
             background: rgba(180,83,9,0.10);
         }
+        .btn-lab-test {
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: 2px dashed rgba(5,150,105,0.5);
+            background: rgba(5,150,105,0.07);
+            color: #065F46;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            transition: 0.2s;
+        }
+        .btn-lab-test:hover {
+            background: rgba(5,150,105,0.15);
+            border-color: rgba(5,150,105,0.8);
+        }
+        body.dark .btn-lab-test {
+            color: #6EE7B7;
+            border-color: rgba(110,231,183,0.4);
+            background: rgba(5,150,105,0.10);
+        }
 
         body.dark .btn-s:hover {
             background: rgba(217,119,6,0.15);
@@ -1139,6 +1160,7 @@
                 <a href="javascript:void(0)" class="nav-link" onclick="goToSection('challenge')"><i class="fa-solid fa-lightbulb"></i> 设计挑战</a>
                 <a href="javascript:void(0)" class="nav-link" onclick="goToSection('discussion')"><i class="fa-solid fa-comments"></i> 深度思考</a>
                 <a href="javascript:void(0)" class="nav-link" onclick="goToSection('summary')"><i class="fa-solid fa-trophy"></i> 学习总结</a>
+                <a href="javascript:void(0)" class="nav-link" onclick="goToSection('lab')"><i class="fa-solid fa-flask"></i> 图像实验室</a>
             </nav>
 
             <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid var(--color-border-light);">
@@ -1502,6 +1524,7 @@
                         <div class="btns" style="margin-top: 18px;">
                             <button type="button"class="btn btn-p" onclick="submitChal()">&#x1F916; 让 AI 分析我的设计</button>
                             <button type="button"class="btn btn-s" onclick="fillDemo()">&#x1F4A1; 填入对角线示例</button>
+                            <button type="button"class="btn btn-lab-test" onclick="testKernelInLab()">&#x1F9EA; 去实验室看效果</button>
                         </div>
                         <div class="air" id="rChal">
                             <div class="air-hdr">
@@ -1525,10 +1548,63 @@
                 <!-- 深度思考 -->
                 <section id="discussion">
                     <h2><i class="fa-solid fa-comments"></i> 深度思考与讨论</h2>
-                    <div class="card" style="background: rgba(217,119,6,0.05);">
-                        <p style="margin-bottom: 15px;"><strong>开放讨论：</strong> 为什么我们要用多层卷积？第一层卷积核看到的线条，和最后一层卷积核看到的"物体部件"之间有什么联系？</p>
-                        <textarea id="thought-input" style="width: 100%; height: 100px; padding: 12px; border-radius: 8px; border: 1px solid var(--color-border-light); margin-bottom: 12px; font-family: inherit;" placeholder="写下你的想法，AI 助教将与你展开讨论..."></textarea>
-                        <button type="button"class="ai-hint-btn" style="background: var(--color-ai); color: white; border: none; width: 100%; justify-content: center; height: 45px;" onclick="discussWithAI()">
+
+                    <!-- CNN 层级示意图 -->
+                    <div class="card cnn-layers-card">
+                        <div class="cnn-layers-title">🧠 CNN 是怎么一层层"看懂"图片的？</div>
+                        <div class="cnn-layers-diagram">
+                            <div class="cnn-layer-item">
+                                <div class="cnn-layer-icon">📷</div>
+                                <div class="cnn-layer-label">原始图片</div>
+                                <div class="cnn-layer-desc">像素值矩阵</div>
+                            </div>
+                            <div class="cnn-arrow">→</div>
+                            <div class="cnn-layer-item">
+                                <div class="cnn-layer-icon">➖</div>
+                                <div class="cnn-layer-label">第1层</div>
+                                <div class="cnn-layer-desc">边缘 / 线条</div>
+                            </div>
+                            <div class="cnn-arrow">→</div>
+                            <div class="cnn-layer-item">
+                                <div class="cnn-layer-icon">🔷</div>
+                                <div class="cnn-layer-label">第2层</div>
+                                <div class="cnn-layer-desc">形状 / 纹理</div>
+                            </div>
+                            <div class="cnn-arrow">→</div>
+                            <div class="cnn-layer-item">
+                                <div class="cnn-layer-icon">👁️</div>
+                                <div class="cnn-layer-label">第3层</div>
+                                <div class="cnn-layer-desc">眼睛 / 轮子 / 部件</div>
+                            </div>
+                            <div class="cnn-arrow">→</div>
+                            <div class="cnn-layer-item cnn-layer-final">
+                                <div class="cnn-layer-icon">😊</div>
+                                <div class="cnn-layer-label">最终输出</div>
+                                <div class="cnn-layer-desc">猫 / 人 / 汽车</div>
+                            </div>
+                        </div>
+                        <p class="cnn-layers-tip">💡 每一层卷积核都在上一层的基础上提取更复杂的特征——就像搭积木一样！</p>
+                    </div>
+
+                    <!-- 3档难度问题选择 -->
+                    <div class="card">
+                        <div class="discuss-level-title">选一个你感兴趣的问题来思考：</div>
+                        <div class="discuss-level-btns">
+                            <button class="discuss-level-btn active" data-level="easy" onclick="selectDiscussLevel(this, 'easy')">
+                                🟢 简单
+                            </button>
+                            <button class="discuss-level-btn" data-level="medium" onclick="selectDiscussLevel(this, 'medium')">
+                                🟡 中等
+                            </button>
+                            <button class="discuss-level-btn" data-level="hard" onclick="selectDiscussLevel(this, 'hard')">
+                                🔴 挑战
+                            </button>
+                        </div>
+                        <div class="discuss-question-box" id="discussQuestion">
+                            🟢 <strong>简单：</strong>边缘检测核的中间一行全是0，这是为什么？去掉这一行全部改成其他数字会怎样？
+                        </div>
+                        <textarea id="thought-input" style="width: 100%; height: 100px; padding: 12px; border-radius: 8px; border: 1px solid var(--color-border-light); margin: 12px 0; font-family: inherit; font-size:14px; resize:vertical;" placeholder="写下你的想法，AI 助教将与你展开讨论..."></textarea>
+                        <button type="button" class="ai-hint-btn" style="background: var(--color-ai); color: white; border: none; width: 100%; justify-content: center; height: 45px;" onclick="discussWithAI()">
                             <i class="fa-solid fa-paper-plane"></i> 提交并与 AI 交流
                         </button>
                         <div id="ai-discuss-response" class="ai-response"></div>
@@ -1583,6 +1659,73 @@
                     </div>
                 </section>
 
+                <!-- 图像实验室 -->
+                <section id="lab">
+                    <h2><i class="fa-solid fa-flask"></i> 图像实验室</h2>
+                    <p class="section-intro">上传一张图片（或使用内置示例），选择卷积核，亲眼看看卷积核对图像的魔法变换！</p>
+
+                    <div class="lab-layout">
+                        <!-- 左列：控制区 -->
+                        <div class="lab-controls card">
+                            <!-- 图片来源 -->
+                            <div class="lab-block">
+                                <div class="lab-block-title"><i class="fa-solid fa-image"></i> 选择图片</div>
+                                <div class="lab-upload-area" id="labUploadArea" onclick="document.getElementById('labFileInput').click()" ondragover="event.preventDefault()" ondrop="labHandleDrop(event)">
+                                    <i class="fa-solid fa-cloud-arrow-up" style="font-size:28px;color:var(--color-accent);margin-bottom:8px"></i>
+                                    <div>拖拽或点击上传图片</div>
+                                    <div style="font-size:11px;opacity:0.6;margin-top:4px">支持 JPG / PNG / GIF</div>
+                                </div>
+                                <input type="file" id="labFileInput" accept="image/*" style="display:none" onchange="labLoadFile(this)">
+                                <div class="lab-sample-btns">
+                                    <button class="lab-sample-btn" onclick="labDrawSample('gradient')">渐变方块</button>
+                                    <button class="lab-sample-btn" onclick="labDrawSample('checker')">棋盘格</button>
+                                    <button class="lab-sample-btn" onclick="labDrawSample('circle')">同心圆</button>
+                                </div>
+                            </div>
+
+                            <!-- 卷积核选择 -->
+                            <div class="lab-block">
+                                <div class="lab-block-title"><i class="fa-solid fa-table-cells"></i> 选择卷积核</div>
+                                <div class="lab-kern-btns" id="labKernBtns">
+                                    <button class="lab-kern-btn active" onclick="labSelectKern(this,'边缘检测')">边缘检测</button>
+                                    <button class="lab-kern-btn" onclick="labSelectKern(this,'水平边缘')">水平边缘</button>
+                                    <button class="lab-kern-btn" onclick="labSelectKern(this,'垂直边缘')">垂直边缘</button>
+                                    <button class="lab-kern-btn" onclick="labSelectKern(this,'模糊')">模糊</button>
+                                    <button class="lab-kern-btn" onclick="labSelectKern(this,'锐化')">锐化</button>
+                                    <button class="lab-kern-btn" onclick="labSelectKern(this,'自定义')">自定义</button>
+                                </div>
+                                <!-- 自定义矩阵 -->
+                                <div class="lab-custom-grid" id="labCustomGrid" style="display:none">
+                                    <div class="lab-custom-label">编辑 3×3 矩阵（点击格子修改）：</div>
+                                    <div class="lab-custom-matrix" id="labCustomMatrix"></div>
+                                </div>
+                                <!-- 当前核预览 -->
+                                <div class="lab-kern-preview" id="labKernPreview"></div>
+                            </div>
+
+                            <!-- 操作按钮 -->
+                            <div class="lab-block">
+                                <button class="lab-apply-btn" onclick="labApply()"><i class="fa-solid fa-play"></i> 应用卷积核</button>
+                                <button class="lab-save-btn" onclick="labSaveToNote()"><i class="fa-solid fa-note-sticky"></i> 保存到笔记</button>
+                            </div>
+                        </div>
+
+                        <!-- 右列：画布对比区 -->
+                        <div class="lab-canvas-area">
+                            <div class="lab-canvas-box">
+                                <div class="lab-canvas-label">原图（灰度）</div>
+                                <canvas id="labOrigCanvas" width="200" height="200"></canvas>
+                            </div>
+                            <div class="lab-canvas-arrow"><i class="fa-solid fa-arrow-right"></i></div>
+                            <div class="lab-canvas-box">
+                                <div class="lab-canvas-label">卷积输出</div>
+                                <canvas id="labOutCanvas" width="200" height="200"></canvas>
+                                <div class="lab-status" id="labStatus"></div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
             </div>
         </main>
     </div>
@@ -1601,9 +1744,34 @@
             <i class="fa-solid fa-bookmark"></i>
             <span>错题本</span>
         </button>
+        <button class="sidebar-toggle-btn" onclick="switchPanel('flashcard')" title="知识闪卡">
+            <i class="fa-solid fa-layer-group"></i>
+            <span>闪卡</span>
+        </button>
         <button class="sidebar-toggle-btn-expand" onclick="toggleRightSidebar()" title="展开/收起">
             <i class="fa-solid fa-chevron-left"></i>
         </button>
+    </div>
+
+    <!-- 徽章获得弹窗（右上角滑入） -->
+    <div id="badgePopup" class="badge-popup" style="display:none">
+        <div class="badge-popup-icon" id="badgePopupIcon"></div>
+        <div class="badge-popup-info">
+            <div class="badge-popup-name" id="badgePopupName"></div>
+            <div class="badge-popup-desc" id="badgePopupDesc"></div>
+        </div>
+    </div>
+
+    <!-- 徽章展示浮动按钮 -->
+    <button class="badge-float-btn" onclick="toggleBadgeGallery()" title="我的成就">🏆</button>
+
+    <!-- 徽章展示浮层 -->
+    <div id="badgeGallery" class="badge-gallery" style="display:none">
+        <div class="badge-gallery-header">
+            <span><i class="fa-solid fa-trophy"></i> 我的成就徽章</span>
+            <button onclick="toggleBadgeGallery()"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="badge-gallery-grid" id="badgeGalleryGrid"></div>
     </div>
 
     <!-- 右侧侧边栏内容 -->
@@ -1652,6 +1820,7 @@
                 </div>
                 <div class="chat-input-container">
                     <input type="text" id="chatInput" placeholder="输入你的问题..." onkeypress="handleChatKeyPress(event)">
+                    <button class="mic-btn-study" id="micBtnStudy" onclick="startVoiceInputStudy()" title="语音提问"><i class="fa-solid fa-microphone"></i></button>
                     <button onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
             </div>
@@ -1662,7 +1831,10 @@
             <div class="panel-header">
                 <h3><i class="fa-solid fa-bookmark"></i> 错题本</h3>
                 <div class="panel-actions">
-                    <button class="panel-action-btn clear-btn" onclick="clearWrongQuestions()" title="清空错题">
+                    <button class="panel-action-btn retry-start-btn" onclick="startRetryMode()" title="重做错题">
+                        <i class="fa-solid fa-rotate-right"></i>
+                    </button>
+                    <button class="panel-action-btn" onclick="clearWrongQuestions()" title="清空错题">
                         <i class="fa-solid fa-trash"></i>
                     </button>
                     <button class="panel-action-btn word-btn" onclick="exportWrongWord()" title="导出Word">
@@ -1675,6 +1847,87 @@
             </div>
             <div class="panel-content">
                 <div id="wrongList" class="wrong-list"></div>
+            </div>
+        </div>
+
+        <!-- 错题重做全屏遮罩 -->
+        <div id="retryOverlay" class="retry-overlay" style="display:none">
+            <div class="retry-modal">
+                <!-- 进度头 -->
+                <div class="retry-header">
+                    <span class="retry-title"><i class="fa-solid fa-rotate-right"></i> 错题重做</span>
+                    <div class="retry-progress-wrap">
+                        <div class="retry-progress-bg">
+                            <div class="retry-progress-fill" id="retryProgressFill"></div>
+                        </div>
+                        <span id="retryProgressText">0 / 0</span>
+                    </div>
+                    <button class="retry-close-btn" onclick="closeRetryMode()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <!-- 题目区 -->
+                <div class="retry-body" id="retryBody">
+                    <div class="retry-question" id="retryQuestion"></div>
+                    <div class="retry-options" id="retryOptions"></div>
+                    <div class="retry-feedback" id="retryFeedback" style="display:none"></div>
+                    <button class="retry-next-btn" id="retryNextBtn" onclick="retryNextQuestion()" style="display:none">下一题 <i class="fa-solid fa-arrow-right"></i></button>
+                </div>
+                <!-- 结果页 -->
+                <div class="retry-result" id="retryResult" style="display:none">
+                    <div class="retry-result-icon" id="retryResultIcon"></div>
+                    <div class="retry-result-title" id="retryResultTitle"></div>
+                    <div class="retry-result-stats" id="retryResultStats"></div>
+                    <button class="retry-result-close" onclick="closeRetryMode()">完成</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 知识闪卡面板 -->
+        <div id="flashcardPanel" class="sidebar-panel">
+            <div class="panel-header">
+                <h3><i class="fa-solid fa-layer-group"></i> 知识闪卡</h3>
+                <div class="panel-actions">
+                    <button class="panel-action-btn" onclick="resetFlashcards()" title="重置进度">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="panel-content flashcard-panel-content">
+                <!-- 进度条 -->
+                <div class="fc-progress-wrap">
+                    <div class="fc-progress-bar-bg">
+                        <div class="fc-progress-bar-fill" id="fcProgressFill"></div>
+                    </div>
+                    <span class="fc-progress-text" id="fcProgressText">0 / 10 已掌握</span>
+                </div>
+                <!-- 卡片区 -->
+                <div class="fc-card-area">
+                    <div class="fc-card" id="fcCard" onclick="flipCard()">
+                        <div class="fc-card-inner" id="fcCardInner">
+                            <div class="fc-card-front" id="fcFront">
+                                <div class="fc-question" id="fcQuestion"></div>
+                                <div class="fc-hint">点击翻转查看答案</div>
+                            </div>
+                            <div class="fc-card-back" id="fcBack">
+                                <div class="fc-answer" id="fcAnswer"></div>
+                                <div class="fc-actions">
+                                    <button class="fc-btn fc-btn-pass" onclick="markCard(true, event)">✅ 掌握了</button>
+                                    <button class="fc-btn fc-btn-fail" onclick="markCard(false, event)">❌ 再练练</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fc-empty" id="fcEmpty" style="display:none">
+                        <div class="fc-empty-icon">🎉</div>
+                        <div class="fc-empty-msg">太棒了！所有卡片都掌握啦！</div>
+                        <button class="fc-reset-btn" onclick="resetFlashcards()">重新来一遍</button>
+                    </div>
+                </div>
+                <!-- 导航 -->
+                <div class="fc-nav" id="fcNav">
+                    <button class="fc-nav-btn" onclick="prevCard()"><i class="fa-solid fa-chevron-left"></i></button>
+                    <span class="fc-nav-count" id="fcNavCount"></span>
+                    <button class="fc-nav-btn" onclick="nextCard()"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
             </div>
         </div>
     </div>
@@ -2047,6 +2300,924 @@
             background: linear-gradient(135deg, #9A3412, #7C2D12);
         }
 
+        .mic-btn-study {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(31,41,55,0.14) !important;
+            background: rgba(31,41,55,0.06) !important;
+            color: #B45309 !important;
+            border-radius: 50% !important;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        .mic-btn-study:hover { background: rgba(180,83,9,0.12) !important; }
+        .mic-btn-study.listening {
+            background: rgba(194,65,12,0.15) !important;
+            color: #C2410C !important;
+            animation: pulse-mic 1s ease-in-out infinite;
+        }
+        @keyframes pulse-mic { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
+
+        /* 知识闪卡样式 */
+        .flashcard-panel-content {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            padding: 14px;
+            overflow: hidden;
+        }
+        .fc-progress-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .fc-progress-bar-bg {
+            flex: 1;
+            height: 8px;
+            background: rgba(31,41,55,0.10);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .fc-progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #B45309, #D97706);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+        .fc-progress-text {
+            font-size: 12px;
+            color: var(--color-accent);
+            font-weight: 700;
+            white-space: nowrap;
+            font-family: 'Fredoka', sans-serif;
+        }
+        .fc-card-area {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 220px;
+        }
+        .fc-card {
+            width: 100%;
+            height: 220px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .fc-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            transition: transform 0.55s cubic-bezier(0.4,0,0.2,1);
+        }
+        .fc-card-inner.flipped {
+            transform: rotateY(180deg);
+        }
+        .fc-card-front, .fc-card-back {
+            position: absolute;
+            inset: 0;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        .fc-card-front {
+            background: linear-gradient(135deg, #FFFBF5, #FFF4E6);
+            border: 2px solid rgba(180,83,9,0.20);
+            box-shadow: 0 4px 16px rgba(180,83,9,0.10);
+        }
+        .fc-card-back {
+            background: linear-gradient(135deg, #FFF7ED, #FFEDD5);
+            border: 2px solid rgba(194,65,12,0.25);
+            box-shadow: 0 4px 16px rgba(194,65,12,0.12);
+            transform: rotateY(180deg);
+        }
+        body.dark .fc-card-front {
+            background: linear-gradient(135deg, #2A1800, #3A2200);
+            border-color: rgba(217,119,6,0.30);
+        }
+        body.dark .fc-card-back {
+            background: linear-gradient(135deg, #3A2200, #4A2C00);
+            border-color: rgba(194,65,12,0.35);
+        }
+        .fc-question {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--color-accent);
+            text-align: center;
+            line-height: 1.5;
+            font-family: 'Fredoka', sans-serif;
+        }
+        .fc-hint {
+            font-size: 11px;
+            color: var(--color-text-muted-light);
+            opacity: 0.7;
+        }
+        body.dark .fc-hint { color: var(--color-text-muted-dark); }
+        .fc-answer {
+            font-size: 13px;
+            color: var(--color-text-main-light);
+            text-align: center;
+            line-height: 1.6;
+        }
+        body.dark .fc-answer { color: var(--color-text-main-dark); }
+        .fc-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 6px;
+        }
+        .fc-btn {
+            padding: 7px 14px;
+            border: none;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Nunito', sans-serif;
+        }
+        .fc-btn-pass {
+            background: rgba(180,83,9,0.12);
+            color: #B45309;
+        }
+        .fc-btn-pass:hover { background: rgba(180,83,9,0.22); }
+        .fc-btn-fail {
+            background: rgba(194,65,12,0.10);
+            color: #C2410C;
+        }
+        .fc-btn-fail:hover { background: rgba(194,65,12,0.20); }
+        .fc-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+        .fc-nav-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1px solid rgba(180,83,9,0.25);
+            background: rgba(255,244,230,0.8);
+            color: var(--color-accent);
+            cursor: pointer;
+            font-size: 13px;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .fc-nav-btn:hover { background: rgba(180,83,9,0.12); }
+        body.dark .fc-nav-btn { background: rgba(58,34,0,0.8); }
+        .fc-nav-count {
+            font-size: 13px;
+            color: var(--color-text-muted-light);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+        }
+        body.dark .fc-nav-count { color: var(--color-text-muted-dark); }
+        .fc-empty {
+            text-align: center;
+            padding: 30px 20px;
+        }
+        .fc-empty-icon { font-size: 48px; margin-bottom: 12px; }
+        .fc-empty-msg {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--color-accent);
+            font-family: 'Fredoka', sans-serif;
+            margin-bottom: 16px;
+        }
+        .fc-reset-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #B45309, #D97706);
+            color: #fff;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            transition: opacity 0.2s;
+        }
+        .fc-reset-btn:hover { opacity: 0.85; }
+
+        /* 答对庆祝 Toast */
+        .correct-toast {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: linear-gradient(135deg, #B45309, #D97706);
+            color: #fff;
+            padding: 12px 28px;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 700;
+            font-family: 'Fredoka', sans-serif;
+            box-shadow: 0 6px 20px rgba(180,83,9,0.35);
+            z-index: 10001;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s, transform 0.25s;
+        }
+        .correct-toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* CNN 层级图 */
+        .cnn-layers-card { padding: 20px; margin-bottom: 16px; }
+        .cnn-layers-title {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--color-accent);
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .cnn-layers-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .cnn-layer-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: rgba(255,244,230,0.7);
+            border: 1px solid rgba(180,83,9,0.18);
+            border-radius: 12px;
+            padding: 10px 12px;
+            min-width: 72px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: default;
+        }
+        .cnn-layer-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 14px rgba(180,83,9,0.15);
+        }
+        body.dark .cnn-layer-item {
+            background: rgba(58,34,0,0.5);
+            border-color: rgba(217,119,6,0.25);
+        }
+        .cnn-layer-final {
+            border-color: rgba(180,83,9,0.45);
+            background: rgba(180,83,9,0.08);
+        }
+        .cnn-layer-icon { font-size: 24px; }
+        .cnn-layer-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--color-accent);
+            font-family: 'Fredoka', sans-serif;
+        }
+        .cnn-layer-desc {
+            font-size: 10px;
+            color: var(--color-text-muted-light);
+            text-align: center;
+            line-height: 1.3;
+        }
+        body.dark .cnn-layer-desc { color: var(--color-text-muted-dark); }
+        .cnn-arrow {
+            font-size: 18px;
+            color: rgba(180,83,9,0.45);
+            flex-shrink: 0;
+            font-weight: 700;
+        }
+        .cnn-layers-tip {
+            font-size: 13px;
+            color: var(--color-text-muted-light);
+            text-align: center;
+            background: rgba(217,119,6,0.07);
+            border-radius: 8px;
+            padding: 8px 12px;
+        }
+        body.dark .cnn-layers-tip { color: var(--color-text-muted-dark); }
+
+        /* 深度思考档次选择 */
+        .discuss-level-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--color-text-main-light);
+            margin-bottom: 10px;
+        }
+        body.dark .discuss-level-title { color: var(--color-text-main-dark); }
+        .discuss-level-btns {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .discuss-level-btn {
+            padding: 7px 18px;
+            border-radius: 20px;
+            border: 2px solid rgba(180,83,9,0.20);
+            background: transparent;
+            color: var(--color-text-muted-light);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Nunito', sans-serif;
+        }
+        .discuss-level-btn:hover { background: rgba(180,83,9,0.08); }
+        .discuss-level-btn.active {
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+            background: rgba(180,83,9,0.09);
+        }
+        body.dark .discuss-level-btn { color: var(--color-text-muted-dark); }
+        .discuss-question-box {
+            background: rgba(217,119,6,0.06);
+            border-left: 4px solid var(--color-accent);
+            border-radius: 0 8px 8px 0;
+            padding: 12px 14px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--color-text-main-light);
+            min-height: 52px;
+            transition: all 0.3s;
+        }
+        body.dark .discuss-question-box {
+            background: rgba(217,119,6,0.08);
+            color: var(--color-text-main-dark);
+        }
+
+        /* 图像实验室 */
+        .section-intro {
+            color: var(--color-text-muted-light);
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        body.dark .section-intro { color: var(--color-text-muted-dark); }
+        .lab-layout {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .lab-controls {
+            flex: 0 0 260px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .lab-block { display: flex; flex-direction: column; gap: 10px; }
+        .lab-block-title {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--color-accent);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .lab-upload-area {
+            border: 2px dashed rgba(180,83,9,0.35);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--color-text-muted-light);
+            background: rgba(255,244,230,0.5);
+            transition: background 0.2s, border-color 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .lab-upload-area:hover {
+            background: rgba(180,83,9,0.07);
+            border-color: rgba(180,83,9,0.55);
+        }
+        body.dark .lab-upload-area {
+            background: rgba(58,34,0,0.4);
+            color: var(--color-text-muted-dark);
+        }
+        .lab-sample-btns {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .lab-sample-btn {
+            padding: 6px 12px;
+            border-radius: 16px;
+            border: 1px solid rgba(180,83,9,0.25);
+            background: rgba(255,244,230,0.7);
+            color: var(--color-accent);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Nunito', sans-serif;
+        }
+        .lab-sample-btn:hover { background: rgba(180,83,9,0.12); }
+        body.dark .lab-sample-btn { background: rgba(58,34,0,0.5); }
+        .lab-kern-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .lab-kern-btn {
+            padding: 5px 11px;
+            border-radius: 14px;
+            border: 1px solid rgba(180,83,9,0.22);
+            background: transparent;
+            color: var(--color-text-muted-light);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: 'Nunito', sans-serif;
+        }
+        .lab-kern-btn:hover { background: rgba(180,83,9,0.08); color: var(--color-accent); }
+        .lab-kern-btn.active {
+            background: var(--color-accent);
+            color: #fff;
+            border-color: var(--color-accent);
+        }
+        body.dark .lab-kern-btn { color: var(--color-text-muted-dark); }
+        .lab-custom-label {
+            font-size: 11px;
+            color: var(--color-text-muted-light);
+            margin-bottom: 4px;
+        }
+        body.dark .lab-custom-label { color: var(--color-text-muted-dark); }
+        .lab-custom-matrix {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
+            max-width: 140px;
+        }
+        .lab-custom-cell {
+            height: 36px;
+            border-radius: 6px;
+            border: 1px solid rgba(180,83,9,0.25);
+            background: rgba(255,244,230,0.7);
+            text-align: center;
+            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--color-accent);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.15s;
+        }
+        .lab-custom-cell:hover { background: rgba(180,83,9,0.12); }
+        body.dark .lab-custom-cell { background: rgba(58,34,0,0.5); }
+        .lab-kern-preview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3px;
+            max-width: 130px;
+        }
+        .lab-kern-preview-cell {
+            height: 30px;
+            border-radius: 4px;
+            background: rgba(180,83,9,0.10);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+        .lab-apply-btn {
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #B45309, #D97706);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            width: 100%;
+            transition: opacity 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .lab-apply-btn:hover { opacity: 0.85; }
+        .lab-save-btn {
+            padding: 8px;
+            border: 1px solid rgba(180,83,9,0.28);
+            border-radius: 10px;
+            background: transparent;
+            color: var(--color-accent);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            width: 100%;
+            transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .lab-save-btn:hover { background: rgba(180,83,9,0.08); }
+        .lab-canvas-area {
+            flex: 1;
+            min-width: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .lab-canvas-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .lab-canvas-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--color-accent);
+            font-family: 'Fredoka', sans-serif;
+        }
+        .lab-canvas-box canvas {
+            border-radius: 12px;
+            border: 2px solid rgba(180,83,9,0.20);
+            background: #f5f5f5;
+            max-width: 200px;
+            max-height: 200px;
+            image-rendering: pixelated;
+        }
+        .lab-canvas-arrow {
+            font-size: 24px;
+            color: rgba(180,83,9,0.45);
+            flex-shrink: 0;
+        }
+        .lab-status {
+            font-size: 12px;
+            color: var(--color-text-muted-light);
+            min-height: 16px;
+            text-align: center;
+        }
+        body.dark .lab-status { color: var(--color-text-muted-dark); }
+
+        /* 徽章弹窗 */
+        @keyframes badge-slide-in {
+            from { transform: translateX(120%); opacity: 0; }
+            to   { transform: translateX(0);    opacity: 1; }
+        }
+        @keyframes badge-slide-out {
+            from { transform: translateX(0);    opacity: 1; }
+            to   { transform: translateX(120%); opacity: 0; }
+        }
+        .badge-popup {
+            position: fixed;
+            top: 72px;
+            right: 20px;
+            z-index: 10000;
+            background: linear-gradient(135deg, #FFFBF5, #FFF4E6);
+            border: 2px solid rgba(180,83,9,0.30);
+            border-radius: 16px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 8px 32px rgba(180,83,9,0.20);
+            max-width: 280px;
+            animation: badge-slide-in 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards;
+        }
+        .badge-popup.hiding {
+            animation: badge-slide-out 0.3s ease-in forwards;
+        }
+        body.dark .badge-popup {
+            background: linear-gradient(135deg, #2A1800, #3A2200);
+            border-color: rgba(217,119,6,0.40);
+        }
+        .badge-popup-icon { font-size: 36px; flex-shrink: 0; }
+        .badge-popup-name {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+        .badge-popup-desc {
+            font-size: 12px;
+            color: var(--color-text-muted-light);
+            margin-top: 2px;
+        }
+        body.dark .badge-popup-desc { color: var(--color-text-muted-dark); }
+
+        /* 徽章浮动按钮 */
+        .badge-float-btn {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            z-index: 900;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid rgba(180,83,9,0.25);
+            background: rgba(255,244,230,0.95);
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(180,83,9,0.18);
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .badge-float-btn:hover {
+            transform: scale(1.12);
+            box-shadow: 0 6px 24px rgba(180,83,9,0.28);
+        }
+        body.dark .badge-float-btn {
+            background: rgba(42,24,0,0.95);
+            border-color: rgba(217,119,6,0.35);
+        }
+
+        /* 徽章展示浮层 */
+        .badge-gallery {
+            position: fixed;
+            bottom: 80px;
+            left: 24px;
+            z-index: 901;
+            background: var(--color-surface-light);
+            border: 2px solid rgba(180,83,9,0.20);
+            border-radius: 16px;
+            width: 280px;
+            box-shadow: 0 8px 32px rgba(180,83,9,0.18);
+            overflow: hidden;
+        }
+        body.dark .badge-gallery {
+            background: #2A1800;
+            border-color: rgba(217,119,6,0.30);
+        }
+        .badge-gallery-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(180,83,9,0.12);
+            font-family: 'Fredoka', sans-serif;
+            font-weight: 700;
+            font-size: 15px;
+            color: var(--color-accent);
+        }
+        .badge-gallery-header button {
+            width: 26px; height: 26px;
+            border-radius: 50%;
+            border: 1px solid rgba(180,83,9,0.20);
+            background: rgba(180,83,9,0.08);
+            color: var(--color-accent);
+            cursor: pointer;
+            font-size: 12px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .badge-gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 14px;
+        }
+        .badge-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: default;
+        }
+        .badge-cell-icon {
+            font-size: 26px;
+            width: 44px; height: 44px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(180,83,9,0.10);
+            border: 2px solid rgba(180,83,9,0.18);
+            transition: 0.2s;
+        }
+        .badge-cell.locked .badge-cell-icon {
+            filter: grayscale(1);
+            opacity: 0.35;
+            background: rgba(31,41,55,0.06);
+            border-color: rgba(31,41,55,0.12);
+        }
+        .badge-cell-name {
+            font-size: 10px;
+            color: var(--color-text-muted-light);
+            text-align: center;
+            line-height: 1.2;
+            font-weight: 600;
+        }
+        body.dark .badge-cell-name { color: var(--color-text-muted-dark); }
+        .badge-cell.unlocked .badge-cell-name { color: var(--color-accent); }
+
+        /* 错题重做遮罩 */
+        .retry-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(26,15,0,0.72);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .retry-modal {
+            background: var(--color-surface-light);
+            border-radius: 20px;
+            width: 92%;
+            max-width: 560px;
+            max-height: 88vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(180,83,9,0.25);
+            border: 2px solid rgba(180,83,9,0.18);
+        }
+        body.dark .retry-modal {
+            background: #2A1800;
+            border-color: rgba(217,119,6,0.30);
+        }
+        .retry-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(180,83,9,0.14);
+            flex-shrink: 0;
+        }
+        .retry-title {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+        .retry-progress-wrap {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--color-text-muted-light);
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+        }
+        body.dark .retry-progress-wrap { color: var(--color-text-muted-dark); }
+        .retry-progress-bg {
+            flex: 1;
+            height: 6px;
+            background: rgba(31,41,55,0.10);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .retry-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #B45309, #D97706);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+        .retry-close-btn {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            border: 1px solid rgba(180,83,9,0.20);
+            background: rgba(180,83,9,0.08);
+            color: var(--color-accent);
+            cursor: pointer;
+            font-size: 14px;
+            display: flex; align-items: center; justify-content: center;
+            transition: 0.2s; flex-shrink: 0;
+        }
+        .retry-close-btn:hover { background: rgba(194,65,12,0.18); }
+        .retry-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .retry-question {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--color-text-main-light);
+            line-height: 1.5;
+            font-family: 'Fredoka', sans-serif;
+        }
+        body.dark .retry-question { color: var(--color-text-main-dark); }
+        .retry-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .retry-option-btn {
+            padding: 12px 16px;
+            border: 2px solid rgba(180,83,9,0.18);
+            border-radius: 12px;
+            background: rgba(255,244,230,0.6);
+            color: var(--color-text-main-light);
+            font-size: 14px;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 600;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        body.dark .retry-option-btn {
+            background: rgba(58,34,0,0.5);
+            color: var(--color-text-main-dark);
+            border-color: rgba(217,119,6,0.20);
+        }
+        .retry-option-btn:hover:not(:disabled) {
+            background: rgba(180,83,9,0.10);
+            border-color: rgba(180,83,9,0.40);
+        }
+        .retry-option-btn:disabled { cursor: default; }
+        .retry-option-btn.correct {
+            background: rgba(5,150,105,0.12);
+            border-color: #059669;
+            color: #065F46;
+        }
+        .retry-option-btn.wrong {
+            background: rgba(194,65,12,0.12);
+            border-color: #C2410C;
+            color: #9A3412;
+            text-decoration: line-through;
+        }
+        .retry-feedback {
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .retry-feedback.correct-fb {
+            background: rgba(5,150,105,0.10);
+            border-left: 3px solid #059669;
+            color: #065F46;
+        }
+        .retry-feedback.wrong-fb {
+            background: rgba(180,83,9,0.08);
+            border-left: 3px solid #B45309;
+            color: #92400E;
+        }
+        body.dark .retry-feedback.correct-fb { color: #6EE7B7; }
+        body.dark .retry-feedback.wrong-fb { color: #FCD34D; }
+        .retry-next-btn {
+            align-self: flex-end;
+            padding: 10px 22px;
+            border: none;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #B45309, #D97706);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            transition: opacity 0.2s;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .retry-next-btn:hover { opacity: 0.85; }
+        .retry-result {
+            padding: 40px 24px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+        .retry-result-icon { font-size: 56px; }
+        .retry-result-title {
+            font-family: 'Fredoka', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--color-accent);
+        }
+        .retry-result-stats {
+            font-size: 14px;
+            color: var(--color-text-muted-light);
+            line-height: 1.8;
+        }
+        body.dark .retry-result-stats { color: var(--color-text-muted-dark); }
+        .retry-result-close {
+            padding: 10px 32px;
+            border: none;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #B45309, #D97706);
+            color: #fff;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: 'Nunito', sans-serif;
+            margin-top: 8px;
+            transition: opacity 0.2s;
+        }
+        .retry-result-close:hover { opacity: 0.85; }
+        .retry-start-btn {
+            color: var(--color-accent) !important;
+        }
+
         /* 错题本样式 */
         .wrong-list {
             display: flex;
@@ -2294,6 +3465,22 @@
         var customData = [[0,0,0],[0,0,0],[0,0,0]];
 
         // 渲染图像
+        // 根据像素值（0-255）生成暖色背景
+        function pixelBg(v) {
+            var t = Math.max(0, Math.min(1, v / 255));
+            var l = Math.round(12 + t * 82); // 12%~94% 亮度
+            return 'hsl(35, 22%, ' + l + '%)';
+        }
+        // 根据输出值（可为负）生成颜色（正=暖橙，负=冷蓝，0=白）
+        function outBg(v) {
+            if (v === null) return '';
+            if (v === 0) return 'hsl(0,0%,97%)';
+            var abs = Math.abs(v), cap = 600;
+            var t = Math.min(1, abs / cap);
+            if (v > 0) return 'hsl(28,' + Math.round(30 + t * 65) + '%,' + Math.round(95 - t * 52) + '%)';
+            return 'hsl(210,' + Math.round(30 + t * 55) + '%,' + Math.round(95 - t * 48) + '%)';
+        }
+
         function renderImg(hlr, hlc) {
             var el = document.getElementById('matImg');
             el.innerHTML = '';
@@ -2304,6 +3491,9 @@
                     if (hlr >= 0 && r >= hlr && r < hlr + 3 && c >= hlc && c < hlc + 3) {
                         d.className += ' c-hl';
                     }
+                    d.style.background = pixelBg(IMG[r][c]);
+                    d.style.color = IMG[r][c] > 140 ? '#5c3d11' : '#fff8f0';
+                    d.style.fontWeight = '700';
                     d.textContent = String(IMG[r][c]);
                     el.appendChild(d);
                 }
@@ -2338,6 +3528,9 @@
                     var v = outGrid[r][c];
                     if (v !== null) {
                         d.className = 'cell c-out done';
+                        d.style.background = outBg(v);
+                        d.style.color = Math.abs(v) > 200 ? (v > 0 ? '#7c2d12' : '#1e3a5f') : '#374151';
+                        d.style.fontWeight = '700';
                         d.textContent = String(v);
                     } else {
                         d.className = 'cell c-out';
@@ -2356,6 +3549,7 @@
                 if (!isNaN(n)) {
                     customData[row][col] = n;
                     renderCustom();
+                    if (typeof tryAwardBadge === 'function') tryAwardBadge('first_design');
                 }
             }
         }
@@ -2508,6 +3702,77 @@
                 '对角线边缘核：左上和右下权重为负，右上和左下权重为正，用来检测 135° 方向的亮度变化。';
         }
 
+        // 将设计挑战的矩阵同步到图像实验室并跳转
+        function testKernelInLab() {
+            // 同步 customData → labCustomData
+            labCustomData = customData.map(row => row.slice());
+            labCurrentKern = '自定义';
+            // 激活自定义按钮
+            document.querySelectorAll('.lab-kern-btn').forEach(b => b.classList.remove('active'));
+            const customBtn = [...document.querySelectorAll('.lab-kern-btn')]
+                .find(b => b.textContent.includes('自定义'));
+            if (customBtn) customBtn.classList.add('active');
+            // 更新UI
+            labInitCustomMatrix();
+            labRenderKernPreview();
+            document.getElementById('labCustomGrid').style.display = 'block';
+            // 跳转到实验室
+            goToSection('lab');
+            // 短暂高亮提示
+            setTimeout(() => {
+                const labSection = document.getElementById('lab');
+                labSection.style.outline = '3px solid rgba(5,150,105,0.6)';
+                labSection.style.borderRadius = '12px';
+                setTimeout(() => { labSection.style.outline = ''; }, 1800);
+            }, 200);
+        }
+
+        // ========== 庆祝动画 ==========
+        const CONFETTI_COLORS = ['#B45309','#D97706','#F59E0B','#C2410C','#EA580C','#10B981','#3B82F6'];
+
+        function spawnConfetti(btn) {
+            const rect = btn.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            for (let i = 0; i < 18; i++) {
+                const el = document.createElement('div');
+                el.className = 'confetti-dot';
+                el.style.cssText = `
+                    position:fixed; z-index:99999; pointer-events:none;
+                    left:${cx}px; top:${cy}px;
+                    width:${6 + Math.random()*6}px; height:${6 + Math.random()*6}px;
+                    border-radius:${Math.random() > 0.5 ? '50%' : '2px'};
+                    background:${CONFETTI_COLORS[Math.floor(Math.random()*CONFETTI_COLORS.length)]};
+                `;
+                document.body.appendChild(el);
+                const angle = (i / 18) * 360 + Math.random() * 20;
+                const dist = 50 + Math.random() * 80;
+                const dx = Math.cos(angle * Math.PI / 180) * dist;
+                const dy = Math.sin(angle * Math.PI / 180) * dist - 30;
+                el.animate([
+                    { transform: 'translate(0,0) scale(1)', opacity: 1 },
+                    { transform: `translate(${dx}px,${dy}px) scale(0)`, opacity: 0 }
+                ], { duration: 550 + Math.random() * 250, easing: 'cubic-bezier(0,0,0.2,1)', fill: 'forwards' })
+                .onfinish = () => el.remove();
+            }
+        }
+
+        let toastTimer = null;
+        function showCorrectToast() {
+            let t = document.getElementById('correctToast');
+            if (!t) {
+                t = document.createElement('div');
+                t.id = 'correctToast';
+                t.className = 'correct-toast';
+                document.body.appendChild(t);
+            }
+            t.textContent = '✨ 答对啦！继续加油！';
+            t.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+        }
+        // ========== 庆祝动画结束 ==========
+
         // 练习题相关代码
         // 检查客观题答案
         function checkAnswer(id, choice, isCorrect) {
@@ -2532,6 +3797,10 @@
                 autoShowErrorAI(id, choice);
             } else {
                 state.scores[id - 1] = 10; // 客观题答对得满分
+                // 庆祝动画
+                const correctBtn = [...btns].find(b => b.querySelector('.option-marker').innerText === choice);
+                if (correctBtn) spawnConfetti(correctBtn);
+                showCorrectToast();
             }
 
             // 检查是否所有题都完成了
@@ -2552,6 +3821,16 @@
             if (done >= 3) { // 只要完成3道题及以上就算完成
                 state.modulesCompleted.exercises = true;
                 updateOverallProgress();
+            }
+            // 徽章：完成所有5题
+            if (done >= 5 && typeof tryAwardBadge === 'function') {
+                tryAwardBadge('all_exercises');
+                // 计算正确率
+                const correct = Object.values(state.answers).filter((v, i) => {
+                    const id = i + 1;
+                    return state.scores[i] !== null && state.scores[i] > 0;
+                }).length;
+                if (correct / 5 >= 0.8) tryAwardBadge('high_score');
             }
         }
 
@@ -2656,6 +3935,26 @@
         }
 
         // 深度思考讨论
+        // 深度思考档次问题数据
+        const DISCUSS_QUESTIONS = {
+            easy:   '为什么边缘检测核的中间一行全是0，这是为什么？去掉这一行全部改成其他数字会怎样？',
+            medium: '一张图片如果同时通过10个不同的卷积核处理，会产生几张特征图？这些特征图分别代表什么？',
+            hard:   '为什么深度学习要用多层叠加的卷积，而不是直接设计一个超大的卷积核一次性提取所有特征？'
+        };
+        let currentDiscussLevel = 'easy';
+
+        function selectDiscussLevel(btn, level) {
+            document.querySelectorAll('.discuss-level-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentDiscussLevel = level;
+            const q = DISCUSS_QUESTIONS[level];
+            const emoji = level === 'easy' ? '🟢 <strong>简单：</strong>' : level === 'medium' ? '🟡 <strong>中等：</strong>' : '🔴 <strong>挑战：</strong>';
+            document.getElementById('discussQuestion').innerHTML = emoji + q;
+            // 清空之前的回答和AI回复
+            document.getElementById('thought-input').value = '';
+            document.getElementById('ai-discuss-response').style.display = 'none';
+        }
+
         async function discussWithAI() {
             const input = document.getElementById('thought-input').value;
             const target = document.getElementById('ai-discuss-response');
@@ -2665,7 +3964,8 @@
             target.style.display = "block";
             target.innerHTML = `AI 正在深度分析你的见解...`;
 
-            const prompt = `学生对“为什么需要多层卷积”发表了以下看法：\n"${input}"\n请针对其观点进行深度互动，给出肯定，并引申出“分级特征提取”的知识点。`;
+            const question = DISCUSS_QUESTIONS[currentDiscussLevel];
+            const prompt = `学生正在思考以下问题（难度：${currentDiscussLevel}）：\n"${question}"\n\n学生的回答是：\n"${input}"\n\n请针对学生的具体观点给出肯定和引导，用初中生能理解的语言，适当引入"分级特征提取"的概念。语气友好鼓励，不超过200字。`;
             const response = await callAI(prompt);
             target.innerHTML = `<strong>💡 AI 深度交流：</strong><br>${parseMarkdown(response)}`;
             state.modulesCompleted.discussion = true;
@@ -2691,7 +3991,7 @@
                 hintsUsed: state.hintsUsed
             });
 
-            const prompt = `请根据该学生的卷积核学习数据生成一份详细的个性化学情总结报告。数据如下：${dataStr}。要求：包含“知识掌握情况”、“学习效率分析”和“后续建议”三个部分。语气要鼓励性，符合教育场景。`;
+            const prompt = `请根据该学生的卷积核学习数据生成一份详细的个性化学情总结报告。数据如下：${dataStr}。要求：包含"知识掌握情况"、"学习效率分析"和"后续建议"三个部分。语气要鼓励性，符合教育场景。`;
             const response = await callAI(prompt);
             target.innerHTML = `<strong>🏆 AI 学习报告：</strong><br>${parseMarkdown(response)}`;
         }
@@ -3007,6 +4307,10 @@
             if (panelName === 'ai') {
                 setTimeout(() => document.getElementById('chatInput').focus(), 100);
             }
+            // 如果是闪卡面板，初始化
+            if (panelName === 'flashcard') {
+                initFlashcards();
+            }
         }
 
         // 保存笔记
@@ -3138,10 +4442,613 @@
         }
 
         function handleChatKeyPress(event) {
-            if (event.key === 'Enter') {
-                sendChatMessage();
+            if (event.key === 'Enter') sendChatMessage();
+        }
+
+        // ========== 语音提问 ==========
+        function startVoiceInputStudy() {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const inputEl = document.getElementById('chatInput');
+            const btn = document.getElementById('micBtnStudy');
+            if (!SR) { alert('请使用 Chrome 或 Edge 浏览器以使用语音功能'); return; }
+            const rec = new SR();
+            rec.lang = 'zh-CN';
+            rec.interimResults = false;
+            btn.classList.add('listening');
+            btn.innerHTML = '<i class="fa-solid fa-circle" style="color:#C2410C"></i>';
+            btn.title = '聆听中...';
+            rec.onresult = (e) => {
+                inputEl.value = e.results[0][0].transcript;
+                inputEl.focus();
+            };
+            rec.onerror = (e) => { if (e.error !== 'no-speech') alert('识别失败: ' + e.error); };
+            rec.onend = () => {
+                btn.classList.remove('listening');
+                btn.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+                btn.title = '语音提问';
+            };
+            rec.start();
+        }
+
+        // ========== 知识闪卡系统 ==========
+        const FLASHCARDS = [
+            { q: '卷积核是什么？', a: '一个小矩阵（如3×3），在图像上滑动做加权求和，用来提取图像特征。' },
+            { q: '为什么卷积核通常是奇数尺寸（3×3、5×5）？', a: '方便确定中心点，计算时对称，不会产生偏移。' },
+            { q: '边缘检测核的核心思路是什么？', a: '中心像素权重为正，周围为负（或反之），突出像素值变化大的位置。' },
+            { q: '模糊核的权重有什么特点？', a: '所有权重相等且为正，权重之和=1，对周围像素取平均，消除细节。' },
+            { q: '锐化核和模糊核有什么区别？', a: '锐化核中心权重很大（如5），周围为负值，加强中心像素与周围的差异。' },
+            { q: '特征图（Feature Map）是什么？', a: '卷积核扫描完整图像后得到的输出矩阵，反映该核在各位置的响应强度。' },
+            { q: '为什么神经网络中需要多个卷积核？', a: '每个核提取不同特征（水平/垂直/纹理等），多个核组合才能描述复杂图像。' },
+            { q: '步长（Stride）是什么意思？', a: '卷积核每次移动的像素数。步长=1时输出最大，步长=2时输出尺寸约缩小一半。' },
+            { q: '填充（Padding）的作用是什么？', a: '在图像边缘补0，让卷积核可处理边缘像素，防止输出图像尺寸缩小太多。' },
+            { q: '浅层vs深层卷积核提取的特征有何不同？', a: '浅层：检测边缘、颜色、纹理等简单特征；深层：组合出眼睛、轮子等复杂部件。' },
+        ];
+
+        let fcQueue = [];      // 当前待学习队列（索引数组）
+        let fcMastered = [];   // 已掌握的索引
+        let fcCurrent = 0;     // 当前在 fcQueue 中的位置
+        let fcFlipped = false; // 是否已翻转
+
+        function initFlashcards() {
+            const saved = localStorage.getItem('conv_fc_mastered');
+            fcMastered = saved ? JSON.parse(saved) : [];
+            fcQueue = FLASHCARDS.map((_, i) => i).filter(i => !fcMastered.includes(i));
+            fcCurrent = 0;
+            fcFlipped = false;
+            renderFlashcard();
+        }
+
+        function renderFlashcard() {
+            const card = document.getElementById('fcCard');
+            const empty = document.getElementById('fcEmpty');
+            const nav = document.getElementById('fcNav');
+            const inner = document.getElementById('fcCardInner');
+
+            const total = FLASHCARDS.length;
+            const masteredCount = fcMastered.length;
+            const pct = (masteredCount / total) * 100;
+            document.getElementById('fcProgressFill').style.width = pct + '%';
+            document.getElementById('fcProgressText').textContent = masteredCount + ' / ' + total + ' 已掌握';
+
+            if (fcQueue.length === 0) {
+                card.style.display = 'none';
+                nav.style.display = 'none';
+                empty.style.display = 'block';
+                return;
+            }
+            card.style.display = 'block';
+            nav.style.display = 'flex';
+            empty.style.display = 'none';
+
+            // 防止越界
+            if (fcCurrent >= fcQueue.length) fcCurrent = fcQueue.length - 1;
+            if (fcCurrent < 0) fcCurrent = 0;
+
+            const idx = fcQueue[fcCurrent];
+            const data = FLASHCARDS[idx];
+            document.getElementById('fcQuestion').textContent = data.q;
+            document.getElementById('fcAnswer').textContent = data.a;
+            document.getElementById('fcNavCount').textContent = (fcCurrent + 1) + ' / ' + fcQueue.length;
+
+            // 重置翻转
+            fcFlipped = false;
+            inner.classList.remove('flipped');
+        }
+
+        function flipCard() {
+            const inner = document.getElementById('fcCardInner');
+            fcFlipped = !fcFlipped;
+            if (fcFlipped) {
+                inner.classList.add('flipped');
+            } else {
+                inner.classList.remove('flipped');
             }
         }
+
+        function markCard(mastered, event) {
+            event.stopPropagation();
+            const idx = fcQueue[fcCurrent];
+            if (mastered) {
+                fcMastered.push(idx);
+                localStorage.setItem('conv_fc_mastered', JSON.stringify(fcMastered));
+                fcQueue.splice(fcCurrent, 1);
+                if (fcCurrent >= fcQueue.length) fcCurrent = Math.max(0, fcQueue.length - 1);
+                if (typeof checkFlashcardDone === 'function') checkFlashcardDone();
+            } else {
+                // 移到队尾
+                fcQueue.splice(fcCurrent, 1);
+                fcQueue.push(idx);
+                if (fcCurrent >= fcQueue.length) fcCurrent = 0;
+            }
+            renderFlashcard();
+        }
+
+        function prevCard() {
+            if (fcQueue.length === 0) return;
+            fcCurrent = (fcCurrent - 1 + fcQueue.length) % fcQueue.length;
+            renderFlashcard();
+        }
+
+        function nextCard() {
+            if (fcQueue.length === 0) return;
+            fcCurrent = (fcCurrent + 1) % fcQueue.length;
+            renderFlashcard();
+        }
+
+        function resetFlashcards() {
+            fcMastered = [];
+            localStorage.removeItem('conv_fc_mastered');
+            initFlashcards();
+        }
+
+        // 支持空格键翻转
+        document.addEventListener('keydown', function(e) {
+            if (e.code === 'Space' && document.getElementById('flashcardPanel').classList.contains('active')) {
+                e.preventDefault();
+                flipCard();
+            }
+        });
+
+        // ========== 知识闪卡结束 ==========
+
+        // ========== 错题重做模式 ==========
+        let retryQueue = [];          // 待重做的题目副本
+        let retryCurrent = 0;         // 当前题目索引
+        let retryCorrect = 0;         // 本次答对数
+        let retryAnswered = false;    // 当前题是否已答
+        let retryCorrectIds = [];     // 本次答对的题目 id
+
+        function startRetryMode() {
+            if (wrongQuestions.length === 0) {
+                alert('错题本是空的，先去做做题吧~');
+                return;
+            }
+            // 深拷贝，不影响原错题本
+            retryQueue = JSON.parse(JSON.stringify(wrongQuestions));
+            retryCurrent = 0;
+            retryCorrect = 0;
+            retryAnswered = false;
+            retryCorrectIds = [];
+
+            document.getElementById('retryOverlay').style.display = 'flex';
+            document.getElementById('retryBody').style.display = 'flex';
+            document.getElementById('retryResult').style.display = 'none';
+            showRetryQuestion();
+        }
+
+        function showRetryQuestion() {
+            const q = retryQueue[retryCurrent];
+            const total = retryQueue.length;
+
+            // 更新进度
+            const pct = (retryCurrent / total) * 100;
+            document.getElementById('retryProgressFill').style.width = pct + '%';
+            document.getElementById('retryProgressText').textContent = retryCurrent + ' / ' + total;
+
+            // 题目
+            document.getElementById('retryQuestion').textContent = q.question;
+
+            // 选项（打乱显示但保持原文本）
+            const optionsEl = document.getElementById('retryOptions');
+            optionsEl.innerHTML = q.options.map(opt => `
+                <button class="retry-option-btn" onclick="selectRetryOption(this, '${opt.replace(/'/g, "\\'")}', '${q.correctAnswer.replace(/'/g, "\\'")}')">
+                    ${opt}
+                </button>
+            `).join('');
+
+            document.getElementById('retryFeedback').style.display = 'none';
+            document.getElementById('retryNextBtn').style.display = 'none';
+            retryAnswered = false;
+        }
+
+        function selectRetryOption(btn, chosen, correct) {
+            if (retryAnswered) return;
+            retryAnswered = true;
+
+            const allBtns = document.querySelectorAll('.retry-option-btn');
+            allBtns.forEach(b => {
+                b.disabled = true;
+                const text = b.textContent.trim();
+                if (text === correct) b.classList.add('correct');
+                else if (b === btn && text !== correct) b.classList.add('wrong');
+            });
+
+            const isCorrect = chosen.trim() === correct.trim();
+            if (isCorrect) {
+                retryCorrect++;
+                retryCorrectIds.push(retryQueue[retryCurrent].id);
+            }
+
+            const fb = document.getElementById('retryFeedback');
+            const q = retryQueue[retryCurrent];
+            fb.className = 'retry-feedback ' + (isCorrect ? 'correct-fb' : 'wrong-fb');
+            fb.innerHTML = isCorrect
+                ? '<strong>✅ 答对了！</strong><br>' + (q.aiExplanation || '继续保持！')
+                : '<strong>❌ 答错了</strong>，正确答案是：' + correct + '<br>' + (q.aiExplanation || '');
+            fb.style.display = 'block';
+
+            const nextBtn = document.getElementById('retryNextBtn');
+            nextBtn.style.display = 'flex';
+            const isLast = retryCurrent >= retryQueue.length - 1;
+            nextBtn.innerHTML = isLast
+                ? '查看结果 <i class="fa-solid fa-flag-checkered"></i>'
+                : '下一题 <i class="fa-solid fa-arrow-right"></i>';
+        }
+
+        function retryNextQuestion() {
+            retryCurrent++;
+            if (retryCurrent >= retryQueue.length) {
+                showRetryResult();
+            } else {
+                showRetryQuestion();
+            }
+        }
+
+        function showRetryResult() {
+            document.getElementById('retryBody').style.display = 'none';
+            document.getElementById('retryResult').style.display = 'flex';
+
+            const total = retryQueue.length;
+            const rate = Math.round((retryCorrect / total) * 100);
+
+            document.getElementById('retryProgressFill').style.width = '100%';
+            document.getElementById('retryProgressText').textContent = total + ' / ' + total;
+
+            let icon = '🎉', title = '太厉害了！全对！';
+            if (rate < 100 && rate >= 60) { icon = '👍'; title = '不错哦，继续加油！'; }
+            else if (rate < 60) { icon = '💪'; title = '还需要多练练～'; }
+
+            document.getElementById('retryResultIcon').textContent = icon;
+            document.getElementById('retryResultTitle').textContent = title;
+            document.getElementById('retryResultStats').innerHTML =
+                `本次共 <strong>${total}</strong> 道错题<br>` +
+                `答对 <strong style="color:#B45309">${retryCorrect}</strong> 道 &nbsp;|&nbsp; ` +
+                `答错 <strong style="color:#C2410C">${total - retryCorrect}</strong> 道<br>` +
+                `正确率 <strong style="font-size:20px;color:#B45309">${rate}%</strong>`;
+
+            // 将本次答对的题从错题本中移除
+            if (retryCorrectIds.length > 0) {
+                wrongQuestions = wrongQuestions.filter(q => !retryCorrectIds.includes(q.id));
+                localStorage.setItem('convolution_wrong_questions', JSON.stringify(wrongQuestions));
+                renderWrongQuestions();
+            }
+        }
+
+        function closeRetryMode() {
+            document.getElementById('retryOverlay').style.display = 'none';
+        }
+
+        // ========== 错题重做结束 ==========
+
+        // ========== 成就徽章系统 ==========
+        const BADGE_DEFS = [
+            { id: 'first_viz',      icon: '🔍', name: '初次探索',   desc: '首次查看卷积可视化' },
+            { id: 'first_ai',       icon: '🤖', name: 'AI对话',     desc: '首次向AI助手提问' },
+            { id: 'first_design',   icon: '✏️',  name: '核心设计师', desc: '首次自定义卷积核' },
+            { id: 'all_exercises',  icon: '📝', name: '全力以赴',   desc: '完成所有练习题' },
+            { id: 'high_score',     icon: '⭐', name: '优秀学员',   desc: '练习题正确率≥80%' },
+            { id: 'long_study',     icon: '⏰', name: '刻苦钻研',   desc: '累计学习超过10分钟' },
+            { id: 'flashcard_done', icon: '🃏', name: '闪卡达人',   desc: '掌握全部10张闪卡' },
+            { id: 'retry_wrong',    icon: '🔄', name: '知错能改',   desc: '完成一次错题重做' },
+            { id: 'note_taker',     icon: '📒', name: '笔记达人',   desc: '保存过学习笔记' },
+            { id: 'night_owl',      icon: '🦉', name: '夜猫学霸',   desc: '在晚上22点后学习' },
+            { id: 'explorer',       icon: '🗺️', name: '全面探索',   desc: '访问过所有学习章节' },
+            { id: 'master',         icon: '👑', name: '卷积大师',   desc: '解锁全部11项成就' },
+        ];
+
+        let badges = JSON.parse(localStorage.getItem('conv_badges') || '{}');
+        let badgePopupTimer = null;
+
+        function tryAwardBadge(id) {
+            if (badges[id]) return; // 已获得
+            badges[id] = true;
+            localStorage.setItem('conv_badges', JSON.stringify(badges));
+            const def = BADGE_DEFS.find(b => b.id === id);
+            if (def) showBadgePopup(def);
+            // 检查是否集齐所有非master徽章
+            const nonMaster = BADGE_DEFS.filter(b => b.id !== 'master');
+            if (nonMaster.every(b => badges[b.id])) {
+                setTimeout(() => tryAwardBadge('master'), 1200);
+            }
+        }
+
+        function showBadgePopup(def) {
+            const popup = document.getElementById('badgePopup');
+            document.getElementById('badgePopupIcon').textContent = def.icon;
+            document.getElementById('badgePopupName').textContent = '🏆 ' + def.name;
+            document.getElementById('badgePopupDesc').textContent = def.desc;
+            popup.classList.remove('hiding');
+            popup.style.display = 'flex';
+            if (badgePopupTimer) clearTimeout(badgePopupTimer);
+            badgePopupTimer = setTimeout(() => {
+                popup.classList.add('hiding');
+                setTimeout(() => { popup.style.display = 'none'; }, 300);
+            }, 3200);
+        }
+
+        function toggleBadgeGallery() {
+            const g = document.getElementById('badgeGallery');
+            if (g.style.display === 'none' || !g.style.display) {
+                renderBadgeGallery();
+                g.style.display = 'block';
+            } else {
+                g.style.display = 'none';
+            }
+        }
+
+        function renderBadgeGallery() {
+            const grid = document.getElementById('badgeGalleryGrid');
+            grid.innerHTML = BADGE_DEFS.map(def => {
+                const unlocked = !!badges[def.id];
+                return `
+                <div class="badge-cell ${unlocked ? 'unlocked' : 'locked'}" title="${def.desc}">
+                    <div class="badge-cell-icon">${def.icon}</div>
+                    <div class="badge-cell-name">${def.name}</div>
+                </div>`;
+            }).join('');
+        }
+
+        // === 触发点挂载 ===
+        // 1. 首次查看可视化（切换到 visualizer section）
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', () => {
+                const target = link.getAttribute('data-section') || link.getAttribute('href') || '';
+                if (target.includes('visualizer')) tryAwardBadge('first_viz');
+                tryAwardBadge('explorer');
+            });
+        });
+        // 也在 doStep 时触发（点了"下一步"）
+        const _origDoStep = doStep;
+        doStep = function() {
+            _origDoStep();
+            tryAwardBadge('first_viz');
+        };
+
+        // 2. 首次发送AI消息（在 sendChatMessage 调用后触发）
+        const _origSendChat = sendChatMessage;
+        sendChatMessage = function() {
+            _origSendChat();
+            tryAwardBadge('first_ai');
+        };
+
+        // 3. 保存笔记时触发
+        const _origSaveNotes = saveNotes;
+        saveNotes = function() {
+            _origSaveNotes();
+            tryAwardBadge('note_taker');
+        };
+
+        // 4. 完成错题重做
+        const _origCloseRetry = closeRetryMode;
+        closeRetryMode = function() {
+            _origCloseRetry();
+            if (retryCurrent >= retryQueue.length) tryAwardBadge('retry_wrong');
+        };
+
+        // 5. 完成全部闪卡（在 markCard 后检查）
+        function checkFlashcardDone() {
+            if (fcMastered.length >= FLASHCARDS.length) tryAwardBadge('flashcard_done');
+        }
+
+        // 6. 晚上22点后学习
+        if (new Date().getHours() >= 22) tryAwardBadge('night_owl');
+
+        // 7. 累计学习10分钟
+        const studyStart = Date.now();
+        setInterval(() => {
+            if (Date.now() - studyStart >= 10 * 60 * 1000) tryAwardBadge('long_study');
+        }, 30000);
+
+        // ========== 成就徽章结束 ==========
+
+        // ========== 图像实验室 ==========
+        const LAB_KERNELS = {
+            '边缘检测': [[-1,-1,-1],[-1,8,-1],[-1,-1,-1]],
+            '水平边缘': [[-1,-2,-1],[0,0,0],[1,2,1]],
+            '垂直边缘': [[-1,0,1],[-2,0,2],[-1,0,1]],
+            '模糊':     [[1/9,1/9,1/9],[1/9,1/9,1/9],[1/9,1/9,1/9]],
+            '锐化':     [[0,-1,0],[-1,5,-1],[0,-1,0]],
+        };
+        let labCurrentKern = '边缘检测';
+        let labCustomData  = [[0,-1,0],[-1,5,-1],[0,-1,0]];
+        let labHasImage    = false;
+
+        // 初始化自定义矩阵 UI
+        function labInitCustomMatrix() {
+            const el = document.getElementById('labCustomMatrix');
+            el.innerHTML = '';
+            for (let r = 0; r < 3; r++) {
+                for (let c = 0; c < 3; c++) {
+                    const d = document.createElement('div');
+                    d.className = 'lab-custom-cell';
+                    d.textContent = labCustomData[r][c];
+                    d.addEventListener('click', () => {
+                        const v = prompt('输入整数：', String(labCustomData[r][c]));
+                        if (v !== null) {
+                            const n = parseFloat(v);
+                            if (!isNaN(n)) {
+                                labCustomData[r][c] = n;
+                                d.textContent = n;
+                                labRenderKernPreview();
+                                if (typeof tryAwardBadge === 'function') tryAwardBadge('first_design');
+                            }
+                        }
+                    });
+                    el.appendChild(d);
+                }
+            }
+        }
+
+        function labRenderKernPreview() {
+            const kern = labCurrentKern === '自定义' ? labCustomData : LAB_KERNELS[labCurrentKern];
+            const el = document.getElementById('labKernPreview');
+            if (!kern) { el.innerHTML = ''; return; }
+            el.innerHTML = kern.flat().map(v => {
+                const str = typeof v === 'number' && !Number.isInteger(v) ? v.toFixed(2) : String(v);
+                return `<div class="lab-kern-preview-cell">${str}</div>`;
+            }).join('');
+        }
+
+        function labSelectKern(btn, name) {
+            document.querySelectorAll('.lab-kern-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            labCurrentKern = name;
+            document.getElementById('labCustomGrid').style.display = name === '自定义' ? 'block' : 'none';
+            labRenderKernPreview();
+        }
+
+        // 绘制内置示例图
+        function labDrawSample(type) {
+            const canvas = document.getElementById('labOrigCanvas');
+            const ctx = canvas.getContext('2d');
+            const W = 200, H = 200;
+            canvas.width = W; canvas.height = H;
+            ctx.clearRect(0, 0, W, H);
+            if (type === 'gradient') {
+                for (let x = 0; x < W; x++) {
+                    const v = Math.round((x / W) * 255);
+                    ctx.fillStyle = `rgb(${v},${v},${v})`;
+                    ctx.fillRect(x, 0, 1, H);
+                }
+                // 叠加方块
+                for (let r = 0; r < 4; r++) {
+                    for (let c = 0; c < 4; c++) {
+                        const v = Math.round(((r * 4 + c) / 15) * 200);
+                        ctx.fillStyle = `rgb(${v},${v},${v})`;
+                        ctx.fillRect(c * 50, r * 50, 48, 48);
+                    }
+                }
+            } else if (type === 'checker') {
+                const sz = 25;
+                for (let r = 0; r < H / sz; r++) {
+                    for (let c = 0; c < W / sz; c++) {
+                        ctx.fillStyle = (r + c) % 2 === 0 ? '#fff' : '#222';
+                        ctx.fillRect(c * sz, r * sz, sz, sz);
+                    }
+                }
+            } else if (type === 'circle') {
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, W, H);
+                for (let i = 4; i >= 1; i--) {
+                    const v = Math.round((i / 4) * 200);
+                    ctx.beginPath();
+                    ctx.arc(W / 2, H / 2, i * 22, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgb(${v},${v},${v})`;
+                    ctx.fill();
+                }
+            }
+            document.getElementById('labStatus').textContent = '';
+            document.getElementById('labOutCanvas').getContext('2d').clearRect(0, 0, 200, 200);
+            labHasImage = true;
+        }
+
+        // 从文件加载图片
+        function labLoadFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.getElementById('labOrigCanvas');
+                    const W = 200, H = 200;
+                    canvas.width = W; canvas.height = H;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, W, H);
+                    // 转灰度
+                    const id = ctx.getImageData(0, 0, W, H);
+                    for (let i = 0; i < id.data.length; i += 4) {
+                        const g = Math.round(0.299 * id.data[i] + 0.587 * id.data[i+1] + 0.114 * id.data[i+2]);
+                        id.data[i] = id.data[i+1] = id.data[i+2] = g;
+                    }
+                    ctx.putImageData(id, 0, 0);
+                    labHasImage = true;
+                    document.getElementById('labStatus').textContent = '';
+                    document.getElementById('labOutCanvas').getContext('2d').clearRect(0,0,200,200);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function labHandleDrop(event) {
+            event.preventDefault();
+            const file = event.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                const input = document.getElementById('labFileInput');
+                input.files = dt.files;
+                labLoadFile(input);
+            }
+        }
+
+        // 卷积计算（纯 JS，逐像素）
+        function labConvolve(srcData, W, H, kernel) {
+            const out = new Uint8ClampedArray(srcData.length);
+            for (let y = 0; y < H; y++) {
+                for (let x = 0; x < W; x++) {
+                    let sum = 0;
+                    for (let ky = 0; ky < 3; ky++) {
+                        for (let kx = 0; kx < 3; kx++) {
+                            const sy = Math.min(H - 1, Math.max(0, y + ky - 1));
+                            const sx = Math.min(W - 1, Math.max(0, x + kx - 1));
+                            const idx = (sy * W + sx) * 4;
+                            sum += srcData[idx] * kernel[ky][kx];
+                        }
+                    }
+                    const v = Math.min(255, Math.max(0, Math.round(sum)));
+                    const i = (y * W + x) * 4;
+                    out[i] = out[i+1] = out[i+2] = v;
+                    out[i+3] = 255;
+                }
+            }
+            return out;
+        }
+
+        function labApply() {
+            if (!labHasImage) {
+                document.getElementById('labStatus').textContent = '请先选择图片或示例';
+                return;
+            }
+            const origCanvas = document.getElementById('labOrigCanvas');
+            const outCanvas  = document.getElementById('labOutCanvas');
+            const W = origCanvas.width, H = origCanvas.height;
+            outCanvas.width = W; outCanvas.height = H;
+            const srcCtx = origCanvas.getContext('2d');
+            const dstCtx = outCanvas.getContext('2d');
+            const srcData = srcCtx.getImageData(0, 0, W, H);
+            const kernel  = labCurrentKern === '自定义' ? labCustomData : LAB_KERNELS[labCurrentKern];
+            document.getElementById('labStatus').textContent = '计算中…';
+            setTimeout(() => {
+                const outPixels = labConvolve(srcData.data, W, H, kernel);
+                const outId = new ImageData(outPixels, W, H);
+                dstCtx.putImageData(outId, 0, 0);
+                document.getElementById('labStatus').textContent = '✅ 完成！';
+            }, 20);
+        }
+
+        function labSaveToNote() {
+            const outCanvas = document.getElementById('labOutCanvas');
+            const noteEl = document.getElementById('globalNote');
+            if (!noteEl) return;
+            try {
+                const dataUrl = outCanvas.toDataURL('image/png');
+                noteEl.innerHTML += `<br><strong>图像实验室 - ${labCurrentKern}卷积核效果</strong><br><img src="${dataUrl}" style="max-width:200px;border-radius:8px;border:1px solid rgba(180,83,9,0.2)"><br>`;
+                if (typeof saveNotes === 'function') saveNotes();
+                alert('已保存到笔记！');
+            } catch(e) {
+                alert('保存失败，请确保图片已处理');
+            }
+        }
+
+        // 页面加载时初始化实验室
+        (function labInit() {
+            labInitCustomMatrix();
+            labRenderKernPreview();
+            labDrawSample('gradient'); // 默认显示渐变示例
+        })();
+        // ========== 图像实验室结束 ==========
 
         // 保存AI聊天历史，用于导出
         let aiChatHistory = [
