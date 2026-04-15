@@ -445,9 +445,22 @@ async def index():
     # ======== 以下是完全无缝挂载的 [截图笔记] 前端 HTML/CSS/JS ========
     # 使用纯文本拼接以避免破坏原有 f-string 逻辑
     html += """
-                <div class="video-actions" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div class="video-actions" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                     <p style="color: var(--text-muted); font-size: 0.95rem;"><i class="fas fa-lightbulb"></i> 提示：遇到重点知识，可以随时截取画面并记录笔记</p>
-                    <button class="btn-screenshot" onclick="takeScreenshot()"><i class="fas fa-camera"></i> 截屏记笔记</button>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <button class="btn-screenshot" onclick="toggleChapters()" id="chapterToggleBtn"><i class="fas fa-list"></i> 章节目录</button>
+                        <button class="btn-screenshot" onclick="addBookmark()" style="background:linear-gradient(135deg,var(--c-mint),var(--c-violet));"><i class="fas fa-bookmark"></i> 记书签</button>
+                        <button class="btn-screenshot" onclick="takeScreenshot()"><i class="fas fa-camera"></i> 截屏记笔记</button>
+                    </div>
+                </div>
+
+                <!-- 章节目录面板 -->
+                <div id="chapterPanel" style="display:none; margin-top:14px; background:var(--surface); border:1px solid var(--border); border-radius:12px; overflow:hidden;">
+                    <div style="padding:12px 16px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-family:'Fredoka',sans-serif; color:var(--c-mint); font-weight:700;"><i class="fas fa-list-ol"></i> 课程章节 &amp; 我的书签</span>
+                        <button onclick="clearBookmarks()" style="font-size:0.8rem; background:none; border:none; color:var(--text-muted); cursor:pointer;">清除书签</button>
+                    </div>
+                    <div id="chapterList" style="padding:8px;"></div>
                 </div>
             </div>
         </div>
@@ -505,6 +518,7 @@ async def index():
                     </div>
                     <div class="chat-input-area">
                         <input type="text" id="chatInput" placeholder="输入你的问题..." onkeypress="handleChatKeyPress(event)">
+                        <button class="mic-btn" id="micBtn" onclick="startVoiceInput('chatInput', 'micBtn')" title="语音提问"><i class="fas fa-microphone"></i></button>
                         <button class="send-btn" onclick="sendChatMessage()"><i class="fas fa-paper-plane"></i></button>
                     </div>
                 </div>
@@ -776,6 +790,23 @@ async def index():
                 opacity: 0.5;
                 cursor: not-allowed;
             }
+            .mic-btn {
+                padding: 0 12px;
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                color: var(--c-mint);
+                cursor: pointer;
+                transition: 0.2s;
+                flex-shrink: 0;
+            }
+            .mic-btn:hover { background: rgba(180,83,9,0.12); }
+            .mic-btn.listening {
+                background: rgba(194,65,12,0.15);
+                color: var(--c-coral);
+                animation: pulse-mic 1s ease-in-out infinite;
+            }
+            @keyframes pulse-mic { 0%,100% { opacity:1; } 50% { opacity:0.5; } }
             .loading-dots {
                 display: inline-flex;
                 gap: 4px;
@@ -890,6 +921,77 @@ async def index():
             // 兼容原来的togglePanel函数
             function togglePanel() {
                 switchPanel('notes');
+            }
+
+            // ========== 视频章节书签 ==========
+            const CHAPTERS = [
+                { time: 0,   label: '开篇引入：AI如何看图？', icon: '🎬' },
+                { time: 60,  label: '像素与灰度值的概念', icon: '🔢' },
+                { time: 150, label: '卷积核是什么', icon: '🧮' },
+                { time: 260, label: '水平边缘检测演示', icon: '↔️' },
+                { time: 370, label: '多种卷积核对比', icon: '🔍' },
+                { time: 480, label: '卷积核在 CNN 中的作用', icon: '🧠' },
+            ];
+
+            function fmtTime(s) {
+                const m = Math.floor(s / 60);
+                return m + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+            }
+
+            function renderChapterList() {
+                const bookmarks = JSON.parse(localStorage.getItem('conv_bookmarks') || '[]');
+                const all = [
+                    ...CHAPTERS.map(c => ({ ...c, type: 'chapter' })),
+                    ...bookmarks.map(b => ({ ...b, type: 'bookmark', icon: '🔖' }))
+                ].sort((a, b) => a.time - b.time);
+
+                document.getElementById('chapterList').innerHTML = all.map(item => `
+                    <div onclick="jumpToTime(${item.time})" style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; cursor:pointer; transition:0.15s;"
+                         onmouseover="this.style.background='rgba(217,119,6,0.10)'" onmouseout="this.style.background='transparent'">
+                        <span style="font-size:1.1rem;">${item.icon}</span>
+                        <span style="font-size:0.8rem; font-weight:700; color:var(--c-yellow); min-width:38px;">${fmtTime(item.time)}</span>
+                        <span style="font-size:0.9rem; color:var(--text-main); flex:1;">${item.label}</span>
+                        ${item.type === 'bookmark' ? `<button onclick="event.stopPropagation();deleteBookmark(${item.time})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.8rem;">✕</button>` : ''}
+                    </div>
+                `).join('');
+            }
+
+            function jumpToTime(t) {
+                const v = document.getElementById('mainVideo');
+                if (v) { v.currentTime = t; v.play(); }
+            }
+
+            function toggleChapters() {
+                const panel = document.getElementById('chapterPanel');
+                const isHidden = panel.style.display === 'none';
+                panel.style.display = isHidden ? 'block' : 'none';
+                if (isHidden) renderChapterList();
+            }
+
+            function addBookmark() {
+                const v = document.getElementById('mainVideo');
+                if (!v) { alert('请先播放视频'); return; }
+                const name = prompt(`在 ${fmtTime(v.currentTime)} 处添加书签，请输入名称：`);
+                if (!name) return;
+                const bookmarks = JSON.parse(localStorage.getItem('conv_bookmarks') || '[]');
+                bookmarks.push({ time: Math.floor(v.currentTime), label: name });
+                localStorage.setItem('conv_bookmarks', JSON.stringify(bookmarks));
+                renderChapterList();
+                document.getElementById('chapterPanel').style.display = 'block';
+            }
+
+            function deleteBookmark(time) {
+                let bookmarks = JSON.parse(localStorage.getItem('conv_bookmarks') || '[]');
+                bookmarks = bookmarks.filter(b => b.time !== time);
+                localStorage.setItem('conv_bookmarks', JSON.stringify(bookmarks));
+                renderChapterList();
+            }
+
+            function clearBookmarks() {
+                if (confirm('确定要清除所有自定义书签吗？')) {
+                    localStorage.removeItem('conv_bookmarks');
+                    renderChapterList();
+                }
             }
 
             async function takeScreenshot() {
@@ -1227,6 +1329,37 @@ async def index():
                     } catch(e) {}
                 }
             };
+
+            // ========== 语音提问功能 ==========
+            function startVoiceInput(inputId, btnId) {
+                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const inputEl = document.getElementById(inputId);
+                const btnEl = document.getElementById(btnId);
+                if (!SR) {
+                    alert('您的浏览器不支持语音输入，请使用 Chrome 或 Edge 浏览器');
+                    return;
+                }
+                const recognition = new SR();
+                recognition.lang = 'zh-CN';
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
+                btnEl.classList.add('listening');
+                btnEl.innerHTML = '<i class="fas fa-circle" style="color:#C2410C"></i>';
+                btnEl.title = '聆听中...';
+                recognition.onresult = (e) => {
+                    inputEl.value = e.results[0][0].transcript;
+                    inputEl.focus();
+                };
+                recognition.onerror = (e) => {
+                    if (e.error !== 'no-speech') alert('语音识别失败：' + e.error);
+                };
+                recognition.onend = () => {
+                    btnEl.classList.remove('listening');
+                    btnEl.innerHTML = '<i class="fas fa-microphone"></i>';
+                    btnEl.title = '语音提问';
+                };
+                recognition.start();
+            }
         </script>
     </body>
     """
@@ -1466,6 +1599,19 @@ async def ai_tutor():
             }}
             .send-btn:hover {{ transform: scale(1.03); filter: brightness(1.1); }}
             .send-btn:disabled {{ opacity: 0.5; cursor: not-allowed; }}
+            .mic-btn {{
+                padding: 14px 14px;
+                background: rgba(31,41,55,0.06);
+                border: 1px solid rgba(31,41,55,0.14);
+                border-radius: 12px;
+                color: #B45309;
+                cursor: pointer;
+                transition: 0.2s;
+                flex-shrink: 0;
+            }}
+            .mic-btn:hover {{ background: rgba(180,83,9,0.12); }}
+            .mic-btn.listening {{ background: rgba(194,65,12,0.15); color: #C2410C; animation: pulse-mic 1s ease-in-out infinite; }}
+            @keyframes pulse-mic {{ 0%,100% {{ opacity:1; }} 50% {{ opacity:0.5; }} }}
             .no-api-key {{
                 text-align: center;
                 padding: 60px 20px;
@@ -1601,6 +1747,7 @@ async def ai_tutor():
             <div class="chat-input-area" style="padding: 0 0 16px 0;">
                     <input type="text" class="chat-input" id="userInput"
                            placeholder="输入你关于卷积核/计算机视觉的问题..." autofocus>
+                    <button class="mic-btn" id="micBtnTutor" onclick="startVoiceInputTutor()" title="语音提问"><i class="fas fa-microphone"></i></button>
                     <button class="send-btn" onclick="sendMessage()">
                         <i class="fas fa-paper-plane"></i> 发送
                     </button>
@@ -1612,6 +1759,21 @@ async def ai_tutor():
             const messagesDiv = document.getElementById('messages');
             const userInput = document.getElementById('userInput');
             const sendBtn = document.querySelector('.send-btn');
+
+            // 语音提问
+            function startVoiceInputTutor() {{
+                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                const btn = document.getElementById('micBtnTutor');
+                if (!SR) {{ alert('请使用 Chrome 或 Edge 浏览器以使用语音功能'); return; }}
+                const rec = new SR();
+                rec.lang = 'zh-CN'; rec.interimResults = false;
+                btn.classList.add('listening');
+                btn.innerHTML = '<i class="fas fa-circle" style="color:#C2410C"></i>';
+                rec.onresult = (e) => {{ userInput.value = e.results[0][0].transcript; userInput.focus(); }};
+                rec.onerror = (e) => {{ if (e.error !== 'no-speech') alert('识别失败: ' + e.error); }};
+                rec.onend = () => {{ btn.classList.remove('listening'); btn.innerHTML = '<i class="fas fa-microphone"></i>'; }};
+                rec.start();
+            }}
 
             userInput.addEventListener('keypress', (e) => {{
                 if (e.key === 'Enter') sendMessage();
@@ -2005,29 +2167,31 @@ async def ai_tutor():
             document.head.appendChild(style);
 
             // ===== AI助教 localStorage 保存逻辑（供跨页面导出读取）=====
-            // 每次 addMessage 后保存到 vlab_tutor_chat
-            const _origAddTutorMsg = addMessage;
-            addMessage = function(text, role, isHtml) {{
-                const el = _origAddTutorMsg(text, role, isHtml);
-                setTimeout(() => {{
+            const _origAddMsg = addMessage;
+            addMessage = function(html, role, skipParse) {{
+                const result = _origAddMsg(html, role, skipParse);
+                setTimeout(function() {{
                     try {{
-                        // 保存纯文本版本（去除加载消息）
-                        const exportable = chatHistory.filter(m =>
-                            !((m.formatted||m.content||'').includes('fa-spinner'))
-                        ).map(m => ({{ role: m.role, content: m.content }}));
+                        var exportable = chatHistory.filter(function(m) {{
+                            return !(m.content||'').includes('fa-spinner');
+                        }}).map(function(m) {{
+                            return {{ role: m.role, content: m.formatted || m.content }};
+                        }});
                         localStorage.setItem('vlab_tutor_chat', JSON.stringify(exportable));
                     }} catch(e) {{}}
                 }}, 80);
-                return el;
+                return result;
             }};
 
-            // 供共享弹窗打开前调用，确保最新数据落地
+            // 供共享弹窗打开前调用
             window._vlabSavePage = function(pageId) {{
                 if (pageId === 'tutor') {{
                     try {{
-                        const exportable = chatHistory.filter(m =>
-                            !((m.formatted||m.content||'').includes('fa-spinner'))
-                        ).map(m => ({{ role: m.role, content: m.content }}));
+                        var exportable = chatHistory.filter(function(m) {{
+                            return !(m.content||'').includes('fa-spinner');
+                        }}).map(function(m) {{
+                            return {{ role: m.role, content: m.formatted || m.content }};
+                        }});
                         localStorage.setItem('vlab_tutor_chat', JSON.stringify(exportable));
                     }} catch(e) {{}}
                 }}
@@ -2039,6 +2203,9 @@ async def ai_tutor():
     html += get_shared_export_btn('tutor')
     html += "\n</html>\n"
 
+    html += get_shared_export_modal()
+    html += get_shared_export_btn('tutor')
+    html += "\n</html>"
     return html
 
 
