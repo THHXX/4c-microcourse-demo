@@ -1615,16 +1615,16 @@
             <div class="panel-header">
                 <h3><i class="fa-solid fa-note-sticky"></i> 学习笔记</h3>
                 <div class="panel-actions">
-                    <button class="panel-action-btn" onclick="saveNotes()" title="保存笔记">
+                    <button class="panel-action-btn save-btn" onclick="saveNotes()" title="保存笔记">
                         <i class="fa-solid fa-save"></i>
                     </button>
-                    <button class="panel-action-btn" onclick="clearNotes()" title="清空笔记">
+                    <button class="panel-action-btn clear-btn" onclick="clearNotes()" title="清空笔记">
                         <i class="fa-solid fa-trash"></i>
                     </button>
-                    <button class="panel-action-btn" onclick="exportNotesWord()" title="导出Word">
+                    <button class="panel-action-btn word-btn" onclick="exportNotesWord()" title="导出Word">
                         <i class="fa-solid fa-file-word"></i>
                     </button>
-                    <button class="panel-action-btn" onclick="exportNotesPDF()" title="导出PDF">
+                    <button class="panel-action-btn pdf-btn" onclick="exportNotesPDF()" title="导出PDF">
                         <i class="fa-solid fa-file-pdf"></i>
                     </button>
                 </div>
@@ -1662,13 +1662,13 @@
             <div class="panel-header">
                 <h3><i class="fa-solid fa-bookmark"></i> 错题本</h3>
                 <div class="panel-actions">
-                    <button class="panel-action-btn" onclick="clearWrongQuestions()" title="清空错题">
+                    <button class="panel-action-btn clear-btn" onclick="clearWrongQuestions()" title="清空错题">
                         <i class="fa-solid fa-trash"></i>
                     </button>
-                    <button class="panel-action-btn" onclick="exportWrongWord()" title="导出Word">
+                    <button class="panel-action-btn word-btn" onclick="exportWrongWord()" title="导出Word">
                         <i class="fa-solid fa-file-word"></i>
                     </button>
-                    <button class="panel-action-btn" onclick="exportWrongPDF()" title="导出PDF">
+                    <button class="panel-action-btn pdf-btn" onclick="exportWrongPDF()" title="导出PDF">
                         <i class="fa-solid fa-file-pdf"></i>
                     </button>
                 </div>
@@ -1836,6 +1836,34 @@
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
+        }
+        .panel-action-btn.save-btn {
+            background: #10B981;
+            color: white;
+        }
+        .panel-action-btn.save-btn:hover {
+            background: #059669;
+        }
+        .panel-action-btn.clear-btn {
+            background: #EF4444;
+            color: white;
+        }
+        .panel-action-btn.clear-btn:hover {
+            background: #DC2626;
+        }
+        .panel-action-btn.word-btn {
+            background: #2563EB;
+            color: white;
+        }
+        .panel-action-btn.word-btn:hover {
+            background: #1D4ED8;
+        }
+        .panel-action-btn.pdf-btn {
+            background: #EF4444;
+            color: white;
+        }
+        .panel-action-btn.pdf-btn:hover {
+            background: #DC2626;
         }
 
         /* AI面板内容布局 */

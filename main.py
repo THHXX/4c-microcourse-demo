@@ -31,6 +31,219 @@ DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY", "")
 DASHSCOPE_BASE_URL = os.getenv("DASHSCOPE_BASE_URL", "https://dashscope.aliyuncs.com/api/v1")
 QWEN_MODEL = os.getenv("QWEN_MODEL", "qwen-plus")
 
+# ============ 跨页面统一导出弹窗（共享HTML+JS）============
+def get_shared_export_modal() -> str:
+    """
+    返回可注入任意页面的「选择导出」弹窗 HTML+CSS+JS。
+    读取 localStorage 中所有模块的数据，支持任意组合导出。
+    调用方式：在页面 JS 中调用 openVlabModal('home'|'study'|'tutor')
+    """
+    return r"""
+<!-- ===== 跨页面统一导出弹窗 ===== -->
+<div id="vlabModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#141e33;border:1px solid rgba(255,255,255,0.1);border-radius:20px;width:min(580px,94vw);max-height:90vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,0.65);color:white;font-family:'Inter',-apple-system,'PingFang SC',sans-serif;">
+
+    <!-- 头部 sticky -->
+    <div style="padding:22px 28px 16px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#141e33;border-radius:20px 20px 0 0;z-index:1;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="width:38px;height:38px;background:linear-gradient(135deg,#00d9ff,#0073ff);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="fas fa-file-export"></i>
+        </div>
+        <div>
+          <div style="font-size:1.1rem;font-weight:700;letter-spacing:-0.3px;">选择导出内容</div>
+          <div style="font-size:0.77rem;color:#64748b;margin-top:1px;">可跨页面自由组合任意模块</div>
+        </div>
+      </div>
+      <button onclick="vlabCloseModal()" style="background:rgba(255,255,255,0.06);border:none;color:#94a3b8;cursor:pointer;width:32px;height:32px;border-radius:8px;font-size:1rem;">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+
+    <!-- 模块列表 -->
+    <div id="vlabModuleList" style="padding:16px 28px 4px;"></div>
+
+    <!-- 格式选择 -->
+    <div style="padding:0 28px 16px;">
+      <div style="background:rgba(255,255,255,0.04);border-radius:14px;padding:16px;">
+        <p style="color:#64748b;font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px;">📄 导出格式</p>
+        <div style="display:flex;gap:12px;">
+          <div id="vlabFmtWord" onclick="vlabSelectFmt('word')" style="flex:1;border:2px solid #00d9ff;background:rgba(0,217,255,0.07);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:0.25s;">
+            <i class="fas fa-file-word" style="color:#2b7cd3;font-size:1.6rem;display:block;margin-bottom:7px;"></i>
+            <div style="font-weight:600;font-size:0.88rem;">Word 文档</div>
+            <div style="color:#64748b;font-size:0.73rem;margin-top:3px;">.doc，可直接编辑</div>
+          </div>
+          <div id="vlabFmtPDF" onclick="vlabSelectFmt('pdf')" style="flex:1;border:2px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:0.25s;">
+            <i class="fas fa-file-pdf" style="color:#c9302c;font-size:1.6rem;display:block;margin-bottom:7px;"></i>
+            <div style="font-weight:600;font-size:0.88rem;">PDF 文件</div>
+            <div style="color:#64748b;font-size:0.73rem;margin-top:3px;">浏览器打印另存</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div style="padding:0 28px 20px;display:flex;gap:12px;">
+      <button onclick="vlabCloseModal()" style="flex:1;padding:13px;border:1px solid rgba(255,255,255,0.1);background:none;border-radius:12px;color:#94a3b8;cursor:pointer;font-size:0.95rem;">取消</button>
+      <button onclick="vlabDoExport()" id="vlabExportBtn" style="flex:2.5;padding:13px;border:none;background:linear-gradient(135deg,#00d9ff,#0073ff);border-radius:12px;color:white;cursor:pointer;font-size:0.95rem;font-weight:600;">
+        <i class="fas fa-download"></i> 开始导出
+      </button>
+    </div>
+    <p id="vlabExportMsg" style="text-align:center;font-size:0.85rem;padding:0 28px 20px;min-height:20px;color:#64748b;"></p>
+  </div>
+</div>
+
+<style>
+.vlab-section-label{font-size:.73rem;color:#475569;text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin:14px 0 8px;display:flex;align-items:center;gap:6px;}
+.vlab-mod-card{background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:.2s;user-select:none;}
+.vlab-mod-card.has-data:hover{background:rgba(255,255,255,0.07);}
+.vlab-mod-card.selected{border-color:rgba(0,217,255,.4);background:rgba(0,217,255,.06);}
+.vlab-mod-card.no-data{opacity:.4;cursor:default;}
+.vlab-mod-row{display:flex;align-items:center;gap:10px;}
+.vlab-checkbox{width:18px;height:18px;border-radius:5px;border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;}
+.vlab-checkbox.checked{background:#00d9ff;border-color:#00d9ff;color:#000;font-size:.72rem;font-weight:800;}
+.vlab-mod-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.88rem;flex-shrink:0;}
+</style>
+
+<script>
+(function(){
+/* ======== 跨页面统一导出弹窗核心逻辑 ======== */
+window._vlabCurrentPage='unknown';
+window._vlabExportFmt='word';
+window._vlabState={};
+
+const VLAB_MODS=[
+  {id:'screenshot_notes', label:'首页截图笔记',        icon:'fa-camera',         bg:'#0e3f6e',color:'#00d9ff',page:'首页',     key:'convolutionKernelNotes',         kind:'json_array', secType:'screenshot_notes'},
+  {id:'home_chat',        label:'首页 AI 学习助手对话', icon:'fa-robot',          bg:'#3b1a6e',color:'#a855f7',page:'首页',     key:'vlab_home_chat',                  kind:'json_array', secType:'ai_chat'},
+  {id:'study_notes',      label:'课后学习笔记',          icon:'fa-pen-nib',        bg:'#063e28',color:'#22c55e',page:'课后习题',key:'convolution_notes',               kind:'html_string',secType:'study_notes'},
+  {id:'wrong_questions',  label:'课后错题本',            icon:'fa-book-open',      bg:'#4a1010',color:'#ef4444',page:'课后习题',key:'convolution_wrong_questions',     kind:'json_array', secType:'wrong_questions'},
+  {id:'study_chat',       label:'课后 AI 对话',          icon:'fa-comments',       bg:'#3d2a00',color:'#f59e0b',page:'课后习题',key:'vlab_study_chat',                 kind:'json_array', secType:'ai_chat'},
+  {id:'tutor_chat',       label:'AI 助教对话',           icon:'fa-graduation-cap', bg:'#1a1a4a',color:'#6366f1',page:'AI助教', key:'vlab_tutor_chat',                 kind:'json_array', secType:'ai_chat'},
+];
+
+function _getData(mod){
+  const raw=localStorage.getItem(mod.key);
+  if(!raw)return null;
+  if(mod.kind==='json_array'){try{const d=JSON.parse(raw);return d&&d.length>0?d:null;}catch(e){return null;}}
+  return raw.trim()?raw:null;
+}
+function _count(mod){
+  const d=_getData(mod);
+  if(!d)return 0;
+  return Array.isArray(d)?d.length:1;
+}
+
+window.vlabSelectFmt=function(fmt){
+  window._vlabExportFmt=fmt;
+  const w=document.getElementById('vlabFmtWord'),p=document.getElementById('vlabFmtPDF');
+  if(fmt==='word'){
+    w.style.border='2px solid #00d9ff';w.style.background='rgba(0,217,255,.07)';
+    p.style.border='2px solid rgba(255,255,255,.1)';p.style.background='rgba(255,255,255,.03)';
+  }else{
+    p.style.border='2px solid #c9302c';p.style.background='rgba(201,48,44,.07)';
+    w.style.border='2px solid rgba(255,255,255,.1)';w.style.background='rgba(255,255,255,.03)';
+  }
+};
+
+window._vlabToggle=function(id){
+  const s=window._vlabState[id];
+  if(!s||s.disabled)return;
+  s.checked=!s.checked;
+  const card=document.getElementById('vlabCard_'+id);
+  const chk=document.getElementById('vlabChk_'+id);
+  if(s.checked){card.classList.add('selected');chk.classList.add('checked');chk.textContent='✓';}
+  else{card.classList.remove('selected');chk.classList.remove('checked');chk.textContent='';}
+};
+
+function _buildModuleList(){
+  window._vlabState={};
+  const groups={};
+  VLAB_MODS.forEach(m=>{if(!groups[m.page])groups[m.page]=[];groups[m.page].push(m);});
+  let html='';
+  Object.keys(groups).forEach(page=>{
+    html+=`<div class="vlab-section-label"><i class="fas fa-layer-group"></i>${page}</div>`;
+    groups[page].forEach(mod=>{
+      const cnt=_count(mod),has=cnt>0;
+      const badge=Array.isArray(_getData(mod))?`${cnt} 条`:(has?'有内容':'暂无');
+      window._vlabState[mod.id]={checked:has,disabled:!has};
+      html+=`<div class="vlab-mod-card ${has?'has-data selected':'no-data'}" id="vlabCard_${mod.id}" onclick="_vlabToggle('${mod.id}')">
+        <div class="vlab-mod-row">
+          <div class="vlab-checkbox ${has?'checked':''}" id="vlabChk_${mod.id}">${has?'✓':''}</div>
+          <div class="vlab-mod-icon" style="background:${mod.bg};color:${mod.color};"><i class="fas ${mod.icon}"></i></div>
+          <div style="flex:1;">
+            <div style="font-size:.88rem;font-weight:600;color:#e2e8f0;">${mod.label}</div>
+            <div style="font-size:.75rem;color:${has?mod.color:'#475569'};margin-top:2px;">${has?badge:'暂无数据'}</div>
+          </div>
+          ${!has?'<div style="font-size:.7rem;color:#475569;background:rgba(255,255,255,.05);padding:3px 8px;border-radius:20px;">未记录</div>':''}
+        </div>
+      </div>`;
+    });
+  });
+  document.getElementById('vlabModuleList').innerHTML=html;
+}
+
+window.openVlabModal=function(pageId){
+  window._vlabCurrentPage=pageId;
+  if(typeof window._vlabSavePage==='function')window._vlabSavePage(pageId);
+  _buildModuleList();
+  document.getElementById('vlabExportMsg').textContent='';
+  document.getElementById('vlabModal').style.display='block';
+  vlabSelectFmt('word');
+};
+
+window.vlabCloseModal=function(){
+  document.getElementById('vlabModal').style.display='none';
+};
+
+window.vlabDoExport=async function(){
+  const btn=document.getElementById('vlabExportBtn');
+  const msg=document.getElementById('vlabExportMsg');
+  const sections=[];
+  VLAB_MODS.forEach(mod=>{
+    if(!(window._vlabState[mod.id]&&window._vlabState[mod.id].checked))return;
+    const data=_getData(mod);
+    if(!data)return;
+    if(mod.secType==='screenshot_notes')sections.push({type:'screenshot_notes',items:data});
+    else if(mod.secType==='ai_chat')sections.push({type:'ai_chat',messages:data,label:mod.label});
+    else if(mod.secType==='wrong_questions')sections.push({type:'wrong_questions',items:data});
+    else if(mod.secType==='study_notes')sections.push({type:'study_notes',content:data});
+  });
+  if(!sections.length){
+    msg.textContent='⚠️ 请至少勾选一个有内容的模块';
+    msg.style.color='#f87171';return;
+  }
+  btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> 生成中...';msg.textContent='';
+  try{
+    const r=await fetch('/api/export-combined',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({format:window._vlabExportFmt,sections})});
+    const d=await r.json();
+    if(d.success){
+      window.open(d.url,'_blank');
+      msg.textContent=window._vlabExportFmt==='pdf'?'✅ 已打开，请按 Ctrl+P → 另存为 PDF':'✅ 文档已生成，请在新标签页另存';
+      msg.style.color='#4ade80';
+    }else{msg.textContent='❌ 导出失败：'+(d.error||'未知错误');msg.style.color='#f87171';}
+  }catch(e){msg.textContent='❌ 网络错误：'+e.message;msg.style.color='#f87171';}
+  finally{btn.disabled=false;btn.innerHTML='<i class="fas fa-download"></i> 开始导出';}
+};
+
+document.getElementById('vlabModal').addEventListener('click',function(e){if(e.target===this)vlabCloseModal();});
+})();
+</script>
+"""
+
+
+def get_shared_export_btn(page_id: str, extra_style: str = "") -> str:
+    """返回悬浮的「选择导出」按钮 HTML，注入任意页面。"""
+    return f"""
+<div style="position:fixed;bottom:28px;right:28px;z-index:9998;{extra_style}">
+  <button onclick="openVlabModal('{page_id}')"
+          style="display:flex;align-items:center;gap:8px;padding:13px 22px;background:linear-gradient(135deg,#00d9ff,#0073ff);border:none;border-radius:50px;color:white;font-size:.95rem;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(0,115,255,.4);transition:.25s;"
+          onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(0,115,255,.5)'"
+          onmouseout="this.style.transform='';this.style.boxShadow='0 8px 24px rgba(0,115,255,.4)'">
+    <i class="fas fa-file-export"></i> 选择导出
+  </button>
+</div>
+"""
+
+
 # ============ FastAPI应用 ============
 app = FastAPI(
     title="卷积核微课 - 虚拟实验室",
@@ -271,8 +484,7 @@ async def index():
                     </div>
                 </div>
                 <div class="export-buttons">
-                    <button class="btn-export doc-btn" onclick="exportWord()"><i class="fas fa-file-word"></i> 导出 Word</button>
-                    <button class="btn-export pdf-btn" onclick="exportPDF()"><i class="fas fa-file-pdf"></i> 导出 PDF</button>
+                    <button class="btn-export select-btn" onclick="openVlabModal('home')"><i class="fas fa-file-export"></i> 选择导出</button>
                 </div>
             </div>
 
@@ -297,8 +509,7 @@ async def index():
                     </div>
                 </div>
                 <div class="export-buttons">
-                    <button class="btn-export doc-btn" onclick="exportAIChat('word')"><i class="fas fa-file-word"></i> 导出 Word</button>
-                    <button class="btn-export pdf-btn" onclick="exportAIChat('pdf')"><i class="fas fa-file-pdf"></i> 导出 PDF</button>
+                    <button class="btn-export select-btn" onclick="openVlabModal('home')"><i class="fas fa-file-export"></i> 选择导出</button>
                 </div>
             </div>
         </div>
@@ -461,7 +672,8 @@ async def index():
             .btn-export { flex: 1; padding: 12px; border: none; border-radius: 8px; color: white; font-weight: 700; cursor: pointer; transition: 0.3s; font-family: 'Nunito', sans-serif; }
             .doc-btn { background: #2b579a; }
             .pdf-btn { background: #c9302c; }
-            .btn-export:hover { filter: brightness(1.15); transform: translateY(-1px); }
+            .select-btn { background: linear-gradient(135deg, #00b4d8, #0077b6); }
+            .btn-export:hover { filter: brightness(1.2); transform: translateY(-1px); }
 
             .modal {
                 display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -994,23 +1206,99 @@ async def index():
                     sendChatMessage();
                 }
             }
+
+            // ===== 首页 localStorage 保存逻辑（供跨页面导出读取）=====
+            // AI对话：每次有新消息时保存到 vlab_home_chat
+            const _origAddHomeChatMsg = addChatMessage;
+            addChatMessage = function(content, role) {
+                const result = _origAddHomeChatMsg(content, role);
+                setTimeout(() => {
+                    try { localStorage.setItem('vlab_home_chat', JSON.stringify(aiChatHistory)); } catch(e) {}
+                }, 50);
+                return result;
+            };
+
+            // 供共享弹窗在打开前调用，确保最新数据已落地 localStorage
+            window._vlabSavePage = function(pageId) {
+                if (pageId === 'home') {
+                    try {
+                        saveNotesToLocalStorage();
+                        localStorage.setItem('vlab_home_chat', JSON.stringify(aiChatHistory));
+                    } catch(e) {}
+                }
+            };
         </script>
     </body>
-    </html>
     """
+    html += get_shared_export_modal()
+    html += get_shared_export_btn('home')
+    html += "\n</html>"
     return html
 
 
 # ============ 课后学习 ============
 @app.get("/study", response_class=HTMLResponse)
 async def study():
-    """课后学习页面"""
+    """课后学习页面（注入跨页面导出弹窗）"""
     if not HTML_FILE.exists():
         raise HTTPException(status_code=404, detail="学习资料文件不存在")
 
-    # 读取HTML文件内容
     with open(HTML_FILE, 'r', encoding='utf-8') as f:
         html_content = f.read()
+
+    # 注入：课后AI对话保存到 localStorage + _vlabSavePage 钩子
+    study_inject_script = r"""
+<script>
+(function(){
+  // 课后习题页：保存 aiChatHistory 到 vlab_study_chat
+  // 等页面加载完成后再劫持 addChatMessage
+  function _hookStudyChat() {
+    if (typeof addChatMessage !== 'function') {
+      setTimeout(_hookStudyChat, 200);
+      return;
+    }
+    const _orig = addChatMessage;
+    window.addChatMessage = function(content, role) {
+      const r = _orig.call(this, content, role);
+      setTimeout(function() {
+        try {
+          var hist = window.aiChatHistory || [];
+          var exportable = hist.filter(function(m) {
+            return !(m.content||'').includes('loading-dots');
+          });
+          localStorage.setItem('vlab_study_chat', JSON.stringify(exportable));
+        } catch(e) {}
+      }, 80);
+      return r;
+    };
+  }
+  _hookStudyChat();
+
+  // 供共享弹窗打开前调用
+  window._vlabSavePage = function(pageId) {
+    if (pageId === 'study') {
+      try {
+        var hist = window.aiChatHistory || [];
+        var exportable = hist.filter(function(m) {
+          return !(m.content||'').includes('loading-dots');
+        });
+        localStorage.setItem('vlab_study_chat', JSON.stringify(exportable));
+      } catch(e) {}
+    }
+  };
+})();
+</script>
+"""
+    # 将注入脚本和共享弹窗插入到 </body> 之前
+    inject_block = (
+        study_inject_script
+        + get_shared_export_modal()
+        + get_shared_export_btn('study')
+    )
+    if '</body>' in html_content:
+        html_content = html_content.replace('</body>', inject_block + '\n</body>', 1)
+    else:
+        html_content += inject_block
 
     return html_content
 
@@ -1306,8 +1594,7 @@ async def ai_tutor():
             <div class="chat-messages" id="messages">
             </div>
             <div class="chat-actions" style="padding: 10px 0; justify-content: flex-end; gap: 8px;">
-                <button class="action-btn" onclick="exportChat('word')"><i class="fas fa-file-word"></i> 导出Word</button>
-                <button class="action-btn" onclick="exportChat('pdf')"><i class="fas fa-file-pdf"></i> 导出PDF</button>
+                <button class="action-btn" onclick="openVlabModal('tutor')" style="background:linear-gradient(135deg,#00b4d8,#0077b6);"><i class="fas fa-file-export"></i> 选择导出</button>
                 <button class="action-btn" onclick="clearChat()"><i class="fas fa-trash"></i> 清空对话</button>
                 <button class="action-btn" onclick="copyLastAnswer()"><i class="fas fa-copy"></i> 复制最后回复</button>
             </div>
@@ -1716,10 +2003,41 @@ async def ai_tutor():
                 }}
             `;
             document.head.appendChild(style);
+
+            // ===== AI助教 localStorage 保存逻辑（供跨页面导出读取）=====
+            // 每次 addMessage 后保存到 vlab_tutor_chat
+            const _origAddTutorMsg = addMessage;
+            addMessage = function(text, role, isHtml) {{
+                const el = _origAddTutorMsg(text, role, isHtml);
+                setTimeout(() => {{
+                    try {{
+                        // 保存纯文本版本（去除加载消息）
+                        const exportable = chatHistory.filter(m =>
+                            !((m.formatted||m.content||'').includes('fa-spinner'))
+                        ).map(m => ({{ role: m.role, content: m.content }}));
+                        localStorage.setItem('vlab_tutor_chat', JSON.stringify(exportable));
+                    }} catch(e) {{}}
+                }}, 80);
+                return el;
+            }};
+
+            // 供共享弹窗打开前调用，确保最新数据落地
+            window._vlabSavePage = function(pageId) {{
+                if (pageId === 'tutor') {{
+                    try {{
+                        const exportable = chatHistory.filter(m =>
+                            !((m.formatted||m.content||'').includes('fa-spinner'))
+                        ).map(m => ({{ role: m.role, content: m.content }}));
+                        localStorage.setItem('vlab_tutor_chat', JSON.stringify(exportable));
+                    }} catch(e) {{}}
+                }}
+            }};
         </script>
     </body>
-    </html>
-        """
+    """
+    html += get_shared_export_modal()
+    html += get_shared_export_btn('tutor')
+    html += "\n</html>\n"
 
     return html
 
@@ -2236,6 +2554,131 @@ async def export_notes_pdf(request: Request):
             f.write(html_content)
 
         return {"success": True, "url": f"/static/exports/{filename}"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+# ============ 综合选择导出接口 ============
+@app.post("/api/export-combined")
+async def export_combined(request: Request):
+    """综合导出：支持截图笔记 + AI对话的任意组合，输出 Word 或 PDF"""
+    try:
+        data = await request.json()
+        fmt = data.get("format", "word")          # "word" | "pdf"
+        sections = data.get("sections", [])       # 有序 section 列表
+
+        # ---- 构造内容 HTML ----
+        body_parts = []
+        for sec in sections:
+            sec_type = sec.get("type", "")
+
+            if sec_type == "screenshot_notes":
+                notes = sec.get("items", [])
+                if not notes:
+                    continue
+                body_parts.append("<h2 style='color:#1e40af;border-bottom:2px solid #93c5fd;padding-bottom:8px;'>📷 视频截图笔记</h2>")
+                for i, note in enumerate(notes):
+                    body_parts.append(f"<div style='margin-bottom:28px;padding:16px;border:1px solid #cbd5e1;border-radius:10px;'>")
+                    body_parts.append(f"<h3 style='margin:0 0 10px 0;color:#334155;'>截图 {i+1}</h3>")
+                    img_path = BASE_DIR / note['image_url'].lstrip('/')
+                    if img_path.exists():
+                        with open(img_path, "rb") as f:
+                            b64 = base64.b64encode(f.read()).decode('utf-8')
+                        body_parts.append(f"<img src='data:image/png;base64,{b64}' style='max-width:100%;border-radius:6px;margin-bottom:10px;'/>")
+                    if note.get('user_note'):
+                        body_parts.append(f"<div style='background:#f0f9ff;padding:10px;border-left:4px solid #3b82f6;margin-top:8px;border-radius:4px;'><b>📝 我的感悟：</b><br>{note['user_note']}</div>")
+                    if note.get('ai_analysis'):
+                        body_parts.append(f"<div style='background:#faf5ff;padding:10px;border-left:4px solid #a855f7;margin-top:8px;border-radius:4px;'><b>🤖 AI 分析：</b><br>{note['ai_analysis']}</div>")
+                    body_parts.append("</div>")
+
+            elif sec_type == "study_notes":
+                content = sec.get("content", "")
+                if not content or not content.strip():
+                    continue
+                body_parts.append("<h2 style='color:#15803d;border-bottom:2px solid #86efac;padding-bottom:8px;'>📝 课后学习笔记</h2>")
+                body_parts.append(f"<div style='padding:16px;border:1px solid #bbf7d0;border-radius:10px;background:#f0fdf4;line-height:1.8;color:#1e293b;'>{content}</div>")
+
+            elif sec_type == "ai_chat":
+                messages = sec.get("messages", [])
+                if not messages:
+                    continue
+                sec_label = sec.get("label", "AI 对话记录")
+                body_parts.append(f"<h2 style='color:#6d28d9;border-bottom:2px solid #c4b5fd;padding-bottom:8px;'>🤖 {sec_label}</h2>")
+                for msg in messages:
+                    role = msg.get("role", "user")
+                    content = msg.get("content", "")
+                    if role == "user":
+                        body_parts.append(f"<div style='margin:10px 0;padding:12px 16px;background:#eff6ff;border-radius:10px;border-left:4px solid #3b82f6;'><b>你：</b><br>{content}</div>")
+                    else:
+                        body_parts.append(f"<div style='margin:10px 0;padding:12px 16px;background:#faf5ff;border-radius:10px;border-left:4px solid #a855f7;'><b>AI助手：</b><br>{content}</div>")
+
+            elif sec_type == "wrong_questions":
+                questions = sec.get("items", [])
+                if not questions:
+                    continue
+                body_parts.append("<h2 style='color:#991b1b;border-bottom:2px solid #fecdd3;padding-bottom:8px;'>📕 错题本</h2>")
+                for i, q in enumerate(questions):
+                    body_parts.append(f"<div style='margin-bottom:24px;padding:16px;background:#fff1f2;border:1px solid #fecdd3;border-radius:10px;'>")
+                    body_parts.append(f"<h3>{i+1}. {q.get('title','')}</h3>")
+                    body_parts.append(f"<p><b>题目：</b>{q.get('question','')}</p>")
+                    for opt in q.get('options', []):
+                        if opt == q.get('correctAnswer'):
+                            body_parts.append(f"<p style='color:green;'>✅ {opt}（正确答案）</p>")
+                        elif opt.startswith(q.get('userChoice', '__')):
+                            body_parts.append(f"<p style='color:red;text-decoration:line-through;'>❌ {opt}（你的选择）</p>")
+                        else:
+                            body_parts.append(f"<p>{opt}</p>")
+                    body_parts.append(f"<div style='background:#f5f3ff;padding:10px;border-radius:6px;margin-top:8px;'><b>🤖 AI解析：</b><br>{q.get('aiExplanation','')}</div>")
+                    body_parts.append("</div>")
+
+        if not body_parts:
+            return {"success": False, "error": "没有可导出的内容"}
+
+        body_html = "\n".join(body_parts)
+        export_time = time.strftime('%Y-%m-%d %H:%M:%S')
+
+        if fmt == "word":
+            full_html = f"""<html xmlns:o='urn:schemas-microsoft-com:office:office'
+                  xmlns:w='urn:schemas-microsoft-com:office:word'
+                  xmlns='http://www.w3.org/TR/REC-html40'>
+<head><meta charset='utf-8'>
+<title>卷积核微课 - 导出文档</title>
+<style>
+  body {{ font-family: 'PingFang SC', '微软雅黑', sans-serif; line-height: 1.7; margin: 40px; color: #1e293b; }}
+  h1 {{ text-align: center; color: #0f172a; }}
+  img {{ max-width: 500px; }}
+</style>
+</head>
+<body>
+<h1>卷积核微课 - 学习资料导出</h1>
+<p style='text-align:center;color:#64748b;'>导出时间：{export_time}</p>
+<hr/>
+{body_html}
+</body></html>"""
+            filename = f"Combined_Export_{int(time.time())}.doc"
+        else:
+            full_html = f"""<!DOCTYPE html>
+<html><head><meta charset='utf-8'><title>卷积核微课 - PDF打印版</title>
+<style>
+  body {{ font-family: 'PingFang SC', sans-serif; line-height: 1.7; max-width: 820px; margin: 0 auto; padding: 40px; color: #1e293b; }}
+  h1 {{ text-align: center; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 16px; }}
+  img {{ max-width: 100%; border-radius: 8px; }}
+  @media print {{ body {{ padding: 0; }} * {{ -webkit-print-color-adjust: exact; }} }}
+</style>
+</head>
+<body onload="setTimeout(()=>window.print(), 600)">
+<h1>📚 卷积核微课 - 学习资料导出</h1>
+<p style='text-align:center;color:#64748b;'>导出时间：{export_time}</p>
+<hr/>
+{body_html}
+</body></html>"""
+            filename = f"Combined_Export_{int(time.time())}.html"
+
+        filepath = exports_dir / filename
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(full_html)
+
+        return {"success": True, "url": f"/static/exports/{filename}", "format": fmt}
     except Exception as e:
         return {"success": False, "error": str(e)}
 
