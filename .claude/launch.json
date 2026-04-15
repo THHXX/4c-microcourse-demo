@@ -6,6 +6,12 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000", "--reload"],
       "port": 5000
+    },
+    {
+      "name": "课件预览",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "5001", "--directory", "F:\\Desktop\\个人资料\\学校作业\\大三下学期作业\\计算机设计大赛\\卷积核微课\\微课课件\\zjl-html\\新建文件夹"],
+      "port": 5002
     }
   ]
 }
