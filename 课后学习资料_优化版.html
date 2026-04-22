@@ -8,6 +8,29 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <!-- anime.js v3 — 动画引擎 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <!-- fabric.js v5 — Canvas 交互画板 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <!-- ECharts v5 — 数据可视化图表（多 CDN 兜底，onerror 逐级回退） -->
+    <script>
+        (function loadECharts() {
+            var cdns = [
+                'https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js',
+                'https://cdn.bootcdn.net/ajax/libs/echarts/5.5.0/echarts.min.js',
+                'https://unpkg.com/echarts@5.5.0/dist/echarts.min.js'
+            ];
+            var i = 0;
+            function tryNext() {
+                if (i >= cdns.length) return;
+                var s = document.createElement('script');
+                s.src = cdns[i++];
+                s.onerror = tryNext;
+                document.head.appendChild(s);
+            }
+            tryNext();
+        })();
+    </script>
 
     <style>
         /* 返回首页按钮 */
@@ -482,6 +505,46 @@
         body.dark .c-hl {
             background: #78350F !important;
             color: var(--color-accent-dark) !important;
+        }
+
+        /* ===== anime.js 感受野滑动 overlay ===== */
+        .mat-img-wrap {
+            position: relative;
+            display: inline-block;
+        }
+        #kernelHighlight {
+            position: absolute;
+            width: calc(3 * 52px + 2 * 3px);   /* 3格宽 + 2间距 */
+            height: calc(3 * 42px + 2 * 3px);  /* 3格高 + 2间距 */
+            border: 3px solid #C2410C;
+            border-radius: 6px;
+            background: rgba(194,65,12,0.10);
+            pointer-events: none;
+            top: 0; left: 0;
+            z-index: 10;
+            display: none;
+            box-shadow: 0 0 0 2px rgba(194,65,12,0.25), 0 4px 16px rgba(194,65,12,0.18);
+        }
+        body.dark #kernelHighlight {
+            border-color: #F59E0B;
+            background: rgba(245,158,11,0.12);
+            box-shadow: 0 0 0 2px rgba(245,158,11,0.3), 0 4px 16px rgba(245,158,11,0.15);
+        }
+
+        /* 输出格弹入动画 */
+        .cell-anim-in {
+            transform-origin: center;
+        }
+
+        /* calcbox 飞入行 */
+        .calc-row {
+            display: block;
+            opacity: 0;
+            transform: translateY(8px);
+        }
+        .calc-row.visible {
+            opacity: 1;
+            transform: translateY(0);
         }
 
         .c-edit {
@@ -1109,6 +1172,91 @@
             color: var(--color-text-muted-dark);
         }
 
+        /* 卷积可视化数据视图 */
+        .vis-chart-wrap {
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px dashed var(--color-border-light);
+        }
+        body.dark .vis-chart-wrap { border-top-color: var(--color-border-dark); }
+        .vis-chart-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--color-accent);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        body.dark .vis-chart-title { color: var(--color-accent-dark); }
+        .vis-chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+        @media (max-width: 720px) {
+            .vis-chart-grid { grid-template-columns: 1fr; }
+        }
+        .vis-chart-box {
+            background: #FFFBF5;
+            border: 1px solid var(--color-border-light);
+            border-radius: 10px;
+            padding: 10px;
+        }
+        body.dark .vis-chart-box {
+            background: var(--color-card-dark);
+            border-color: var(--color-border-dark);
+        }
+        .vis-chart-sub {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--color-text-muted-light);
+            text-align: center;
+            margin-bottom: 6px;
+        }
+        body.dark .vis-chart-sub { color: var(--color-text-muted-dark); }
+
+        /* ECharts 图表网格 */
+        .chartgrid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 20px;
+        }
+        .chart-wide { grid-column: 1 / -1; }
+        .chart-box {
+            background: #FFFBF5;
+            border: 1px solid var(--color-border-light);
+            border-radius: 12px;
+            padding: 14px 16px 10px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        body.dark .chart-box {
+            background: var(--color-card-dark);
+            border-color: var(--color-border-dark);
+        }
+        .chart-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--color-accent);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        body.dark .chart-title { color: var(--color-accent-dark); }
+        .chart-canvas { width: 100%; }
+        .chart-hint {
+            font-size: 11px;
+            color: var(--color-text-muted-light);
+            text-align: center;
+            margin-top: 4px;
+        }
+        body.dark .chart-hint { color: var(--color-text-muted-dark); }
+        @media (max-width: 720px) {
+            .chartgrid { grid-template-columns: 1fr; }
+        }
+
         /* 移动端适配 */
         @media (max-width: 768px) {
             .app-layout { grid-template-columns: 1fr; }
@@ -1285,8 +1433,11 @@
                         <div class="vis-layout">
                             <div class="vis-col">
                                 <div class="vis-label">输入图像 (5×5)</div>
-                                <div class="vis-sublabel">蓝色 = 当前计算区域</div>
-                                <div class="mat" id="matImg" style="grid-template-columns:repeat(5,52px)"></div>
+                                <div class="vis-sublabel">橙框 = 当前感受野</div>
+                                <div class="mat-img-wrap">
+                                    <div id="kernelHighlight"></div>
+                                    <div class="mat" id="matImg" style="grid-template-columns:repeat(5,52px)"></div>
+                                </div>
                             </div>
                             <div class="opsym">&times;</div>
                             <div class="vis-col">
@@ -1302,6 +1453,17 @@
                         </div>
 
                         <div class="calcbox" id="calcbox">点击 "下一步" 开始演示卷积核滑动计算过程 &rarr;</div>
+
+                        <!-- ECharts 乘加柱状图：实时显示当前位置的 9 个乘积 -->
+                        <div class="vis-chart-wrap">
+                            <div class="vis-chart-title">
+                                <i class="fa-solid fa-chart-column"></i> 当前位置 9 个乘加结果可视化
+                            </div>
+                            <div class="vis-chart-box">
+                                <div class="vis-chart-sub" id="convBarTitle">点"下一步"后这里会显示每格的乘积（红=正 / 蓝=负）</div>
+                                <div id="convBarChart" style="width:100%;height:260px;"></div>
+                            </div>
+                        </div>
 
                         <div class="btns">
                             <button type="button"class="btn btn-p" onclick="doStep()">&#x25B6; 下一步</button>
@@ -1513,8 +1675,17 @@
                         </p>
                         <div style="display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap;">
                             <div>
-                                <div style="font-size: 12px; color: var(--color-text-muted-light); margin-bottom: 8px;">你的卷积核（点击数字编辑）</div>
-                                <div class="mat" id="matCustom" style="grid-template-columns:repeat(3,56px)"></div>
+                                <div style="font-size: 12px; color: var(--color-text-muted-light); margin-bottom: 8px;">你的卷积核（点击格子编辑）</div>
+                                <!-- fabric.js 可视化权重画布 -->
+                                <canvas id="fabricKernCanvas" width="186" height="186" style="border-radius:10px;cursor:pointer;display:block;"></canvas>
+                                <!-- 图例 -->
+                                <div style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:11px;color:var(--color-text-muted-light);">
+                                    <div style="width:14px;height:14px;background:#1e3a5f;border-radius:3px;"></div><span>负值</span>
+                                    <div style="width:14px;height:14px;background:#f5f5f0;border-radius:3px;border:1px solid #ddd;"></div><span>0</span>
+                                    <div style="width:14px;height:14px;background:#7c2d12;border-radius:3px;"></div><span>正值</span>
+                                </div>
+                                <!-- 隐藏旧矩阵（保留用于其他 JS 兼容） -->
+                                <div class="mat" id="matCustom" style="grid-template-columns:repeat(3,56px);display:none"></div>
                             </div>
                             <div style="flex: 1; min-width: 220px;">
                                 <div style="font-size: 12px; color: var(--color-text-muted-light); margin-bottom: 8px;">说明你的设计思路</div>
@@ -1646,6 +1817,24 @@
                                 <div class="lbl">学习时长</div>
                             </div>
                         </div>
+
+                        <!-- ECharts 可视化学情报告 -->
+                        <div class="chartgrid">
+                            <div class="chart-box">
+                                <div class="chart-title"><i class="fa-solid fa-chart-pie"></i> 五维能力雷达</div>
+                                <div id="summaryRadar" class="chart-canvas" style="height: 300px;"></div>
+                                <div class="chart-hint" id="radarHint">完成各模块后在这里看到你的能力画像</div>
+                            </div>
+                            <div class="chart-box">
+                                <div class="chart-title"><i class="fa-solid fa-circle-notch"></i> 整体完成度</div>
+                                <div id="summaryGauge" class="chart-canvas" style="height: 300px;"></div>
+                            </div>
+                            <div class="chart-box chart-wide">
+                                <div class="chart-title"><i class="fa-solid fa-chart-line"></i> 练习得分趋势</div>
+                                <div id="summaryTrend" class="chart-canvas" style="height: 260px;"></div>
+                                <div class="chart-hint" id="trendHint">完成练习题后显示每题的得分走势</div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="card" style="text-align: center; padding: 40px;">
@@ -1713,8 +1902,12 @@
                         <!-- 右列：画布对比区 -->
                         <div class="lab-canvas-area">
                             <div class="lab-canvas-box">
-                                <div class="lab-canvas-label">原图（灰度）</div>
-                                <canvas id="labOrigCanvas" width="200" height="200"></canvas>
+                                <div class="lab-canvas-label">原图（灰度）<span id="labScanLabel" style="font-size:10px;color:var(--color-accent);margin-left:6px;font-weight:600;"></span></div>
+                                <!-- fabric.js 叠层：原图 canvas + overlay canvas -->
+                                <div style="position:relative;width:200px;height:200px;display:inline-block;">
+                                    <canvas id="labOrigCanvas" width="200" height="200" style="position:absolute;top:0;left:0;z-index:1;border-radius:8px;"></canvas>
+                                    <canvas id="labFabricOverlay" width="200" height="200" style="position:absolute;top:0;left:0;z-index:2;pointer-events:none;border-radius:8px;"></canvas>
+                                </div>
                             </div>
                             <div class="lab-canvas-arrow"><i class="fa-solid fa-arrow-right"></i></div>
                             <div class="lab-canvas-box">
@@ -2852,6 +3045,11 @@
             max-height: 200px;
             image-rendering: pixelated;
         }
+        /* fabric overlay canvas 不显示自身边框 */
+        #labFabricOverlay {
+            border: none !important;
+            background: transparent !important;
+        }
         .lab-canvas-arrow {
             font-size: 24px;
             color: rgba(180,83,9,0.45);
@@ -3347,19 +3545,32 @@
             // 滚动到顶部
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
-            // 如果进入学习总结页面，自动标记所有模块为完成
+            // 进入学习总结页面时，按真实数据渲染图表（不再强制标完成）
             if (sectionId === 'summary') {
-                state.modulesCompleted = {
-                    intro: true,
-                    visualizer: true,
-                    exercises: true,
-                    challenge: true,
-                    discussion: true
-                };
+                setTimeout(function () {
+                    if (typeof renderSummaryCharts === 'function') renderSummaryCharts();
+                    if (_radarChart) _radarChart.resize();
+                    if (_gaugeChart) _gaugeChart.resize();
+                    if (_trendChart) _trendChart.resize();
+                }, 80);
             }
 
             // 更新进度
             updateOverallProgress();
+
+            // 切换到设计挑战时，确保 fabric.js 权重矩阵已初始化
+            if (sectionId === 'challenge') {
+                setTimeout(function() {
+                    if (typeof initFabricKern === 'function') {
+                        if (!_fabricKern || _fabricKernCells.length === 0) {
+                            initFabricKern();
+                        } else {
+                            // 重新渲染（可能数据已更新）
+                            renderCustom();
+                        }
+                    }
+                }, 50);
+            }
         }
 
         // 学习状态追踪
@@ -3554,9 +3765,155 @@
             }
         }
 
-        // 渲染自定义卷积核
+        // ===== fabric.js 可视化权重矩阵 =====
+        var _fabricKern = null;
+        var _fabricKernCells = [];  // 9个 fabric.Group 对象
+
+        // 根据权重值生成颜色：负=冷蓝，0=米白，正=暖橙红
+        function weightToColor(v) {
+            if (v === 0) return { bg: '#F5F5F0', text: '#9CA3AF' };
+            var cap = 5;
+            var t = Math.min(1, Math.abs(v) / cap);
+            if (v > 0) {
+                // 正值：米白 → 深橙红
+                var l = Math.round(95 - t * 55);
+                var s = Math.round(30 + t * 55);
+                return { bg: 'hsl(18,' + s + '%,' + l + '%)', text: l < 60 ? '#fff' : '#7c2d12' };
+            } else {
+                // 负值：米白 → 深蓝
+                var l2 = Math.round(95 - t * 55);
+                var s2 = Math.round(30 + t * 50);
+                return { bg: 'hsl(215,' + s2 + '%,' + l2 + '%)', text: l2 < 60 ? '#fff' : '#1e3a5f' };
+            }
+        }
+
+        function initFabricKern() {
+            if (typeof fabric === 'undefined') {
+                renderCustomLegacy(); return;
+            }
+            var canvasEl = document.getElementById('fabricKernCanvas');
+            if (!canvasEl) return;
+
+            if (_fabricKern) {
+                _fabricKern.dispose();
+                _fabricKern = null;
+                _fabricKernCells = [];
+            }
+
+            _fabricKern = new fabric.Canvas('fabricKernCanvas', {
+                width: 186, height: 186,
+                selection: false,
+                renderOnAddRemove: false
+            });
+
+            var GAP = 4;
+            var CELL = Math.floor((186 - GAP * 4) / 3); // ≈58px
+
+            for (var r = 0; r < 3; r++) {
+                for (var c = 0; c < 3; c++) {
+                    (function(row, col) {
+                        var v = customData[row][col];
+                        var colors = weightToColor(v);
+                        var x = GAP + col * (CELL + GAP);
+                        var y = GAP + row * (CELL + GAP);
+
+                        var rect = new fabric.Rect({
+                            left: 0, top: 0,
+                            width: CELL, height: CELL,
+                            fill: colors.bg,
+                            rx: 8, ry: 8,
+                            stroke: 'rgba(180,83,9,0.18)',
+                            strokeWidth: 1.5,
+                            shadow: new fabric.Shadow({color:'rgba(0,0,0,0.06)',blur:4,offsetX:0,offsetY:2})
+                        });
+
+                        var label = new fabric.Text(String(v), {
+                            left: CELL / 2, top: CELL / 2,
+                            originX: 'center', originY: 'center',
+                            fontSize: 18, fontWeight: '700',
+                            fontFamily: 'JetBrains Mono, Consolas, monospace',
+                            fill: colors.text,
+                            selectable: false
+                        });
+
+                        var group = new fabric.Group([rect, label], {
+                            left: x, top: y,
+                            selectable: false,
+                            hoverCursor: 'pointer',
+                            data: { row: row, col: col }
+                        });
+
+                        group.on('mousedown', function() {
+                            var val = prompt('输入整数（如 -1, 0, 1, 2）：', String(customData[this.data.row][this.data.col]));
+                            if (val !== null) {
+                                var n = parseInt(val, 10);
+                                if (!isNaN(n)) {
+                                    customData[this.data.row][this.data.col] = n;
+                                    renderCustom();
+                                    if (typeof tryAwardBadge === 'function') tryAwardBadge('first_design');
+                                }
+                            }
+                        });
+
+                        _fabricKern.add(group);
+                        _fabricKernCells.push({ group, rect, label, row, col });
+                    })(r, c);
+                }
+            }
+            _fabricKern.renderAll();
+        }
+
+        // 用 anime.js 更新单元格颜色（带过渡动画）
+        function updateFabricKernCell(row, col) {
+            if (!_fabricKern || typeof anime === 'undefined') return;
+            var idx = row * 3 + col;
+            var cell = _fabricKernCells[idx];
+            if (!cell) return;
+            var v = customData[row][col];
+            var colors = weightToColor(v);
+
+            // 弹入动画
+            var grp = cell.group;
+            anime({
+                targets: { s: 1 },
+                s: [0.8, 1.06, 1.0],
+                duration: 350,
+                easing: 'easeOutBack',
+                update: function(anim) {
+                    var s = anim.animatables[0].target.s;
+                    grp.set({ scaleX: s, scaleY: s });
+                    _fabricKern.renderAll();
+                }
+            });
+
+            cell.rect.set('fill', colors.bg);
+            cell.label.set({ text: String(v), fill: colors.text });
+            _fabricKern.renderAll();
+        }
+
+        // 渲染自定义卷积核（主入口）
         function renderCustom() {
+            if (typeof fabric !== 'undefined' && document.getElementById('fabricKernCanvas')) {
+                if (!_fabricKern || _fabricKernCells.length === 0) {
+                    initFabricKern();
+                    return;
+                }
+                // 更新所有格子
+                for (var r = 0; r < 3; r++) {
+                    for (var c = 0; c < 3; c++) {
+                        updateFabricKernCell(r, c);
+                    }
+                }
+            } else {
+                renderCustomLegacy();
+            }
+        }
+
+        // 降级渲染（fabric 不可用时）
+        function renderCustomLegacy() {
             var el = document.getElementById('matCustom');
+            if (!el) return;
+            el.style.display = 'inline-grid';
             el.innerHTML = '';
             for (var r = 0; r < 3; r++) {
                 for (var c = 0; c < 3; c++) {
@@ -3589,6 +3946,98 @@
             return { sum: Math.round(sum), parts: parts };
         }
 
+        // ===== anime.js 感受野 overlay 控制 =====
+        var CELL_W = 55;  // 52px + 3px gap
+        var CELL_H = 45;  // 42px + 3px gap
+
+        function showKernelHighlight(or, oc, animate) {
+            var hl = document.getElementById('kernelHighlight');
+            var targetX = oc * CELL_W;
+            var targetY = or * CELL_H;
+            if (!animate || typeof anime === 'undefined') {
+                hl.style.display = 'block';
+                hl.style.transform = 'translate(' + targetX + 'px,' + targetY + 'px)';
+                return;
+            }
+            hl.style.display = 'block';
+            anime({
+                targets: hl,
+                translateX: targetX,
+                translateY: targetY,
+                duration: 480,
+                easing: 'easeInOutQuad'
+            });
+            // 同时给感受野做一次脉冲效果
+            anime({
+                targets: hl,
+                boxShadow: [
+                    '0 0 0 2px rgba(194,65,12,0.25), 0 4px 16px rgba(194,65,12,0.18)',
+                    '0 0 0 6px rgba(194,65,12,0.50), 0 4px 24px rgba(194,65,12,0.40)',
+                    '0 0 0 2px rgba(194,65,12,0.25), 0 4px 16px rgba(194,65,12,0.18)'
+                ],
+                duration: 600,
+                easing: 'easeOutQuad'
+            });
+        }
+
+        function hideKernelHighlight() {
+            var hl = document.getElementById('kernelHighlight');
+            hl.style.display = 'none';
+        }
+
+        // 用 anime.js 让 calcbox 各行依次飞入
+        function animateCalcBox(or, oc, res) {
+            var row1 = res.parts.slice(0, 3).join(' + ');
+            var row2 = res.parts.slice(3, 6).join(' + ');
+            var row3 = res.parts.slice(6, 9).join(' + ');
+            var html =
+                '<span class="calc-row rpos" id="crow0">位置 [' + or + ',' + oc + ']</span>' +
+                '<span class="calc-row" id="crow1">' + row1 + '</span>' +
+                '<span class="calc-row" id="crow2">+ ' + row2 + '</span>' +
+                '<span class="calc-row" id="crow3">+ ' + row3 + '</span>' +
+                '<span class="calc-row" id="crow4">= <span class="rval">' + res.sum + '</span></span>';
+            document.getElementById('calcbox').innerHTML = html;
+
+            if (typeof anime === 'undefined') {
+                // fallback: show all immediately
+                ['crow0','crow1','crow2','crow3','crow4'].forEach(function(id) {
+                    var el = document.getElementById(id);
+                    if (el) { el.style.opacity = '1'; el.style.transform = 'translateY(0)'; }
+                });
+                return;
+            }
+            // 逐行飞入
+            ['crow0','crow1','crow2','crow3','crow4'].forEach(function(id, i) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                anime({
+                    targets: el,
+                    opacity: [0, 1],
+                    translateY: [10, 0],
+                    duration: 300,
+                    delay: i * 80,
+                    easing: 'easeOutQuad'
+                });
+            });
+        }
+
+        // 用 anime.js 让输出格弹入
+        function animateOutCell(or, oc) {
+            var el = document.getElementById('matOut');
+            if (!el) return;
+            var cells = el.querySelectorAll('.cell');
+            var idx = or * 3 + oc;
+            var cell = cells[idx];
+            if (!cell || typeof anime === 'undefined') return;
+            anime({
+                targets: cell,
+                scale: [0.4, 1.1, 1.0],
+                opacity: [0.3, 1],
+                duration: 450,
+                easing: 'easeOutBack'
+            });
+        }
+
         // 执行一步计算
         function doStep() {
             step++;
@@ -3597,22 +4046,30 @@
             var oc = step % 3;
             var res = calcConv(or, oc);
             outGrid[or][oc] = res.sum;
+
+            // 1. 感受野平滑滑动（animate=true 时用 anime.js）
+            showKernelHighlight(or, oc, step > 0);
+
+            // 2. 渲染图像（保留 c-hl 高亮兼容，但 overlay 已经覆盖视觉）
             renderImg(or, oc);
+
+            // 3. 渲染输出格
             renderOut();
-            var row1 = res.parts.slice(0, 3).join(' + ');
-            var row2 = res.parts.slice(3, 6).join(' + ');
-            var row3 = res.parts.slice(6, 9).join(' + ');
-            document.getElementById('calcbox').innerHTML =
-                '<span class="rpos">位置 [' + or + ',' + oc + ']</span><br>'
-                + row1 + '<br>'
-                + '+ ' + row2 + '<br>'
-                + '+ ' + row3 + '<br>'
-                + '= <span class="rval">' + res.sum + '</span>';
+
+            // 4. 输出格弹入动画
+            animateOutCell(or, oc);
+
+            // 5. calcbox 飞入动画
+            animateCalcBox(or, oc, res);
+
             document.getElementById('stepinfo').textContent =
                 '当前：[行' + or + ',列' + oc + ']  第' + (step + 1) + '/9步';
             state.vizCount = step + 1;
 
-            if (step >= 0) { // 只要操作过至少1步就算完成
+            // 6. ECharts 同步更新乘加柱状图
+            if (typeof renderConvBarChart === 'function') renderConvBarChart(or, oc, res);
+
+            if (step >= 0) {
                 state.modulesCompleted.visualizer = true;
                 updateOverallProgress();
             }
@@ -3627,6 +4084,7 @@
             document.getElementById('autoBtn').textContent = '⏵ 自动播放';
             step = -1;
             outGrid = [[null,null,null],[null,null,null],[null,null,null]];
+            hideKernelHighlight();
             renderImg(-1, -1);
             renderOut();
             document.getElementById('calcbox').textContent =
@@ -3634,6 +4092,11 @@
             document.getElementById('stepinfo').textContent =
                 '当前：未开始 · 共 9 个计算位置';
             document.getElementById('hintBox').classList.remove('show');
+            // 重置乘加柱状图
+            if (_convBarChart && !_convBarChart.isDisposed()) {
+                _convBarChart.clear();
+                document.getElementById('convBarTitle').textContent = '点"下一步"后这里会显示每格的乘积（红=正 / 蓝=负）';
+            }
         }
 
         // 自动播放
@@ -3693,6 +4156,75 @@
             doReset();
             renderKern();
         }
+
+        // ====== ECharts: 卷积可视化数据视图（乘加柱状图）======
+        var _convBarChart = null;
+
+        function renderConvBarChart(or, oc, res) {
+            if (typeof echarts === 'undefined') {
+                setTimeout(function () { renderConvBarChart(or, oc, res); }, 600);
+                return;
+            }
+            var el = document.getElementById('convBarChart');
+            if (!el) return;
+            if (!_convBarChart || _convBarChart.isDisposed()) _convBarChart = echarts.init(el);
+
+            var cats = [];
+            var values = [];
+            var colors = [];
+            var k = KERNS[kIdx];
+            for (var r = 0; r < 3; r++) {
+                for (var c = 0; c < 3; c++) {
+                    var iv = IMG[or + r][oc + c];
+                    var kv = k.blur ? (1 / 9) : k.data[r][c];
+                    var product = iv * kv;
+                    cats.push('(' + r + ',' + c + ')');
+                    values.push(Math.round(product * 100) / 100);
+                    colors.push(product >= 0 ? '#C2410C' : '#1E40AF');
+                }
+            }
+
+            document.getElementById('convBarTitle').innerHTML =
+                '位置 [' + or + ',' + oc + ']：9 个乘加结果（总和 = <b style="color:#B45309">' + res.sum + '</b>）';
+
+            _convBarChart.setOption({
+                tooltip: {
+                    trigger: 'axis',
+                    formatter: function (p) {
+                        var d = p[0];
+                        return '核位置 ' + d.name + '<br/>乘积：<b>' + d.value + '</b>';
+                    }
+                },
+                grid: { left: 40, right: 20, top: 24, bottom: 30 },
+                xAxis: {
+                    type: 'category',
+                    data: cats,
+                    axisLabel: { fontSize: 10, color: '#6B7280' }
+                },
+                yAxis: {
+                    type: 'value',
+                    axisLabel: { fontSize: 10, color: '#6B7280' },
+                    splitLine: { lineStyle: { color: 'rgba(180,83,9,0.12)' } }
+                },
+                series: [{
+                    type: 'bar',
+                    data: values.map(function (v, i) {
+                        return { value: v, itemStyle: { color: colors[i], borderRadius: [4, 4, 0, 0] } };
+                    }),
+                    label: { show: true, position: 'top', fontSize: 10, color: '#374151' },
+                    markLine: {
+                        silent: true,
+                        symbol: 'none',
+                        lineStyle: { color: '#B45309', type: 'dashed' },
+                        data: [{ type: 'average', label: { formatter: '均值', fontSize: 10 } }]
+                    }
+                }]
+            });
+        }
+
+        window.addEventListener('resize', function () {
+            if (_convBarChart && !_convBarChart.isDisposed()) _convBarChart.resize();
+        });
 
         // 填充示例卷积核
         function fillDemo() {
@@ -4017,9 +4549,211 @@
             const duration = Math.floor((Date.now() - state.startTime) / 1000);
             document.getElementById('sumTime').textContent = `${Math.floor(duration / 60)}分`;
 
+            // 更新 ECharts 可视化
+            if (typeof renderSummaryCharts === 'function') {
+                renderSummaryCharts();
+            }
+
             // 保存状态到本地存储
             saveStateToLocalStorage();
         }
+
+        // ====== ECharts: 学情可视化 ======
+        var _radarChart = null, _gaugeChart = null, _trendChart = null;
+
+        function _ensureChart(id, existing) {
+            if (typeof echarts === 'undefined') return null;
+            var el = document.getElementById(id);
+            if (!el) return null;
+            if (existing && !existing.isDisposed()) return existing;
+            return echarts.init(el);
+        }
+
+        function renderSummaryCharts() {
+            if (typeof echarts === 'undefined') {
+                // ECharts 还没加载完，1s 后再试一次
+                setTimeout(renderSummaryCharts, 600);
+                return;
+            }
+            var isDark = document.body.classList.contains('dark');
+            var textColor = isDark ? '#FEF3C7' : '#1F2937';
+            var axisColor = isDark ? '#D1A070' : '#6B7280';
+
+            // ---- 数据聚合 ----
+            var total = Object.keys(state.modulesCompleted).length;
+            var completed = Object.values(state.modulesCompleted).filter(Boolean).length;
+            var completionPct = Math.round((completed / total) * 100);
+
+            var answered = Object.values(state.answers).filter(function (v) { return v !== null; });
+            var correctRate = answered.length > 0
+                ? Math.round(answered.filter(function (v) { return v === true; }).length / answered.length * 100)
+                : 0;
+
+            var validScores = state.scores.filter(function (s) { return s !== null; });
+            var avgScore = validScores.length > 0
+                ? Math.round(validScores.reduce(function (a, b) { return a + b; }, 0) / validScores.length)
+                : 0;
+
+            var vizScore = Math.min(100, Math.round((state.vizCount || 0) / 9 * 100));
+            var hintsUsed = state.hintsUsed || 0;
+            var independence = Math.max(0, 100 - Math.min(100, hintsUsed * 15));
+
+            // ---- 雷达图 ----
+            _radarChart = _ensureChart('summaryRadar', _radarChart);
+            if (_radarChart) {
+                _radarChart.setOption({
+                    tooltip: {},
+                    radar: {
+                        indicator: [
+                            { name: '知识掌握', max: 100 },
+                            { name: '练习正确', max: 100 },
+                            { name: '可视化探索', max: 100 },
+                            { name: '理解得分', max: 100 },
+                            { name: '独立思考', max: 100 }
+                        ],
+                        radius: '65%',
+                        splitNumber: 4,
+                        axisName: { color: textColor, fontSize: 11, fontWeight: 600 },
+                        splitArea: { areaStyle: { color: ['rgba(245,158,11,0.04)', 'rgba(245,158,11,0.10)'] } },
+                        axisLine: { lineStyle: { color: 'rgba(180,83,9,0.25)' } },
+                        splitLine: { lineStyle: { color: 'rgba(180,83,9,0.18)' } }
+                    },
+                    series: [{
+                        type: 'radar',
+                        symbolSize: 6,
+                        areaStyle: { color: 'rgba(217,119,6,0.28)' },
+                        lineStyle: { color: '#B45309', width: 2 },
+                        itemStyle: { color: '#B45309' },
+                        data: [{
+                            value: [completionPct, correctRate, vizScore, avgScore * 10, independence],
+                            name: '本次学习'
+                        }]
+                    }]
+                });
+            }
+
+            var hint = document.getElementById('radarHint');
+            if (hint) {
+                if (completionPct < 20) {
+                    hint.textContent = '先去可视化模块和练习看看，数据会越来越丰满';
+                } else {
+                    var arr = [
+                        { k: '知识掌握', v: completionPct },
+                        { k: '练习正确率', v: correctRate },
+                        { k: '可视化探索', v: vizScore },
+                        { k: '理解得分', v: avgScore * 10 },
+                        { k: '独立思考', v: independence }
+                    ].sort(function (a, b) { return a.v - b.v; });
+                    hint.textContent = '短板：' + arr[0].k + '（' + arr[0].v + '）· 优势：' + arr[arr.length - 1].k + '（' + arr[arr.length - 1].v + '）';
+                }
+            }
+
+            // ---- 环形进度 ----
+            _gaugeChart = _ensureChart('summaryGauge', _gaugeChart);
+            if (_gaugeChart) {
+                _gaugeChart.setOption({
+                    series: [{
+                        type: 'gauge',
+                        startAngle: 225,
+                        endAngle: -45,
+                        min: 0,
+                        max: 100,
+                        progress: { show: true, width: 16, roundCap: true, itemStyle: { color: '#D97706' } },
+                        axisLine: { lineStyle: { width: 16, color: [[1, isDark ? '#3A2200' : '#FEF3C7']] } },
+                        pointer: { show: false },
+                        axisTick: { show: false },
+                        splitLine: { show: false },
+                        axisLabel: { show: false },
+                        anchor: { show: false },
+                        detail: {
+                            valueAnimation: true,
+                            offsetCenter: [0, '5%'],
+                            fontSize: 38,
+                            fontWeight: 700,
+                            color: '#B45309',
+                            formatter: '{value}%'
+                        },
+                        title: {
+                            offsetCenter: [0, '38%'],
+                            fontSize: 13,
+                            color: axisColor
+                        },
+                        data: [{ value: completionPct, name: completed + ' / ' + total + ' 模块完成' }]
+                    }]
+                });
+            }
+
+            // ---- 得分趋势折线图 ----
+            _trendChart = _ensureChart('summaryTrend', _trendChart);
+            if (_trendChart) {
+                var xs = [], ys = [];
+                state.scores.forEach(function (s, i) {
+                    xs.push('第' + (i + 1) + '题');
+                    ys.push(s === null ? '-' : s);
+                });
+                _trendChart.setOption({
+                    tooltip: { trigger: 'axis' },
+                    grid: { left: 40, right: 20, top: 30, bottom: 30 },
+                    xAxis: {
+                        type: 'category',
+                        data: xs,
+                        axisLabel: { color: axisColor, fontSize: 11 },
+                        axisLine: { lineStyle: { color: 'rgba(180,83,9,0.3)' } }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        min: 0,
+                        max: 10,
+                        name: '得分',
+                        nameTextStyle: { color: axisColor, fontSize: 11 },
+                        axisLabel: { color: axisColor, fontSize: 11 },
+                        splitLine: { lineStyle: { color: 'rgba(180,83,9,0.12)' } }
+                    },
+                    series: [{
+                        type: 'line',
+                        smooth: true,
+                        data: ys,
+                        symbolSize: 10,
+                        lineStyle: { color: '#B45309', width: 3 },
+                        itemStyle: { color: '#D97706', borderColor: '#B45309', borderWidth: 2 },
+                        areaStyle: {
+                            color: {
+                                type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+                                colorStops: [
+                                    { offset: 0, color: 'rgba(217,119,6,0.40)' },
+                                    { offset: 1, color: 'rgba(217,119,6,0.02)' }
+                                ]
+                            }
+                        },
+                        markLine: {
+                            silent: true,
+                            symbol: 'none',
+                            lineStyle: { color: '#C2410C', type: 'dashed', width: 1 },
+                            data: [{ yAxis: 6, label: { formatter: '及格线 6', color: '#C2410C', fontSize: 10 } }]
+                        }
+                    }]
+                });
+            }
+
+            var th = document.getElementById('trendHint');
+            if (th) {
+                if (validScores.length === 0) {
+                    th.textContent = '完成练习题后显示每题的得分走势';
+                } else if (validScores.length < 5) {
+                    th.textContent = '已完成 ' + validScores.length + ' / 5 题，继续加油';
+                } else {
+                    var trend = validScores[validScores.length - 1] - validScores[0];
+                    th.textContent = trend > 0 ? '整体呈上升趋势，理解在加深 📈' : (trend < 0 ? '后几题得分略有下滑，建议复盘 📉' : '得分保持稳定');
+                }
+            }
+        }
+
+        // 窗口尺寸变化时重绘
+        window.addEventListener('resize', function () {
+            if (_radarChart) _radarChart.resize();
+            if (_gaugeChart) _gaugeChart.resize();
+            if (_trendChart) _trendChart.resize();
+        });
 
         // AI 调用相关函数
         function showLoad(elId) {
@@ -5006,9 +5740,113 @@
             return out;
         }
 
+        // ===== fabric.js 扫描动画 =====
+        let _labFabric = null;
+        let _labScanRunning = false;
+
+        function labGetFabric() {
+            if (_labFabric) return _labFabric;
+            if (typeof fabric === 'undefined') return null;
+            _labFabric = new fabric.StaticCanvas('labFabricOverlay', {
+                width: 200, height: 200,
+                renderOnAddRemove: true
+            });
+            return _labFabric;
+        }
+
+        function labClearOverlay() {
+            const fc = labGetFabric();
+            if (fc) { fc.clear(); fc.renderAll(); }
+        }
+
+        // 在 fabric canvas 上用 anime.js 驱动感受野扫描
+        function labRunScanAnimation(onDone) {
+            const fc = labGetFabric();
+            if (!fc || typeof anime === 'undefined') { onDone && onDone(); return; }
+
+            const W = 200, H = 200;
+            // 核大小 3px，步长 stride px，演示用较大步长，使动画流畅
+            const stride = 20;  // 每步 20 像素
+            const kernPx = 40;  // 感受野可视窗口大小（像素）
+
+            // 创建感受野方框
+            const rect = new fabric.Rect({
+                left: 0, top: 0,
+                width: kernPx, height: kernPx,
+                fill: 'rgba(194,65,12,0.12)',
+                stroke: '#C2410C',
+                strokeWidth: 2.5,
+                rx: 4, ry: 4,
+                selectable: false, evented: false
+            });
+            fc.add(rect);
+
+            // 计算扫描路径
+            const positions = [];
+            for (let y = 0; y + kernPx <= H; y += stride) {
+                const row = [];
+                for (let x = 0; x + kernPx <= W; x += stride) {
+                    row.push({x, y});
+                }
+                // 蛇形扫描：偶数行从左到右，奇数行从右到左
+                if (Math.floor(y / stride) % 2 === 1) row.reverse();
+                positions.push(...row);
+            }
+
+            _labScanRunning = true;
+            let idx = 0;
+            const scanLabel = document.getElementById('labScanLabel');
+
+            function nextPos() {
+                if (!_labScanRunning || idx >= positions.length) {
+                    // 扫描结束：淡出 overlay
+                    anime({
+                        targets: { opacity: 1 },
+                        opacity: [1, 0],
+                        duration: 400,
+                        easing: 'easeOutQuad',
+                        update: function(anim) {
+                            rect.set('opacity', 1 - anim.progress / 100);
+                            fc.renderAll();
+                        },
+                        complete: function() {
+                            fc.clear(); fc.renderAll();
+                            _labScanRunning = false;
+                            if (scanLabel) scanLabel.textContent = '';
+                            onDone && onDone();
+                        }
+                    });
+                    return;
+                }
+                const pos = positions[idx];
+                if (scanLabel) scanLabel.textContent = `扫描中 ${idx+1}/${positions.length}`;
+                const dur = idx === 0 ? 0 : Math.max(60, 300 - positions.length * 2);
+                anime({
+                    targets: { lx: rect.left, ly: rect.top },
+                    lx: pos.x, ly: pos.y,
+                    duration: dur,
+                    easing: 'linear',
+                    update: function(anim) {
+                        const props = anim.animatables[0].target;
+                        rect.set({ left: props.lx, top: props.ly });
+                        fc.renderAll();
+                    },
+                    complete: function() {
+                        idx++;
+                        nextPos();
+                    }
+                });
+            }
+            nextPos();
+        }
+
         function labApply() {
             if (!labHasImage) {
                 document.getElementById('labStatus').textContent = '请先选择图片或示例';
+                return;
+            }
+            if (_labScanRunning) {
+                _labScanRunning = false;
                 return;
             }
             const origCanvas = document.getElementById('labOrigCanvas');
@@ -5019,13 +5857,18 @@
             const dstCtx = outCanvas.getContext('2d');
             const srcData = srcCtx.getImageData(0, 0, W, H);
             const kernel  = labCurrentKern === '自定义' ? labCustomData : LAB_KERNELS[labCurrentKern];
-            document.getElementById('labStatus').textContent = '计算中…';
-            setTimeout(() => {
+            document.getElementById('labStatus').textContent = '扫描中…';
+
+            // 先清空输出，启动 fabric.js 感受野扫描动画
+            dstCtx.clearRect(0, 0, W, H);
+            labRunScanAnimation(function() {
+                // 动画结束后执行真正的卷积计算
                 const outPixels = labConvolve(srcData.data, W, H, kernel);
                 const outId = new ImageData(outPixels, W, H);
                 dstCtx.putImageData(outId, 0, 0);
                 document.getElementById('labStatus').textContent = '✅ 完成！';
-            }, 20);
+                if (typeof tryAwardBadge === 'function') tryAwardBadge('lab_master');
+            });
         }
 
         function labSaveToNote() {
@@ -5245,7 +6088,13 @@
         renderImg(-1, -1);
         renderKern();
         renderOut();
-        renderCustom();
+        // fabric.js 需等 DOM 完全就绪后初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() { initFabricKern(); });
+        } else {
+            // 延迟一帧，确保 canvas 元素已渲染
+            setTimeout(function() { initFabricKern(); }, 0);
+        }
         updateOverallProgress();
     </script>
 </body>

@@ -40,21 +40,21 @@ def get_shared_export_modal() -> str:
     """
     return r"""
 <!-- ===== 跨页面统一导出弹窗 ===== -->
-<div id="vlabModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.65);backdrop-filter:blur(6px);">
-  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#141e33;border:1px solid rgba(255,255,255,0.1);border-radius:20px;width:min(580px,94vw);max-height:90vh;overflow-y:auto;box-shadow:0 32px 80px rgba(0,0,0,0.65);color:white;font-family:'Inter',-apple-system,'PingFang SC',sans-serif;">
+<div id="vlabModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(31,24,16,0.55);backdrop-filter:blur(6px);">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#FFF8EF;border:1.5px solid rgba(196,130,60,0.22);border-radius:20px;width:min(580px,94vw);max-height:90vh;overflow-y:auto;box-shadow:0 32px 80px rgba(120,60,10,0.18);color:#1F2937;font-family:'Inter',-apple-system,'PingFang SC',sans-serif;">
 
     <!-- 头部 sticky -->
-    <div style="padding:22px 28px 16px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#141e33;border-radius:20px 20px 0 0;z-index:1;">
+    <div style="padding:22px 28px 16px;border-bottom:1.5px solid rgba(196,130,60,0.15);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:#FFF8EF;border-radius:20px 20px 0 0;z-index:1;">
       <div style="display:flex;align-items:center;gap:12px;">
-        <div style="width:38px;height:38px;background:linear-gradient(135deg,#00d9ff,#0073ff);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <div style="width:38px;height:38px;background:linear-gradient(135deg,#C2410C,#D97706);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:white;">
           <i class="fas fa-file-export"></i>
         </div>
         <div>
-          <div style="font-size:1.1rem;font-weight:700;letter-spacing:-0.3px;">选择导出内容</div>
-          <div style="font-size:0.77rem;color:#64748b;margin-top:1px;">可跨页面自由组合任意模块</div>
+          <div style="font-size:1.1rem;font-weight:700;letter-spacing:-0.3px;color:#1F2937;">选择导出内容</div>
+          <div style="font-size:0.77rem;color:#92400E;margin-top:1px;">可跨页面自由组合任意模块</div>
         </div>
       </div>
-      <button onclick="vlabCloseModal()" style="background:rgba(255,255,255,0.06);border:none;color:#94a3b8;cursor:pointer;width:32px;height:32px;border-radius:8px;font-size:1rem;">
+      <button onclick="vlabCloseModal()" style="background:rgba(194,65,12,0.08);border:none;color:#92400E;cursor:pointer;width:32px;height:32px;border-radius:8px;font-size:1rem;">
         <i class="fas fa-times"></i>
       </button>
     </div>
@@ -64,18 +64,18 @@ def get_shared_export_modal() -> str:
 
     <!-- 格式选择 -->
     <div style="padding:0 28px 16px;">
-      <div style="background:rgba(255,255,255,0.04);border-radius:14px;padding:16px;">
-        <p style="color:#64748b;font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px;">📄 导出格式</p>
+      <div style="background:rgba(194,65,12,0.05);border:1px solid rgba(196,130,60,0.18);border-radius:14px;padding:16px;">
+        <p style="color:#92400E;font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:12px;">📄 导出格式</p>
         <div style="display:flex;gap:12px;">
-          <div id="vlabFmtWord" onclick="vlabSelectFmt('word')" style="flex:1;border:2px solid #00d9ff;background:rgba(0,217,255,0.07);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:0.25s;">
+          <div id="vlabFmtWord" onclick="vlabSelectFmt('word')" style="flex:1;border:2px solid #C2410C;background:rgba(194,65,12,0.07);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:0.25s;">
             <i class="fas fa-file-word" style="color:#2b7cd3;font-size:1.6rem;display:block;margin-bottom:7px;"></i>
-            <div style="font-weight:600;font-size:0.88rem;">Word 文档</div>
-            <div style="color:#64748b;font-size:0.73rem;margin-top:3px;">.doc，可直接编辑</div>
+            <div style="font-weight:600;font-size:0.88rem;color:#1F2937;">Word 文档</div>
+            <div style="color:#92400E;font-size:0.73rem;margin-top:3px;">.doc，可直接编辑</div>
           </div>
-          <div id="vlabFmtPDF" onclick="vlabSelectFmt('pdf')" style="flex:1;border:2px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:0.25s;">
+          <div id="vlabFmtPDF" onclick="vlabSelectFmt('pdf')" style="flex:1;border:2px solid rgba(196,130,60,0.25);background:rgba(196,130,60,0.04);border-radius:12px;padding:14px;text-align:center;cursor:pointer;transition:0.25s;">
             <i class="fas fa-file-pdf" style="color:#c9302c;font-size:1.6rem;display:block;margin-bottom:7px;"></i>
-            <div style="font-weight:600;font-size:0.88rem;">PDF 文件</div>
-            <div style="color:#64748b;font-size:0.73rem;margin-top:3px;">浏览器打印另存</div>
+            <div style="font-weight:600;font-size:0.88rem;color:#1F2937;">PDF 文件</div>
+            <div style="color:#92400E;font-size:0.73rem;margin-top:3px;">浏览器打印另存</div>
           </div>
         </div>
       </div>
@@ -83,24 +83,24 @@ def get_shared_export_modal() -> str:
 
     <!-- 操作按钮 -->
     <div style="padding:0 28px 20px;display:flex;gap:12px;">
-      <button onclick="vlabCloseModal()" style="flex:1;padding:13px;border:1px solid rgba(255,255,255,0.1);background:none;border-radius:12px;color:#94a3b8;cursor:pointer;font-size:0.95rem;">取消</button>
-      <button onclick="vlabDoExport()" id="vlabExportBtn" style="flex:2.5;padding:13px;border:none;background:linear-gradient(135deg,#00d9ff,#0073ff);border-radius:12px;color:white;cursor:pointer;font-size:0.95rem;font-weight:600;">
+      <button onclick="vlabCloseModal()" style="flex:1;padding:13px;border:1.5px solid rgba(196,130,60,0.3);background:rgba(194,65,12,0.04);border-radius:12px;color:#92400E;cursor:pointer;font-size:0.95rem;">取消</button>
+      <button onclick="vlabDoExport()" id="vlabExportBtn" style="flex:2.5;padding:13px;border:none;background:linear-gradient(135deg,#C2410C,#D97706);border-radius:12px;color:white;cursor:pointer;font-size:0.95rem;font-weight:600;box-shadow:0 4px 14px rgba(194,65,12,0.3);">
         <i class="fas fa-download"></i> 开始导出
       </button>
     </div>
-    <p id="vlabExportMsg" style="text-align:center;font-size:0.85rem;padding:0 28px 20px;min-height:20px;color:#64748b;"></p>
+    <p id="vlabExportMsg" style="text-align:center;font-size:0.85rem;padding:0 28px 20px;min-height:20px;color:#92400E;"></p>
   </div>
 </div>
 
 <style>
-.vlab-section-label{font-size:.73rem;color:#475569;text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin:14px 0 8px;display:flex;align-items:center;gap:6px;}
-.vlab-mod-card{background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.07);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:.2s;user-select:none;}
-.vlab-mod-card.has-data:hover{background:rgba(255,255,255,0.07);}
-.vlab-mod-card.selected{border-color:rgba(0,217,255,.4);background:rgba(0,217,255,.06);}
+.vlab-section-label{font-size:.73rem;color:#92400E;text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin:14px 0 8px;display:flex;align-items:center;gap:6px;}
+.vlab-mod-card{background:rgba(194,65,12,0.04);border:1.5px solid rgba(196,130,60,0.18);border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:.2s;user-select:none;}
+.vlab-mod-card.has-data:hover{background:rgba(194,65,12,0.09);}
+.vlab-mod-card.selected{border-color:rgba(194,65,12,0.5);background:rgba(194,65,12,0.07);}
 .vlab-mod-card.no-data{opacity:.4;cursor:default;}
 .vlab-mod-row{display:flex;align-items:center;gap:10px;}
-.vlab-checkbox{width:18px;height:18px;border-radius:5px;border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;}
-.vlab-checkbox.checked{background:#00d9ff;border-color:#00d9ff;color:#000;font-size:.72rem;font-weight:800;}
+.vlab-checkbox{width:18px;height:18px;border-radius:5px;border:2px solid rgba(196,130,60,0.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s;}
+.vlab-checkbox.checked{background:#C2410C;border-color:#C2410C;color:#fff;font-size:.72rem;font-weight:800;}
 .vlab-mod-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.88rem;flex-shrink:0;}
 </style>
 
@@ -112,12 +112,12 @@ window._vlabExportFmt='word';
 window._vlabState={};
 
 const VLAB_MODS=[
-  {id:'screenshot_notes', label:'首页截图笔记',        icon:'fa-camera',         bg:'#0e3f6e',color:'#00d9ff',page:'首页',     key:'convolutionKernelNotes',         kind:'json_array', secType:'screenshot_notes'},
-  {id:'home_chat',        label:'首页 AI 学习助手对话', icon:'fa-robot',          bg:'#3b1a6e',color:'#a855f7',page:'首页',     key:'vlab_home_chat',                  kind:'json_array', secType:'ai_chat'},
-  {id:'study_notes',      label:'课后学习笔记',          icon:'fa-pen-nib',        bg:'#063e28',color:'#22c55e',page:'课后习题',key:'convolution_notes',               kind:'html_string',secType:'study_notes'},
-  {id:'wrong_questions',  label:'课后错题本',            icon:'fa-book-open',      bg:'#4a1010',color:'#ef4444',page:'课后习题',key:'convolution_wrong_questions',     kind:'json_array', secType:'wrong_questions'},
-  {id:'study_chat',       label:'课后 AI 对话',          icon:'fa-comments',       bg:'#3d2a00',color:'#f59e0b',page:'课后习题',key:'vlab_study_chat',                 kind:'json_array', secType:'ai_chat'},
-  {id:'tutor_chat',       label:'AI 助教对话',           icon:'fa-graduation-cap', bg:'#1a1a4a',color:'#6366f1',page:'AI助教', key:'vlab_tutor_chat',                 kind:'json_array', secType:'ai_chat'},
+  {id:'screenshot_notes', label:'首页截图笔记',        icon:'fa-camera',         bg:'#fef3c7',color:'#B45309',page:'首页',     key:'convolutionKernelNotes',         kind:'json_array', secType:'screenshot_notes'},
+  {id:'home_chat',        label:'首页 AI 学习助手对话', icon:'fa-robot',          bg:'#fee2e2',color:'#9A3412',page:'首页',     key:'vlab_home_chat',                  kind:'json_array', secType:'ai_chat'},
+  {id:'study_notes',      label:'课后学习笔记',          icon:'fa-pen-nib',        bg:'#fff7ed',color:'#C2410C',page:'课后习题',key:'convolution_notes',               kind:'html_string',secType:'study_notes'},
+  {id:'wrong_questions',  label:'课后错题本',            icon:'fa-book-open',      bg:'#fef2f2',color:'#b91c1c',page:'课后习题',key:'convolution_wrong_questions',     kind:'json_array', secType:'wrong_questions'},
+  {id:'study_chat',       label:'课后 AI 对话',          icon:'fa-comments',       bg:'#fefce8',color:'#ca8a04',page:'课后习题',key:'vlab_study_chat',                 kind:'json_array', secType:'ai_chat'},
+  {id:'tutor_chat',       label:'AI 助教对话',           icon:'fa-graduation-cap', bg:'#fdf4ff',color:'#9A3412',page:'AI助教', key:'vlab_tutor_chat',                 kind:'json_array', secType:'ai_chat'},
 ];
 
 function _getData(mod){
@@ -136,11 +136,11 @@ window.vlabSelectFmt=function(fmt){
   window._vlabExportFmt=fmt;
   const w=document.getElementById('vlabFmtWord'),p=document.getElementById('vlabFmtPDF');
   if(fmt==='word'){
-    w.style.border='2px solid #00d9ff';w.style.background='rgba(0,217,255,.07)';
-    p.style.border='2px solid rgba(255,255,255,.1)';p.style.background='rgba(255,255,255,.03)';
+    w.style.border='2px solid #C2410C';w.style.background='rgba(194,65,12,.07)';
+    p.style.border='2px solid rgba(196,130,60,.25)';p.style.background='rgba(196,130,60,.04)';
   }else{
     p.style.border='2px solid #c9302c';p.style.background='rgba(201,48,44,.07)';
-    w.style.border='2px solid rgba(255,255,255,.1)';w.style.background='rgba(255,255,255,.03)';
+    w.style.border='2px solid rgba(196,130,60,.25)';w.style.background='rgba(196,130,60,.04)';
   }
 };
 
@@ -170,10 +170,10 @@ function _buildModuleList(){
           <div class="vlab-checkbox ${has?'checked':''}" id="vlabChk_${mod.id}">${has?'✓':''}</div>
           <div class="vlab-mod-icon" style="background:${mod.bg};color:${mod.color};"><i class="fas ${mod.icon}"></i></div>
           <div style="flex:1;">
-            <div style="font-size:.88rem;font-weight:600;color:#e2e8f0;">${mod.label}</div>
-            <div style="font-size:.75rem;color:${has?mod.color:'#475569'};margin-top:2px;">${has?badge:'暂无数据'}</div>
+            <div style="font-size:.88rem;font-weight:600;color:#1F2937;">${mod.label}</div>
+            <div style="font-size:.75rem;color:${has?mod.color:'#92400E'};margin-top:2px;">${has?badge:'暂无数据'}</div>
           </div>
-          ${!has?'<div style="font-size:.7rem;color:#475569;background:rgba(255,255,255,.05);padding:3px 8px;border-radius:20px;">未记录</div>':''}
+          ${!has?'<div style="font-size:.7rem;color:#92400E;background:rgba(196,130,60,.1);padding:3px 8px;border-radius:20px;">未记录</div>':''}
         </div>
       </div>`;
     });
@@ -235,9 +235,9 @@ def get_shared_export_btn(page_id: str, extra_style: str = "") -> str:
     return f"""
 <div style="position:fixed;bottom:28px;right:28px;z-index:9998;{extra_style}">
   <button onclick="openVlabModal('{page_id}')"
-          style="display:flex;align-items:center;gap:8px;padding:13px 22px;background:linear-gradient(135deg,#00d9ff,#0073ff);border:none;border-radius:50px;color:white;font-size:.95rem;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(0,115,255,.4);transition:.25s;"
-          onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(0,115,255,.5)'"
-          onmouseout="this.style.transform='';this.style.boxShadow='0 8px 24px rgba(0,115,255,.4)'">
+          style="display:flex;align-items:center;gap:8px;padding:13px 22px;background:linear-gradient(135deg,#C2410C,#D97706);border:none;border-radius:50px;color:white;font-size:.95rem;font-weight:700;cursor:pointer;box-shadow:0 8px 24px rgba(194,65,12,0.35);transition:.25s;"
+          onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 32px rgba(194,65,12,0.5)'"
+          onmouseout="this.style.transform='';this.style.boxShadow='0 8px 24px rgba(194,65,12,0.35)'">
     <i class="fas fa-file-export"></i> 选择导出
   </button>
 </div>
@@ -281,6 +281,24 @@ async def index():
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+        <script>
+            (function loadECharts() {{
+                var cdns = [
+                    'https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js',
+                    'https://cdn.bootcdn.net/ajax/libs/echarts/5.5.0/echarts.min.js',
+                    'https://unpkg.com/echarts@5.5.0/dist/echarts.min.js'
+                ];
+                var i = 0;
+                function tryNext() {{
+                    if (i >= cdns.length) return;
+                    var s = document.createElement('script');
+                    s.src = cdns[i++];
+                    s.onerror = tryNext;
+                    document.head.appendChild(s);
+                }}
+                tryNext();
+            }})();
+        </script>
         <style>
             :root {{
                 --bg: #FFF4E6;
@@ -475,6 +493,10 @@ async def index():
                 <i class="fas fa-robot"></i>
                 <span>AI</span>
             </button>
+            <button class="sidebar-toggle-btn" onclick="switchPanel('dashboard', event)" title="学情仪表盘">
+                <i class="fas fa-chart-line"></i>
+                <span>学情</span>
+            </button>
             <button class="sidebar-toggle-btn" onclick="toggleRightSidebar()" title="收起侧边栏">
                 <i class="fas fa-chevron-right"></i>
             </button>
@@ -524,6 +546,47 @@ async def index():
                 </div>
                 <div class="export-buttons">
                     <button class="btn-export select-btn" onclick="openVlabModal('home')"><i class="fas fa-file-export"></i> 选择导出</button>
+                </div>
+            </div>
+
+            <!-- 学情仪表盘面板 -->
+            <div class="sidebar-panel" id="dashboardPanel">
+                <div class="panel-header">
+                    <h3><i class="fas fa-chart-line"></i> 学情仪表盘</h3>
+                    <button class="panel-close" onclick="toggleRightSidebar()"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="panel-content dashboard-content">
+                    <div class="dashboard-stats">
+                        <div class="dash-stat">
+                            <div class="dash-stat-value" id="dashNotesCount">0</div>
+                            <div class="dash-stat-label">截图笔记</div>
+                        </div>
+                        <div class="dash-stat">
+                            <div class="dash-stat-value" id="dashChatCount">0</div>
+                            <div class="dash-stat-label">AI 对话轮次</div>
+                        </div>
+                        <div class="dash-stat">
+                            <div class="dash-stat-value" id="dashActiveDays">0</div>
+                            <div class="dash-stat-label">活跃天数</div>
+                        </div>
+                    </div>
+
+                    <div class="dash-card">
+                        <div class="dash-card-title"><i class="fas fa-tags"></i> 知识点提问分布</div>
+                        <div id="dashTopicBar" style="width:100%;height:220px;"></div>
+                    </div>
+
+                    <div class="dash-card">
+                        <div class="dash-card-title"><i class="fas fa-chart-pie"></i> 学习内容构成</div>
+                        <div id="dashContentPie" style="width:100%;height:220px;"></div>
+                    </div>
+
+                    <div class="dash-card">
+                        <div class="dash-card-title"><i class="fas fa-fire"></i> 近 30 天活跃度</div>
+                        <div id="dashHeatmap" style="width:100%;height:180px;"></div>
+                    </div>
+
+                    <button class="btn-export select-btn" style="width:100%;margin-top:10px;" onclick="refreshDashboard()"><i class="fas fa-sync"></i> 刷新数据</button>
                 </div>
             </div>
         </div>
@@ -652,6 +715,48 @@ async def index():
             .panel-close:hover { color: var(--c-coral); }
 
             .panel-content { flex: 1; overflow-y: auto; padding: 15px; }
+            .dashboard-content { padding: 14px 12px; }
+            .dashboard-stats {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 8px;
+                margin-bottom: 14px;
+            }
+            .dash-stat {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                padding: 12px 6px;
+                text-align: center;
+            }
+            .dash-stat-value {
+                font-family: 'Fredoka', sans-serif;
+                font-size: 1.5rem;
+                color: var(--c-mint);
+                font-weight: 700;
+                line-height: 1.1;
+            }
+            .dash-stat-label {
+                font-size: 0.7rem;
+                color: var(--text-muted);
+                margin-top: 3px;
+            }
+            .dash-card {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: 10px;
+                padding: 10px 10px 6px;
+                margin-bottom: 12px;
+            }
+            .dash-card-title {
+                font-size: 0.78rem;
+                font-weight: 700;
+                color: var(--c-mint);
+                margin-bottom: 6px;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
             .screenshot-item {
                 background: var(--surface); border: 1px solid var(--border);
                 border-radius: 12px; margin-bottom: 20px; overflow: hidden;
@@ -915,6 +1020,13 @@ async def index():
                 // 如果是AI面板，聚焦输入框
                 if (panelName === 'ai') {
                     setTimeout(() => document.getElementById('chatInput').focus(), 100);
+                }
+
+                // 如果是学情仪表盘，渲染 ECharts 图表
+                if (panelName === 'dashboard') {
+                    setTimeout(() => {
+                        if (typeof renderDashboard === 'function') renderDashboard();
+                    }, 120);
                 }
             }
 
@@ -1360,6 +1472,207 @@ async def index():
                 };
                 recognition.start();
             }
+
+            // ========== 学情仪表盘（ECharts） ==========
+            var _topicBarChart = null, _contentPieChart = null, _heatmapChart = null;
+
+            // 知识点关键词库
+            var TOPIC_KEYWORDS = {
+                '卷积核类型': ['卷积核', '类型', '边缘检测', '模糊', '锐化', 'sobel', '高斯'],
+                'padding/stride': ['padding', '填充', 'stride', '步长', '步幅'],
+                '感受野': ['感受野', 'receptive', '视野', '覆盖'],
+                'CNN 应用': ['cnn', '卷积神经网络', '分类', '识别', '特征图', 'feature'],
+                '计算过程': ['计算', '乘加', '相乘', '求和', '运算', '滑动']
+            };
+
+            function _classifyTopic(text) {
+                if (!text) return null;
+                var t = text.toLowerCase();
+                var best = null, bestHits = 0;
+                Object.keys(TOPIC_KEYWORDS).forEach(function (topic) {
+                    var hits = 0;
+                    TOPIC_KEYWORDS[topic].forEach(function (kw) {
+                        if (t.indexOf(kw.toLowerCase()) !== -1) hits++;
+                    });
+                    if (hits > bestHits) { bestHits = hits; best = topic; }
+                });
+                return best;
+            }
+
+            function _collectLS(key) {
+                try {
+                    var raw = localStorage.getItem(key);
+                    if (!raw) return [];
+                    var d = JSON.parse(raw);
+                    return Array.isArray(d) ? d : [];
+                } catch (e) { return []; }
+            }
+
+            function refreshDashboard() { renderDashboard(); }
+
+            function renderDashboard() {
+                if (typeof echarts === 'undefined') {
+                    setTimeout(renderDashboard, 600);
+                    return;
+                }
+
+                var notes = _collectLS('convolutionKernelNotes');
+                var homeChat = _collectLS('vlab_home_chat');
+                var studyChat = _collectLS('vlab_study_chat');
+                var tutorChat = _collectLS('vlab_tutor_chat');
+                var wrong = _collectLS('convolution_wrong_questions');
+                var allChats = homeChat.concat(studyChat).concat(tutorChat);
+                var userQs = allChats.filter(function (m) { return m && m.role === 'user'; });
+
+                // 顶部统计
+                document.getElementById('dashNotesCount').textContent = notes.length;
+                document.getElementById('dashChatCount').textContent = userQs.length;
+
+                // 活跃天数：汇集所有带时间戳的条目
+                var dateSet = {};
+                function addDate(ts) {
+                    if (!ts) return;
+                    var d = new Date(ts);
+                    if (isNaN(d.getTime())) return;
+                    var k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                    dateSet[k] = (dateSet[k] || 0) + 1;
+                }
+                notes.forEach(function (n) { addDate(n.timestamp || n.time || n.createdAt); });
+                allChats.forEach(function (m) { addDate(m.timestamp || m.time); });
+                wrong.forEach(function (w) { addDate(w.timestamp || w.time); });
+                var days = Object.keys(dateSet);
+                document.getElementById('dashActiveDays').textContent = days.length;
+
+                // ---- 1. 知识点提问分布（柱状图）----
+                var topicCounts = {};
+                Object.keys(TOPIC_KEYWORDS).forEach(function (t) { topicCounts[t] = 0; });
+                topicCounts['其他'] = 0;
+                userQs.forEach(function (m) {
+                    var topic = _classifyTopic(m.content || '') || '其他';
+                    topicCounts[topic] = (topicCounts[topic] || 0) + 1;
+                });
+
+                var barEl = document.getElementById('dashTopicBar');
+                if (barEl) {
+                    if (!_topicBarChart || _topicBarChart.isDisposed()) _topicBarChart = echarts.init(barEl);
+                    var cats = Object.keys(topicCounts);
+                    var vals = cats.map(function (k) { return topicCounts[k]; });
+                    _topicBarChart.setOption({
+                        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+                        grid: { left: 10, right: 10, top: 20, bottom: 50, containLabel: true },
+                        xAxis: {
+                            type: 'category',
+                            data: cats,
+                            axisLabel: { rotate: 30, fontSize: 10, color: '#6B7280', interval: 0 }
+                        },
+                        yAxis: {
+                            type: 'value',
+                            minInterval: 1,
+                            axisLabel: { fontSize: 10, color: '#6B7280' },
+                            splitLine: { lineStyle: { color: 'rgba(180,83,9,0.12)' } }
+                        },
+                        series: [{
+                            type: 'bar',
+                            data: vals,
+                            barMaxWidth: 26,
+                            itemStyle: {
+                                color: {
+                                    type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
+                                    colorStops: [
+                                        { offset: 0, color: '#D97706' },
+                                        { offset: 1, color: '#C2410C' }
+                                    ]
+                                },
+                                borderRadius: [4, 4, 0, 0]
+                            },
+                            label: { show: true, position: 'top', fontSize: 10, color: '#B45309' }
+                        }]
+                    });
+                }
+
+                // ---- 2. 学习内容构成（饼图）----
+                var pieEl = document.getElementById('dashContentPie');
+                if (pieEl) {
+                    if (!_contentPieChart || _contentPieChart.isDisposed()) _contentPieChart = echarts.init(pieEl);
+                    _contentPieChart.setOption({
+                        tooltip: { trigger: 'item', formatter: '{b}<br/>数量：{c}（{d}%）' },
+                        legend: { bottom: 0, fontSize: 10, textStyle: { color: '#6B7280', fontSize: 10 } },
+                        color: ['#D97706', '#C2410C', '#B45309', '#9A3412', '#EA580C'],
+                        series: [{
+                            type: 'pie',
+                            radius: ['42%', '68%'],
+                            center: ['50%', '44%'],
+                            avoidLabelOverlap: true,
+                            label: { show: true, fontSize: 10, formatter: '{b}\\n{c}' },
+                            labelLine: { length: 8, length2: 6 },
+                            data: [
+                                { value: notes.length, name: '截图笔记' },
+                                { value: homeChat.filter(function (m) { return m.role === 'user'; }).length, name: '首页提问' },
+                                { value: studyChat.filter(function (m) { return m.role === 'user'; }).length, name: '课后提问' },
+                                { value: tutorChat.filter(function (m) { return m.role === 'user'; }).length, name: '助教提问' },
+                                { value: wrong.length, name: '错题' }
+                            ].filter(function (d) { return d.value > 0; })
+                        }]
+                    });
+                    if (notes.length + userQs.length + wrong.length === 0) {
+                        _contentPieChart.setOption({
+                            title: {
+                                text: '暂无学习数据',
+                                left: 'center', top: 'center',
+                                textStyle: { color: '#6B7280', fontSize: 13, fontWeight: 400 }
+                            },
+                            series: [{ data: [] }]
+                        });
+                    }
+                }
+
+                // ---- 3. 近 30 天活跃热力图 ----
+                var heatEl = document.getElementById('dashHeatmap');
+                if (heatEl) {
+                    if (!_heatmapChart || _heatmapChart.isDisposed()) _heatmapChart = echarts.init(heatEl);
+                    var today = new Date();
+                    var end = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+                    var start = new Date(end.getTime() - 29 * 86400000);
+                    var startStr = start.getFullYear() + '-' + String(start.getMonth() + 1).padStart(2, '0') + '-' + String(start.getDate()).padStart(2, '0');
+                    var endStr = end.getFullYear() + '-' + String(end.getMonth() + 1).padStart(2, '0') + '-' + String(end.getDate()).padStart(2, '0');
+                    var data = [];
+                    var maxVal = 1;
+                    for (var d = new Date(start); d <= end; d = new Date(d.getTime() + 86400000)) {
+                        var k = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                        var v = dateSet[k] || 0;
+                        data.push([k, v]);
+                        if (v > maxVal) maxVal = v;
+                    }
+                    _heatmapChart.setOption({
+                        tooltip: { formatter: function (p) { return p.value[0] + '：' + p.value[1] + ' 次学习'; } },
+                        visualMap: {
+                            min: 0, max: maxVal, show: false,
+                            inRange: { color: ['#FEF3C7', '#FBBF24', '#D97706', '#9A3412'] }
+                        },
+                        calendar: {
+                            range: [startStr, endStr],
+                            cellSize: ['auto', 16],
+                            top: 20, left: 30, right: 10, bottom: 30,
+                            dayLabel: { show: true, fontSize: 9, color: '#6B7280' },
+                            monthLabel: { show: true, fontSize: 9, color: '#6B7280' },
+                            yearLabel: { show: false },
+                            itemStyle: { borderColor: '#FFF4E6', borderWidth: 2, color: '#FEF3C7' },
+                            splitLine: { show: false }
+                        },
+                        series: [{
+                            type: 'heatmap',
+                            coordinateSystem: 'calendar',
+                            data: data
+                        }]
+                    });
+                }
+            }
+
+            window.addEventListener('resize', function () {
+                [_topicBarChart, _contentPieChart, _heatmapChart].forEach(function (c) {
+                    if (c && !c.isDisposed()) c.resize();
+                });
+            });
         </script>
     </body>
     """
