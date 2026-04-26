@@ -25,6 +25,8 @@ load_dotenv()
 BASE_DIR = Path(__file__).parent
 VIDEO_FILE = BASE_DIR / "DougongGrowth.mp4"
 HTML_FILE = BASE_DIR / "课后学习资料_优化版.html"
+PAGES_DIR = BASE_DIR / "static" / "pages"
+CALCULATOR_FILE = BASE_DIR / "Calculator.html"
 
 # 千问API配置
 DASHSCOPE_API_KEY = os.getenv("DASHSCOPE_API_KEY", "")
@@ -377,6 +379,40 @@ async def index():
             .card-video i {{ color: var(--c-yellow); }}
             .card-study i {{ color: var(--c-coral); }}
             .card-ai i {{ color: var(--c-mint); }}
+            .card-playground i {{ color: #9A3412; }}
+            .card-3d i {{ color: #7C2D12; }}
+            .card-viz i {{ color: #B45309; }}
+            .card-calc i {{ color: #6B7280; }}
+            .nav-card .badge {{
+                display: inline-block;
+                font-size: 0.7rem;
+                padding: 2px 8px;
+                background: linear-gradient(90deg, var(--c-coral), var(--c-yellow));
+                color: #fff;
+                border-radius: 10px;
+                margin-left: 6px;
+                font-family: 'JetBrains Mono', monospace;
+                letter-spacing: 0.05em;
+                vertical-align: middle;
+            }}
+            .nav-card .badge.egg {{
+                background: linear-gradient(90deg, #6B7280, #9CA3AF);
+            }}
+            .section-title {{
+                font-family: 'Fredoka', 'PingFang SC', sans-serif;
+                font-size: 1.2rem;
+                color: var(--c-mint);
+                margin: 30px 0 12px;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }}
+            .section-title::after {{
+                content: '';
+                flex: 1;
+                height: 1px;
+                background: linear-gradient(90deg, rgba(180,83,9,0.3), transparent);
+            }}
             .video-player {{
                 margin-top: 40px;
                 background: var(--surface);
@@ -435,6 +471,32 @@ async def index():
                     <i class="fas fa-robot"></i>
                     <h2>🤖 AI助教</h2>
                     <p>基于千问大模型的智能问答助手</p>
+                </a>
+            </div>
+
+            <div class="section-title">
+                <i class="fas fa-rocket"></i> 创意拓展实验室
+            </div>
+            <div class="nav-cards">
+                <a href="/playground" class="nav-card card-playground">
+                    <i class="fas fa-flask"></i>
+                    <h2>🧪 卷积核操场<span class="badge">FABRIC.JS</span></h2>
+                    <p>可拖拽的图像画布 + 9 种经典核实时预览，亲手调权重看效果</p>
+                </a>
+                <a href="/showcase-3d" class="nav-card card-3d">
+                    <i class="fas fa-cube"></i>
+                    <h2>🎲 3D 展示厅<span class="badge">THREE.JS</span></h2>
+                    <p>3D 立体卷积核、滑窗动画、特征金字塔，鼠标可旋转/缩放/悬浮</p>
+                </a>
+                <a href="/data-viz" class="nav-card card-viz">
+                    <i class="fas fa-chart-pie"></i>
+                    <h2>📊 数据洞察大屏<span class="badge">ECHARTS</span></h2>
+                    <p>学习行为 + 卷积核应用，饼图/雷达/中国地图多维分析</p>
+                </a>
+                <a href="/calculator" class="nav-card card-calc">
+                    <i class="fas fa-calculator"></i>
+                    <h2>🥚 科学计算器<span class="badge egg">EASTER EGG</span></h2>
+                    <p>彩蛋页：手算卷积时验证一下结果（奶油配色版）</p>
                 </a>
             </div>
 
@@ -1680,6 +1742,38 @@ async def index():
     html += get_shared_export_btn('home')
     html += "\n</html>"
     return html
+
+
+# ============ 创意拓展页面（Fabric.js / Three.js / ECharts / Calculator 彩蛋）============
+def _serve_static_page(file_path: Path, label: str) -> str:
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail=f"{label} 文件不存在: {file_path.name}")
+    with open(file_path, 'r', encoding='utf-8') as f:
+        return f.read()
+
+
+@app.get("/playground", response_class=HTMLResponse)
+async def playground():
+    """Fabric.js 卷积核可视化操场"""
+    return _serve_static_page(PAGES_DIR / "playground.html", "卷积核操场")
+
+
+@app.get("/showcase-3d", response_class=HTMLResponse)
+async def showcase_3d():
+    """Three.js 3D 卷积核展示"""
+    return _serve_static_page(PAGES_DIR / "showcase-3d.html", "3D 展示厅")
+
+
+@app.get("/data-viz", response_class=HTMLResponse)
+async def data_viz():
+    """ECharts 数据洞察大屏"""
+    return _serve_static_page(PAGES_DIR / "data-viz.html", "数据洞察大屏")
+
+
+@app.get("/calculator", response_class=HTMLResponse)
+async def calculator():
+    """彩蛋页：科学计算器（Calculator.html）"""
+    return _serve_static_page(CALCULATOR_FILE, "科学计算器")
 
 
 # ============ 课后学习 ============

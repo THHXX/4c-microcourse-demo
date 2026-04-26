@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="zh-CN" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="google" content="notranslate">
+<meta name="robots" content="notranslate">
+<meta http-equiv="Content-Language" content="zh-CN">
+<title>数据洞察 · ECharts | 卷积核微课</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<!-- ECharts 主库 + 3D 扩展（中国地图运行时通过 GeoJSON 注册）-->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts-gl@2.0.9/dist/echarts-gl.min.js"></script>
+
+<style>
+  :root{
+    --bg:#FFF4E6; --bg-deep:#F5E6CF;
+    --c-coral:#C2410C; --c-yellow:#D97706; --c-mint:#B45309; --c-orange:#EA580C;
+    --ink:#1F2937; --muted:#6B7280; --line:#d9d1c0;
+    --shadow:0 20px 40px rgba(17,24,39,0.10);
+    --shadow-sm:0 4px 12px rgba(17,24,39,0.06);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Nunito','PingFang SC',sans-serif;
+    background:var(--bg);
+    background-image:
+      radial-gradient(1200px 600px at 10% 0%, rgba(255,255,255,0.6), transparent 60%),
+      radial-gradient(800px 500px at 100% 100%, rgba(217,119,6,0.10), transparent 70%);
+    color:var(--ink); min-height:100vh; padding:24px;
+  }
+  .top-bar{max-width:1400px;margin:0 auto 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;}
+  .top-bar .title{
+    font-family:'Fredoka',sans-serif;font-size:1.6rem;
+    background:linear-gradient(90deg,var(--c-coral),var(--c-yellow));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .top-bar .sub{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:.1em;}
+  .nav-back{
+    background:#fff;border:1px solid var(--line);padding:8px 16px;border-radius:10px;
+    color:var(--ink);text-decoration:none;font-size:14px;
+  }
+  .nav-back:hover{background:#f0e9dc;}
+
+  .container{max-width:1400px;margin:0 auto;}
+
+  /* 数据集切换 tab */
+  .dataset-tabs{
+    display:flex;gap:8px;margin-bottom:20px;background:#FFF8EF;padding:6px;border-radius:14px;
+    border:1px solid var(--line);width:fit-content;box-shadow:var(--shadow-sm);
+  }
+  .dataset-tab{
+    padding:10px 20px;border:none;background:transparent;cursor:pointer;border-radius:10px;
+    font-family:'Nunito',sans-serif;font-size:14px;color:var(--muted);transition:all .2s;
+    display:inline-flex;align-items:center;gap:8px;
+  }
+  .dataset-tab.active{background:linear-gradient(135deg,var(--c-coral),var(--c-yellow));color:#fff;box-shadow:0 4px 12px rgba(194,65,12,0.3);}
+  .dataset-tab:hover:not(.active){background:rgba(217,119,6,0.08);color:var(--ink);}
+
+  /* KPI 卡片 */
+  .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px;}
+  .kpi{
+    background:#FFF8EF;border:1px solid var(--line);border-radius:14px;padding:16px 18px;
+    box-shadow:var(--shadow-sm);position:relative;overflow:hidden;
+  }
+  .kpi::before{
+    content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--c-yellow);
+  }
+  .kpi.coral::before{background:var(--c-coral);}
+  .kpi.mint::before{background:var(--c-mint);}
+  .kpi.orange::before{background:var(--c-orange);}
+  .kpi .label{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;margin-bottom:6px;}
+  .kpi .value{font-family:'Fredoka',sans-serif;font-size:1.7rem;color:var(--ink);}
+  .kpi .delta{font-size:12px;color:var(--c-mint);margin-top:4px;}
+  .kpi .delta.down{color:#dc2626;}
+
+  /* 图表网格 */
+  .chart-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:20px;
+  }
+  @media(max-width:980px){.chart-grid{grid-template-columns:1fr;}}
+  .chart-card{
+    background:#FFF8EF;border:1px solid var(--line);border-radius:18px;padding:20px;
+    box-shadow:var(--shadow);
+  }
+  .chart-card.full{grid-column:1/-1;}
+  .chart-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+  .chart-head h3{font-family:'Fredoka',sans-serif;font-size:1.05rem;color:var(--c-mint);display:flex;align-items:center;gap:8px;}
+  .chart-head .tag{
+    background:rgba(217,119,6,0.12);color:var(--c-coral);padding:3px 10px;border-radius:12px;
+    font-size:11px;font-family:'JetBrains Mono',monospace;letter-spacing:.06em;
+  }
+  .chart-head .tag.advanced{background:rgba(180,83,9,0.15);color:var(--c-mint);}
+  .chart-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;}
+  .chart-box{width:100%;height:380px;}
+  .chart-box.tall{height:480px;}
+
+  .insight{
+    margin-top:12px;background:#fff8ef;border:1px solid #f0e0c0;border-radius:10px;padding:10px 12px;
+    font-size:12px;color:#3d3a34;line-height:1.7;
+  }
+  .insight b{color:var(--c-coral);}
+
+  /* 数据集说明面板 */
+  .dataset-info{
+    background:linear-gradient(135deg,rgba(217,119,6,0.08),rgba(194,65,12,0.05));
+    border:1px solid #f0e0c0;border-radius:14px;padding:16px 20px;margin-bottom:20px;
+  }
+  .dataset-info h4{font-family:'Fredoka',sans-serif;color:var(--c-coral);margin-bottom:6px;font-size:1rem;}
+  .dataset-info p{font-size:13px;color:#3d3a34;line-height:1.7;}
+  .dataset-info code{background:rgba(217,119,6,0.15);padding:1px 6px;border-radius:4px;font-family:'JetBrains Mono',monospace;color:var(--c-coral);}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div>
+    <div class="title"><i class="fas fa-chart-pie"></i> 数据洞察大屏</div>
+    <div class="sub">ECHARTS · LEARNING & CONVOLUTION INSIGHTS</div>
+  </div>
+  <a href="/" class="nav-back"><i class="fas fa-arrow-left"></i> 返回首页</a>
+</div>
+
+<div class="container">
+
+  <!-- 数据集切换 -->
+  <div class="dataset-tabs">
+    <button class="dataset-tab active" data-ds="learning">
+      <i class="fas fa-graduation-cap"></i> 学习行为数据
+    </button>
+    <button class="dataset-tab" data-ds="kernel">
+      <i class="fas fa-brain"></i> 卷积核应用数据
+    </button>
+  </div>
+
+  <!-- 数据集说明 -->
+  <div class="dataset-info" id="dsInfo"></div>
+
+  <!-- KPI -->
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <!-- 图表区 -->
+  <div class="chart-grid" id="chartArea">
+    <!-- 简单图 1 -->
+    <div class="chart-card">
+      <div class="chart-head">
+        <h3 id="c1Title"><i class="fas fa-chart-pie"></i> 简单图表 1</h3>
+        <span class="tag">SIMPLE</span>
+      </div>
+      <div class="chart-desc" id="c1Desc"></div>
+      <div class="chart-box" id="chart1"></div>
+      <div class="insight" id="c1Insight"></div>
+    </div>
+
+    <!-- 简单图 2 -->
+    <div class="chart-card">
+      <div class="chart-head">
+        <h3 id="c2Title"><i class="fas fa-chart-radar"></i> 简单图表 2</h3>
+        <span class="tag">SIMPLE</span>
+      </div>
+      <div class="chart-desc" id="c2Desc"></div>
+      <div class="chart-box" id="chart2"></div>
+      <div class="insight" id="c2Insight"></div>
+    </div>
+
+    <!-- 复杂图（占满整行） -->
+    <div class="chart-card full">
+      <div class="chart-head">
+        <h3 id="c3Title"><i class="fas fa-cube"></i> 复杂图表</h3>
+        <span class="tag advanced">ADVANCED</span>
+      </div>
+      <div class="chart-desc" id="c3Desc"></div>
+      <div class="chart-box tall" id="chart3"></div>
+      <div class="insight" id="c3Insight"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   虚拟数据生成
+   ============================================================ */
+
+// 数据集 1：学习行为数据
+const learningData = (() => {
+  const days = ['周一','周二','周三','周四','周五','周六','周日'];
+  const watchTime = [42, 38, 51, 47, 65, 88, 76];      // 每日观看时长（分钟）
+  const correctRate = [62, 68, 71, 75, 78, 82, 85];    // 答题正确率（%）
+  const aiAsks = [12, 18, 22, 19, 28, 35, 31];         // AI 提问次数
+  const screenshots = [8, 11, 15, 13, 18, 24, 20];     // 截图笔记次数
+
+  // 学习模块时长占比（饼图）
+  const moduleTime = [
+    {name:'微课观影', value:1245, color:'#D97706'},
+    {name:'课后练习', value:892,  color:'#C2410C'},
+    {name:'AI 助教', value:678,   color:'#B45309'},
+    {name:'笔记复习', value:534,  color:'#EA580C'},
+    {name:'错题回顾', value:312,  color:'#FFD89B'},
+  ];
+
+  // 5 维知识掌握度（雷达图）
+  const knowledge = [
+    {name:'卷积核定义', max:100, value:85},
+    {name:'矩阵运算',   max:100, value:78},
+    {name:'边缘检测',   max:100, value:92},
+    {name:'CNN 结构',   max:100, value:68},
+    {name:'实际应用',   max:100, value:74},
+    {name:'激活函数',   max:100, value:71},
+  ];
+
+  return {days, watchTime, correctRate, aiAsks, screenshots, moduleTime, knowledge};
+})();
+
+// 数据集 2：卷积核应用数据
+const kernelData = (() => {
+  // 8 个经典核 × 4 个任务的准确率（%）—— 用于 3D 柱状图
+  const kernels = ['Sobel-X','Sobel-Y','Laplacian','Gaussian','Sharpen','Emboss','Edge','Identity'];
+  const tasks = ['边缘检测','降噪平滑','纹理识别','物体分割'];
+  const matrix = [
+    // 行: kernel  列: task
+    [92, 35, 68, 71],
+    [91, 34, 67, 70],
+    [88, 28, 72, 65],
+    [22, 95, 41, 58],
+    [76, 30, 84, 78],
+    [55, 40, 77, 52],
+    [94, 33, 69, 73],
+    [10, 88, 25, 30],
+  ];
+
+  // 经典核类型分布（饼图）
+  const distribution = [
+    {name:'边缘检测类', value:38, color:'#C2410C'},
+    {name:'平滑模糊类', value:24, color:'#D97706'},
+    {name:'锐化增强类', value:18, color:'#B45309'},
+    {name:'特殊效果类', value:12, color:'#EA580C'},
+    {name:'恒等变换类', value:8,  color:'#FFD89B'},
+  ];
+
+  // 4 大维度评估（雷达图）
+  const evaluation = [
+    {name:'计算速度',     max:100},
+    {name:'边缘保留',     max:100},
+    {name:'噪声抑制',     max:100},
+    {name:'细节增强',     max:100},
+    {name:'通用性',       max:100},
+  ];
+  const evalSeries = [
+    {name:'Sobel-X',  data:[88, 92, 35, 70, 65]},
+    {name:'Gaussian', data:[72, 30, 95, 25, 85]},
+    {name:'Sharpen',  data:[80, 55, 40, 92, 75]},
+  ];
+
+  // 中国主要 AI 视觉应用城市（地图坐标）
+  // value: [经度, 纬度, 应用案例数]
+  const cityApps = [
+    {name:'北京', value:[116.40, 39.90, 156]},
+    {name:'上海', value:[121.47, 31.23, 142]},
+    {name:'深圳', value:[114.06, 22.55, 138]},
+    {name:'杭州', value:[120.16, 30.29, 121]},
+    {name:'广州', value:[113.27, 23.13, 98]},
+    {name:'成都', value:[104.07, 30.67, 76]},
+    {name:'南京', value:[118.78, 32.06, 68]},
+    {name:'武汉', value:[114.31, 30.59, 62]},
+    {name:'西安', value:[108.95, 34.27, 54]},
+    {name:'合肥', value:[117.28, 31.86, 48]},
+    {name:'重庆', value:[106.55, 29.57, 45]},
+    {name:'青岛', value:[120.38, 36.07, 38]},
+    {name:'长沙', value:[112.94, 28.23, 35]},
+    {name:'天津', value:[117.20, 39.13, 42]},
+    {name:'苏州', value:[120.62, 31.32, 71]},
+  ];
+
+  return {kernels, tasks, matrix, distribution, evaluation, evalSeries, cityApps};
+})();
+
+/* ============================================================
+   初始化 ECharts 实例
+   ============================================================ */
+const chart1 = echarts.init(document.getElementById('chart1'));
+const chart2 = echarts.init(document.getElementById('chart2'));
+const chart3 = echarts.init(document.getElementById('chart3'));
+
+window.addEventListener('resize', ()=>{
+  chart1.resize(); chart2.resize(); chart3.resize();
+});
+
+/* ============================================================
+   渲染数据集 1：学习行为
+   ============================================================ */
+function renderLearning(){
+  // 信息面板
+  document.getElementById('dsInfo').innerHTML = `
+    <h4><i class="fas fa-database"></i> 数据集 · 学习行为（虚拟生成 · 模拟 50 名学生 7 天的学习记录）</h4>
+    <p>采集字段：<code>watchTime</code>（观看时长） · <code>correctRate</code>（答题正确率） ·
+       <code>aiAsks</code>（AI 提问次数） · <code>screenshots</code>（截图笔记次数） ·
+       <code>moduleTime</code>（5 大学习模块的时长分布） · <code>knowledge</code>（6 维知识掌握度）。
+       核心问题：<b>学生在哪些模块停留最久？哪些知识点掌握薄弱？</b></p>
+  `;
+
+  // KPI
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi"><div class="label">本周观看</div><div class="value">407 <span style="font-size:.7em;color:var(--muted)">分钟</span></div><div class="delta">↑ 23% vs 上周</div></div>
+    <div class="kpi coral"><div class="label">平均正确率</div><div class="value">74.4%</div><div class="delta">↑ 6.2 pp</div></div>
+    <div class="kpi mint"><div class="label">AI 提问数</div><div class="value">165 <span style="font-size:.7em;color:var(--muted)">次</span></div><div class="delta">↑ 18%</div></div>
+    <div class="kpi orange"><div class="label">截图笔记</div><div class="value">109 <span style="font-size:.7em;color:var(--muted)">张</span></div><div class="delta">↑ 12%</div></div>
+  `;
+
+  // ---- 简单图 1：学习模块时长占比（环形饼图）----
+  document.getElementById('c1Title').innerHTML = '<i class="fas fa-chart-pie"></i> 学习模块时长占比';
+  document.getElementById('c1Desc').textContent = '展示 5 大学习模块的时间分配，环形饼图直观对比比例。';
+  chart1.setOption({
+    color: learningData.moduleTime.map(x=>x.color),
+    tooltip:{trigger:'item', formatter:'{b}: {c} 分钟 ({d}%)'},
+    legend:{bottom:0, textStyle:{color:'#3d3a34'}},
+    series:[{
+      type:'pie',
+      radius:['38%','68%'],
+      center:['50%','45%'],
+      avoidLabelOverlap:true,
+      itemStyle:{borderRadius:6, borderColor:'#FFF8EF', borderWidth:2},
+      label:{show:true, formatter:'{b}\n{d}%', fontSize:12, color:'#1F2937'},
+      labelLine:{length:8, length2:10},
+      data: learningData.moduleTime,
+    }]
+  }, true);
+  document.getElementById('c1Insight').innerHTML = '<b>洞察：</b>「微课观影」+「课后练习」共占 60%+，是学生主战场；「错题回顾」占比偏低，建议增加复盘提醒。';
+
+  // ---- 简单图 2：6 维知识掌握度（雷达图）----
+  document.getElementById('c2Title').innerHTML = '<i class="fas fa-bullseye"></i> 知识点掌握度雷达';
+  document.getElementById('c2Desc').textContent = '6 维度雷达图，一眼看出学生的强项与弱项。';
+  chart2.setOption({
+    tooltip:{},
+    radar:{
+      indicator: learningData.knowledge.map(k=>({name:k.name, max:k.max})),
+      shape:'polygon',
+      splitArea:{areaStyle:{color:['rgba(217,119,6,0.04)','rgba(217,119,6,0.08)']}},
+      axisName:{color:'#3d3a34', fontSize:12},
+      splitLine:{lineStyle:{color:'rgba(217,119,6,0.25)'}},
+      axisLine:{lineStyle:{color:'rgba(217,119,6,0.3)'}},
+    },
+    series:[{
+      type:'radar',
+      data:[{
+        value: learningData.knowledge.map(k=>k.value),
+        name:'掌握度',
+        areaStyle:{color:'rgba(217,119,6,0.4)'},
+        lineStyle:{color:'#C2410C', width:2},
+        itemStyle:{color:'#C2410C'},
+      }]
+    }]
+  }, true);
+  document.getElementById('c2Insight').innerHTML = '<b>洞察：</b>「边缘检测」掌握最好（92），「CNN 结构」最弱（68）—— 推荐在课后增加 CNN 章节的练习。';
+
+  // ---- 复杂图：每日学习行为多维堆叠图（柱状+折线组合）----
+  document.getElementById('c3Title').innerHTML = '<i class="fas fa-chart-line"></i> 7 天学习行为多维联动分析';
+  document.getElementById('c3Desc').textContent = '柱状（观看时长/AI 提问/截图）+ 折线（正确率），4 个维度同框对比，揭示学习强度与效果的关系。';
+  chart3.setOption({
+    tooltip:{trigger:'axis', axisPointer:{type:'cross'}},
+    legend:{data:['观看时长','AI 提问','截图笔记','正确率%'], bottom:0, textStyle:{color:'#3d3a34'}},
+    grid:{left:50, right:60, top:30, bottom:50},
+    xAxis:[{type:'category', data:learningData.days, axisLine:{lineStyle:{color:'#d9d1c0'}}}],
+    yAxis:[
+      {type:'value', name:'次数 / 分钟', position:'left', axisLine:{lineStyle:{color:'#D97706'}}, splitLine:{lineStyle:{color:'rgba(217,119,6,0.1)'}}},
+      {type:'value', name:'正确率 %', position:'right', max:100, axisLine:{lineStyle:{color:'#C2410C'}}, splitLine:{show:false}},
+    ],
+    series:[
+      {name:'观看时长', type:'bar', data:learningData.watchTime, itemStyle:{color:'#D97706', borderRadius:[6,6,0,0]}, barWidth:14},
+      {name:'AI 提问', type:'bar', data:learningData.aiAsks, itemStyle:{color:'#B45309', borderRadius:[6,6,0,0]}, barWidth:14},
+      {name:'截图笔记', type:'bar', data:learningData.screenshots, itemStyle:{color:'#FFD89B', borderRadius:[6,6,0,0]}, barWidth:14},
+      {name:'正确率%', type:'line', yAxisIndex:1, data:learningData.correctRate,
+       lineStyle:{color:'#C2410C', width:3}, itemStyle:{color:'#C2410C'},
+       symbol:'circle', symbolSize:10, smooth:true,
+       areaStyle:{color:'rgba(194,65,12,0.1)'}},
+    ]
+  }, true);
+  document.getElementById('c3Insight').innerHTML = '<b>洞察：</b>周末（周六周日）学习强度最高，且正确率随学习时长稳定上升，<b>说明持续学习确实有效</b>。AI 提问与正确率正相关 —— 主动提问的学生进步更快。';
+}
+
+/* ============================================================
+   渲染数据集 2：卷积核应用
+   ============================================================ */
+function renderKernel(){
+  // 信息面板
+  document.getElementById('dsInfo').innerHTML = `
+    <h4><i class="fas fa-database"></i> 数据集 · 卷积核应用（虚拟生成 · 基于真实视觉论文统计趋势）</h4>
+    <p>采集字段：<code>matrix</code>（8 种核 × 4 类任务的准确率） · <code>distribution</code>（核类型在工业界的使用占比） ·
+       <code>evalSeries</code>（多维评估指标） · <code>cityApps</code>（中国主要城市的视觉 AI 应用案例数）。
+       核心问题：<b>什么核做什么任务最好？应用集中在哪些城市？</b></p>
+  `;
+
+  // KPI
+  document.getElementById('kpiRow').innerHTML = `
+    <div class="kpi"><div class="label">收录核数量</div><div class="value">8 <span style="font-size:.7em;color:var(--muted)">种</span></div><div class="delta">主流经典核</div></div>
+    <div class="kpi coral"><div class="label">最高准确率</div><div class="value">95% <span style="font-size:.7em;color:var(--muted)">Gaussian/降噪</span></div><div class="delta">平滑任务</div></div>
+    <div class="kpi mint"><div class="label">应用城市</div><div class="value">15 <span style="font-size:.7em;color:var(--muted)">+</span></div><div class="delta">覆盖全国主要城市</div></div>
+    <div class="kpi orange"><div class="label">应用案例</div><div class="value">1194 <span style="font-size:.7em;color:var(--muted)">例</span></div><div class="delta">↑ 持续增长</div></div>
+  `;
+
+  // ---- 简单图 1：核类型分布（饼图）----
+  document.getElementById('c1Title').innerHTML = '<i class="fas fa-chart-pie"></i> 核类型工业使用占比';
+  document.getElementById('c1Desc').textContent = '5 大类核在实际项目中的使用频率分布。';
+  chart1.setOption({
+    color: kernelData.distribution.map(x=>x.color),
+    tooltip:{trigger:'item', formatter:'{b}: {c}% ({d}%)'},
+    legend:{bottom:0, textStyle:{color:'#3d3a34'}},
+    series:[{
+      type:'pie',
+      radius:['38%','68%'],
+      center:['50%','45%'],
+      itemStyle:{borderRadius:6, borderColor:'#FFF8EF', borderWidth:2},
+      label:{show:true, formatter:'{b}\n{d}%', fontSize:12, color:'#1F2937'},
+      data: kernelData.distribution,
+    }]
+  }, true);
+  document.getElementById('c1Insight').innerHTML = '<b>洞察：</b>「边缘检测类」最常用（38%），因为它是所有视觉任务的<b>基础前置步骤</b>。';
+
+  // ---- 简单图 2：3 个核 × 5 维评估（雷达对比）----
+  document.getElementById('c2Title').innerHTML = '<i class="fas fa-bullseye"></i> 三大经典核多维对比';
+  document.getElementById('c2Desc').textContent = '同时对比 Sobel/Gaussian/Sharpen 在 5 个维度上的能力差异。';
+  chart2.setOption({
+    color:['#C2410C','#D97706','#B45309'],
+    tooltip:{},
+    legend:{bottom:0, data: kernelData.evalSeries.map(s=>s.name), textStyle:{color:'#3d3a34'}},
+    radar:{
+      indicator: kernelData.evaluation,
+      shape:'polygon',
+      splitArea:{areaStyle:{color:['rgba(217,119,6,0.04)','rgba(217,119,6,0.08)']}},
+      axisName:{color:'#3d3a34', fontSize:12},
+      splitLine:{lineStyle:{color:'rgba(217,119,6,0.25)'}},
+    },
+    series:[{
+      type:'radar',
+      data: kernelData.evalSeries.map(s=>({
+        value:s.data, name:s.name,
+        areaStyle:{opacity:0.18},
+        lineStyle:{width:2},
+      }))
+    }]
+  }, true);
+  document.getElementById('c2Insight').innerHTML = '<b>洞察：</b>每个核都有<b>专长领域</b>—— Sobel 适合做边缘，Gaussian 擅长降噪，Sharpen 用于细节增强。<b>没有万能核</b>，要选对工具。';
+
+  // ---- 复杂图：中国地图 + 城市散点 ----
+  document.getElementById('c3Title').innerHTML = '<i class="fas fa-map-marked-alt"></i> 中国视觉 AI 应用地图';
+  document.getElementById('c3Desc').textContent = '复杂图选择：<b>地图坐标 + 散点</b>。理由：城市应用数据天然带「地理属性」，地图能直接呈现"东部沿海集中、内陆分散"的产业格局，比纯柱状图更有信息量。';
+
+  // 多源 GeoJSON：哪个能通就用哪个
+  const CHINA_GEO_URLS = [
+    'https://geo.datav.aliyun.com/areas_v3/bound/100000_full.json',
+    'https://cdn.jsdelivr.net/gh/echarts-maps/echarts-china-cities-js@release/dist/china.json',
+    'https://fastly.jsdelivr.net/npm/echarts-countries-js@1.0.6/echarts-countries-js/china.json',
+  ];
+
+  async function loadChinaMap(){
+    if(echarts.getMap('china')) return true;
+    for(const url of CHINA_GEO_URLS){
+      try{
+        const r = await fetch(url, {cache:'force-cache'});
+        if(!r.ok) continue;
+        const geo = await r.json();
+        echarts.registerMap('china', geo);
+        return true;
+      }catch(e){ /* try next */ }
+    }
+    return false;
+  }
+
+  async function renderMap(){
+    chart3.showLoading({text:'加载中国地图中…', color:'#C2410C', textColor:'#1F2937', maskColor:'rgba(255,248,239,0.6)'});
+    const ok = await loadChinaMap();
+    chart3.hideLoading();
+    if(!ok){
+      chart3.setOption({
+        title:{
+          text:'地图加载失败',
+          subtext:'请检查网络（GeoJSON 需联网获取）',
+          left:'center', top:'center',
+          textStyle:{color:'#C2410C', fontFamily:'Fredoka'},
+          subtextStyle:{color:'#6B7280'}
+        }
+      }, true);
+      return;
+    }
+    chart3.setOption({
+      tooltip:{
+        trigger:'item',
+        formatter:p => p.value ? `${p.name}<br/>视觉 AI 应用案例：<b>${p.value[2]}</b> 例` : p.name
+      },
+      visualMap:{
+        min:30, max:160,
+        calculable:true,
+        inRange:{color:['#FFD89B','#D97706','#C2410C']},
+        textStyle:{color:'#3d3a34'},
+        left:'left', bottom:20,
+      },
+      geo:{
+        map:'china',
+        roam:true, zoom:1.1,
+        itemStyle:{areaColor:'#FFF4E6', borderColor:'#D97706', borderWidth:0.6},
+        emphasis:{itemStyle:{areaColor:'#FFE4B5'}, label:{color:'#1F2937'}},
+        label:{show:false},
+      },
+      series:[
+        {
+          name:'应用案例',
+          type:'scatter',
+          coordinateSystem:'geo',
+          data: kernelData.cityApps,
+          symbolSize: v => Math.sqrt(v[2]) * 2.2,
+          itemStyle:{color:'#C2410C', shadowBlur:10, shadowColor:'rgba(194,65,12,0.5)'},
+          label:{show:true, formatter:'{b}', position:'right', color:'#1F2937', fontSize:11},
+        },
+        {
+          name:'TOP5 涟漪',
+          type:'effectScatter',
+          coordinateSystem:'geo',
+          data: kernelData.cityApps.slice().sort((a,b)=>b.value[2]-a.value[2]).slice(0,5),
+          symbolSize: v => Math.sqrt(v[2]) * 2.2,
+          rippleEffect:{period:3, scale:3, brushType:'stroke'},
+          itemStyle:{color:'#EA580C'},
+          label:{show:true, formatter:'{b}', position:'right', color:'#C2410C', fontSize:12, fontWeight:'bold'},
+        }
+      ]
+    }, true);
+  }
+  renderMap();
+
+  document.getElementById('c3Insight').innerHTML = '<b>洞察：</b>视觉 AI 应用<b>北上深杭</b>四城合计占比超 50%，呈现明显的「<b>沿海+省会双中心</b>」分布。中西部城市（成都/武汉/西安）正快速崛起，是下一阶段的产业新增长极。';
+}
+
+/* ============================================================
+   切换数据集
+   ============================================================ */
+const renderers = {learning: renderLearning, kernel: renderKernel};
+document.querySelectorAll('.dataset-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.dataset-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    chart1.clear(); chart2.clear(); chart3.clear();
+    renderers[tab.dataset.ds]();
+  });
+});
+
+/* ---- 初始渲染 ---- */
+renderLearning();
+</script>
+
+</body>
+</html>

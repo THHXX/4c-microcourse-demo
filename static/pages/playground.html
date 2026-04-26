@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-CN" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="google" content="notranslate">
+<meta name="robots" content="notranslate">
+<meta http-equiv="Content-Language" content="zh-CN">
+<title>卷积核操场 · Fabric.js | 卷积核微课</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<!-- fabric.js 仍引入：用于「应用卷积」时的 Image.filters.Convolute 核心能力 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+
+<style>
+  :root{
+    --bg:#FFF4E6; --bg-deep:#F5E6CF;
+    --c-coral:#C2410C; --c-yellow:#D97706; --c-mint:#B45309;
+    --ink:#1F2937; --ink-soft:#3d3a34; --muted:#8a8578;
+    --line:#d9d1c0; --key:#ffffff; --key-press:#f0e9dc;
+    --accent:#D97706; --accent-press:#B45309;
+    --shadow-sm:0 1px 2px rgba(26,24,20,0.08);
+    --shadow-md:0 6px 18px rgba(26,24,20,0.10);
+    --shadow-lg:0 24px 50px -20px rgba(26,24,20,0.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Nunito','PingFang SC',sans-serif;
+    background:var(--bg);
+    background-image:
+      radial-gradient(1200px 600px at 10% 0%, rgba(255,255,255,0.6), transparent 60%),
+      radial-gradient(800px 500px at 100% 100%, rgba(217,119,6,0.10), transparent 70%);
+    color:var(--ink); min-height:100vh; padding:28px 24px;
+  }
+  .top-bar{max-width:1280px;margin:0 auto 18px;display:flex;justify-content:space-between;align-items:center;}
+  .top-bar .title{
+    font-family:'Fredoka',sans-serif;font-size:1.6rem;
+    background:linear-gradient(90deg,var(--c-coral),var(--c-yellow));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .top-bar .sub{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:.1em;}
+  .nav-back{
+    background:#fff;border:1px solid var(--line);padding:8px 16px;border-radius:10px;
+    color:var(--ink);text-decoration:none;font-size:14px;box-shadow:var(--shadow-sm);
+  }
+  .nav-back:hover{background:var(--key-press);}
+
+  .layout{
+    max-width:1280px;margin:0 auto;
+    display:grid;grid-template-columns:1fr 380px 1fr;gap:20px;
+  }
+  @media(max-width:1100px){.layout{grid-template-columns:1fr;}}
+
+  .panel{
+    background:var(--bg-deep);border:1px solid var(--line);border-radius:18px;padding:18px;
+    box-shadow:0 1px 0 rgba(255,255,255,0.8) inset, var(--shadow-lg);
+  }
+  .panel h3{
+    font-family:'Fredoka',sans-serif;font-size:1.05rem;color:var(--c-mint);
+    margin-bottom:12px;display:flex;align-items:center;gap:8px;
+  }
+
+  /* 画布容器：原生 canvas，行高 0 防留白 */
+  .canvas-wrap{
+    background:#faf6ee;border:1px solid var(--line);border-radius:12px;
+    padding:10px;text-align:center;line-height:0;
+  }
+  .canvas-wrap canvas{
+    display:inline-block;background:#fff;border-radius:8px;max-width:100%;
+    box-shadow:var(--shadow-sm);cursor:crosshair;
+  }
+  .canvas-wrap canvas.no-draw{cursor:default;}
+
+  .actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;line-height:1.4;}
+  .btn{
+    background:var(--key);border:1px solid var(--line);padding:8px 14px;border-radius:10px;
+    font-size:13px;font-family:'Nunito',sans-serif;cursor:pointer;color:var(--ink);
+    box-shadow:var(--shadow-sm);transition:all .15s;
+    display:inline-flex;align-items:center;gap:6px;
+  }
+  .btn:hover{background:var(--key-press);transform:translateY(-1px);}
+  .btn:active{transform:translateY(0);}
+  .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .btn-primary:hover{background:var(--accent-press);}
+  .btn-dark{background:#1a1814;color:#fff;border-color:#1a1814;}
+
+  .toolbar{
+    display:flex;flex-wrap:wrap;gap:6px;padding:8px;background:#faf6ee;
+    border:1px solid var(--line);border-radius:10px;margin-bottom:10px;line-height:1.4;
+  }
+  .tool-btn{
+    width:36px;height:36px;border:1px solid var(--line);background:#fff;
+    border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+    color:var(--ink);transition:all .15s;
+  }
+  .tool-btn:hover{background:var(--key-press);color:var(--accent);}
+  .tool-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+
+  .kernel-console{
+    background:#1a1814;color:#fff;border-radius:14px;padding:18px;margin-bottom:14px;
+  }
+  .kernel-console .label{font-family:'JetBrains Mono',monospace;font-size:11px;color:#a89e87;letter-spacing:.12em;text-transform:uppercase;}
+  .kernel-console .formula{
+    font-family:'JetBrains Mono',monospace;font-size:13px;color:#f0e9dc;margin-top:4px;
+    word-break:break-all;min-height:1.6em;
+  }
+  .kernel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0;}
+  .kernel-cell input{
+    width:100%;aspect-ratio:1;text-align:center;font-family:'JetBrains Mono',monospace;
+    font-size:1.1rem;font-weight:600;color:var(--ink);
+    background:#fff;border:1px solid var(--line);border-radius:10px;
+    box-shadow:var(--shadow-sm);transition:all .15s;
+  }
+  .kernel-cell input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(217,119,6,0.18);}
+  .kernel-cell input.center{border-color:var(--accent);background:#fff8ef;}
+
+  .preset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .preset-btn{
+    background:var(--key);border:1px solid var(--line);padding:10px 6px;
+    border-radius:10px;font-size:12px;cursor:pointer;box-shadow:var(--shadow-sm);
+    transition:all .15s;color:var(--ink);font-family:'Nunito',sans-serif;
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+  }
+  .preset-btn:hover{background:var(--key-press);border-color:var(--accent);}
+  .preset-btn i{color:var(--accent);font-size:14px;}
+  .divider{height:1px;background:var(--line);margin:14px 0;}
+
+  .info-box{
+    background:#fff8ef;border:1px solid #f0e0c0;border-radius:10px;padding:10px 12px;
+    font-size:12px;color:var(--ink-soft);line-height:1.6;margin-top:10px;
+  }
+  .info-box code{font-family:'JetBrains Mono',monospace;background:rgba(217,119,6,.12);padding:1px 6px;border-radius:4px;color:var(--c-coral);}
+
+  .stat-row{display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4;}
+  .stat-row b{color:var(--ink);}
+
+  /* 错误提示条 */
+  #errBar{
+    position:fixed;top:0;left:0;right:0;background:#7f1d1d;color:#fff;padding:8px 16px;
+    font-family:'JetBrains Mono',monospace;font-size:12px;z-index:9999;display:none;
+  }
+  #errBar .x{float:right;cursor:pointer;}
+
+  /* 提示徽章：fabric 真实参与的位置 */
+  .badge-fabric{
+    display:inline-block;background:linear-gradient(135deg,#C2410C,#D97706);color:#fff;
+    font-size:10px;padding:2px 8px;border-radius:10px;margin-left:6px;letter-spacing:.05em;
+    font-family:'JetBrains Mono',monospace;vertical-align:middle;
+  }
+</style>
+</head>
+<body>
+
+<div id="errBar"><span id="errMsg"></span><span class="x" onclick="this.parentElement.style.display='none'">✕</span></div>
+
+<div class="top-bar">
+  <div>
+    <div class="title"><i class="fas fa-flask"></i> 卷积核操场</div>
+    <div class="sub">FABRIC.JS · CONVOLUTION · NATIVE CANVAS HYBRID</div>
+  </div>
+  <a href="/" class="nav-back"><i class="fas fa-arrow-left"></i> 返回首页</a>
+</div>
+
+<div class="layout">
+
+  <!-- 左：原图画布（原生 Canvas，但叠加层用 fabric.Canvas 做注释） -->
+  <div class="panel">
+    <h3><i class="fas fa-image"></i> 原图画布（点击下方"自由绘制"可在画布上画）</h3>
+    <div class="toolbar">
+      <button class="tool-btn active" id="t-select" title="选择 / 不绘制"><i class="fas fa-mouse-pointer"></i></button>
+      <button class="tool-btn" id="t-pen" title="自由绘制（红色）"><i class="fas fa-pen" style="color:#C2410C"></i></button>
+      <button class="tool-btn" id="t-pen2" title="自由绘制（深色）"><i class="fas fa-pen" style="color:#1F2937"></i></button>
+      <button class="tool-btn" id="t-eraser" title="清除画笔"><i class="fas fa-eraser"></i></button>
+      <span style="flex:1"></span>
+      <input type="file" id="fileInput" accept="image/*" style="display:none">
+      <button class="btn" id="btnUpload"><i class="fas fa-upload"></i> 上传图片</button>
+      <button class="btn" id="btnDemo"><i class="fas fa-image"></i> 示例图</button>
+    </div>
+    <div class="canvas-wrap">
+      <canvas id="srcCanvas" width="380" height="320"></canvas>
+    </div>
+    <div class="info-box">
+      <b>核心说明：</b> 这块画布用<b>原生 HTML5 Canvas API</b> 做图像加载与绘制。
+      右侧"应用卷积"一键时，会调用 <code>fabric.Image.filters.Convolute</code><span class="badge-fabric">FABRIC</span>
+      执行真实卷积运算 —— fabric.js 的核心滤镜能力在这里发挥作用。
+    </div>
+  </div>
+
+  <!-- 中：卷积核控制台 -->
+  <div class="panel">
+    <h3><i class="fas fa-th"></i> 3×3 卷积核控制台</h3>
+
+    <div class="kernel-console">
+      <div class="label">CURRENT KERNEL</div>
+      <div class="formula" id="kernelFormula">[1,0,-1, 2,0,-2, 1,0,-1]</div>
+      <div class="stat-row" style="color:#a89e87;margin-top:8px;">
+        <span>偏置 bias: <b id="biasShow" style="color:#fff">0</b></span>
+        <span>权重和: <b id="sumShow" style="color:#fff">0</b></span>
+      </div>
+    </div>
+
+    <div class="kernel-grid">
+      <div class="kernel-cell"><input type="number" step="any" data-i="0" value="1"></div>
+      <div class="kernel-cell"><input type="number" step="any" data-i="1" value="0"></div>
+      <div class="kernel-cell"><input type="number" step="any" data-i="2" value="-1"></div>
+      <div class="kernel-cell"><input type="number" step="any" data-i="3" value="2"></div>
+      <div class="kernel-cell"><input type="number" step="any" data-i="4" value="0" class="center"></div>
+      <div class="kernel-cell"><input type="number" step="any" data-i="5" value="-2"></div>
+      <div class="kernel-cell"><input type="number" step="any" data-i="6" value="1"></div>
+      <div class="kernel-cell"><input type="number" step="any" data-i="7" value="0"></div>
+      <div class="kernel-cell"><input type="number" step="any" data-i="8" value="-1"></div>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <input type="number" id="biasInput" value="0" step="any"
+        style="flex:1;padding:8px;border:1px solid var(--line);border-radius:8px;font-family:'JetBrains Mono',monospace;text-align:center;"
+        placeholder="偏置 bias">
+      <button class="btn btn-primary" id="btnApply"><i class="fas fa-play"></i> 应用</button>
+    </div>
+
+    <div class="divider"></div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.12em;margin-bottom:8px;">PRESETS · 经典卷积核</div>
+
+    <div class="preset-grid">
+      <button class="preset-btn" data-preset="identity"><i class="fas fa-equals"></i>恒等</button>
+      <button class="preset-btn" data-preset="edge"><i class="fas fa-mountain"></i>边缘</button>
+      <button class="preset-btn" data-preset="sobelX"><i class="fas fa-arrows-alt-h"></i>Sobel-X</button>
+      <button class="preset-btn" data-preset="sobelY"><i class="fas fa-arrows-alt-v"></i>Sobel-Y</button>
+      <button class="preset-btn" data-preset="sharpen"><i class="fas fa-bolt"></i>锐化</button>
+      <button class="preset-btn" data-preset="blur"><i class="fas fa-tint"></i>模糊</button>
+      <button class="preset-btn" data-preset="emboss"><i class="fas fa-cube"></i>浮雕</button>
+      <button class="preset-btn" data-preset="laplacian"><i class="fas fa-wave-square"></i>拉普拉斯</button>
+      <button class="preset-btn" data-preset="random"><i class="fas fa-dice"></i>随机</button>
+    </div>
+
+    <div class="info-box">
+      <b>知识点</b>：3×3 卷积核滑过图像，每个像素与周围 9 格按权重相乘求和 + 偏置，得到新像素。
+      点击预设核会自动应用<span class="badge-fabric">FABRIC</span>。
+    </div>
+  </div>
+
+  <!-- 右：卷积结果 -->
+  <div class="panel">
+    <h3><i class="fas fa-magic"></i> 卷积结果</h3>
+    <div class="canvas-wrap">
+      <canvas id="dstCanvas" width="380" height="320" class="no-draw"></canvas>
+    </div>
+    <div class="actions">
+      <button class="btn" id="btnDownload"><i class="fas fa-download"></i> 下载结果</button>
+      <button class="btn btn-dark" id="btnReset"><i class="fas fa-redo"></i> 重置</button>
+    </div>
+    <div class="info-box">
+      <b>巧记三步走</b>：① 滑窗 → ② 加权求和 → ③ 写入新图。
+      这就是 CNN 卷积层每一层做的事 —— 只是 CNN 里的卷积核权重是 "学" 出来的。
+    </div>
+    <div class="stat-row">
+      <span>滤镜：<b id="filterName">Sobel-X</b></span>
+      <span>耗时：<b id="costTime">0 ms</b></span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+'use strict';
+
+/* ---- 全局错误兜底 ---- */
+window.addEventListener('error', e => {
+  const bar = document.getElementById('errBar');
+  if(bar){
+    document.getElementById('errMsg').textContent = '错误: ' + (e.message||'') + ' @ ' + (e.lineno||'');
+    bar.style.display = 'block';
+  }
+});
+
+/* ============================================================
+   原生 Canvas 实现（不依赖 fabric.Canvas）
+   ============================================================ */
+const CANVAS_W = 380, CANVAS_H = 320;
+
+const srcCanvas = document.getElementById('srcCanvas');
+const dstCanvas = document.getElementById('dstCanvas');
+const srcCtx = srcCanvas.getContext('2d');
+const dstCtx = dstCanvas.getContext('2d');
+
+// 原图（HTMLImageElement）—— 卷积运算的输入源
+let srcImageEl = null;
+// 当前画笔
+let currentPenColor = null;   // null 表示不绘制；'#C2410C' / '#1F2937'
+let isDrawing = false;
+let lastX = 0, lastY = 0;
+
+/* ---- 重绘函数：先画图，再画涂鸦 ---- */
+const strokes = [];   // 存所有笔画点 {color, points:[{x,y}]}
+function redrawSrc(){
+  srcCtx.fillStyle = '#fff';
+  srcCtx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+  if(srcImageEl){
+    // 等比缩放居中
+    const scale = Math.min(CANVAS_W / srcImageEl.width, CANVAS_H / srcImageEl.height) * 0.95;
+    const w = srcImageEl.width * scale, h = srcImageEl.height * scale;
+    const x = (CANVAS_W - w) / 2, y = (CANVAS_H - h) / 2;
+    srcCtx.drawImage(srcImageEl, x, y, w, h);
+  }
+  // 重绘笔画
+  for(const stroke of strokes){
+    srcCtx.strokeStyle = stroke.color;
+    srcCtx.lineWidth = 3;
+    srcCtx.lineCap = 'round';
+    srcCtx.lineJoin = 'round';
+    srcCtx.beginPath();
+    for(let i=0;i<stroke.points.length;i++){
+      const p = stroke.points[i];
+      if(i===0) srcCtx.moveTo(p.x, p.y);
+      else srcCtx.lineTo(p.x, p.y);
+    }
+    srcCtx.stroke();
+  }
+}
+
+/* ---- 鼠标绘制事件（绑在 canvas 上，扩展无法拦截 canvas 内部坐标系）---- */
+function getPos(e){
+  const rect = srcCanvas.getBoundingClientRect();
+  const sx = CANVAS_W / rect.width;
+  const sy = CANVAS_H / rect.height;
+  return {
+    x: (e.clientX - rect.left) * sx,
+    y: (e.clientY - rect.top) * sy
+  };
+}
+srcCanvas.addEventListener('mousedown', e => {
+  if(!currentPenColor) return;
+  isDrawing = true;
+  const p = getPos(e);
+  lastX = p.x; lastY = p.y;
+  strokes.push({color: currentPenColor, points:[{x:p.x, y:p.y}]});
+});
+srcCanvas.addEventListener('mousemove', e => {
+  if(!isDrawing || !currentPenColor) return;
+  const p = getPos(e);
+  const cur = strokes[strokes.length - 1];
+  cur.points.push({x:p.x, y:p.y});
+  // 增量绘制：只画最后一段，避免每次重绘整张图
+  srcCtx.strokeStyle = currentPenColor;
+  srcCtx.lineWidth = 3;
+  srcCtx.lineCap = 'round';
+  srcCtx.lineJoin = 'round';
+  srcCtx.beginPath();
+  srcCtx.moveTo(lastX, lastY);
+  srcCtx.lineTo(p.x, p.y);
+  srcCtx.stroke();
+  lastX = p.x; lastY = p.y;
+});
+srcCanvas.addEventListener('mouseup', () => { isDrawing = false; });
+srcCanvas.addEventListener('mouseleave', () => { isDrawing = false; });
+
+/* ============================================================
+   预设核
+   ============================================================ */
+const PRESETS = {
+  identity:  {k:[0,0,0, 0,1,0, 0,0,0], b:0,  name:'恒等核'},
+  edge:      {k:[-1,-1,-1, -1,8,-1, -1,-1,-1], b:0, name:'边缘检测'},
+  sobelX:    {k:[1,0,-1, 2,0,-2, 1,0,-1], b:0, name:'Sobel-X'},
+  sobelY:    {k:[1,2,1, 0,0,0, -1,-2,-1], b:0, name:'Sobel-Y'},
+  sharpen:   {k:[0,-1,0, -1,5,-1, 0,-1,0], b:0, name:'锐化'},
+  blur:      {k:[1/9,1/9,1/9, 1/9,1/9,1/9, 1/9,1/9,1/9], b:0, name:'均值模糊'},
+  emboss:    {k:[-2,-1,0, -1,1,1, 0,1,2], b:128, name:'浮雕'},
+  laplacian: {k:[0,1,0, 1,-4,1, 0,1,0], b:0, name:'拉普拉斯'},
+};
+
+function readKernel(){
+  const inputs = document.querySelectorAll('.kernel-cell input');
+  const arr = Array.from(inputs).map(inp => parseFloat(inp.value)||0);
+  const bias = parseFloat(document.getElementById('biasInput').value)||0;
+  return {kernel:arr, bias};
+}
+function writeKernel(arr, bias){
+  document.querySelectorAll('.kernel-cell input').forEach((inp,i)=>{
+    inp.value = +arr[i].toFixed(4);
+  });
+  document.getElementById('biasInput').value = bias;
+  refreshFormula();
+}
+function refreshFormula(){
+  const {kernel, bias} = readKernel();
+  document.getElementById('kernelFormula').textContent =
+    '[' + kernel.map(v=>(+v.toFixed(3))).join(', ') + ']';
+  document.getElementById('biasShow').textContent = bias;
+  document.getElementById('sumShow').textContent = (+kernel.reduce((a,b)=>a+b,0).toFixed(3));
+}
+
+/* ============================================================
+   应用卷积 —— fabric.Image.filters.Convolute 在这里参与运算
+   ============================================================ */
+function applyConvolution(){
+  const t0 = performance.now();
+  const {kernel, bias} = readKernel();
+
+  // 1) 从 srcCanvas 取出当前像素（含图片+涂鸦）转成 dataURL
+  const srcDataURL = srcCanvas.toDataURL('image/png');
+
+  // 2) fabric 加载这张图，应用 Convolute 滤镜，再吐出像素
+  if(typeof fabric === 'undefined'){
+    // 兜底：fabric 没加载，用纯原生卷积（保证可用）
+    nativeConvolute(kernel, bias);
+    document.getElementById('costTime').textContent =
+      (performance.now()-t0).toFixed(1) + ' ms · 原生';
+    return;
+  }
+  fabric.Image.fromURL(srcDataURL, fimg => {
+    if(!fimg){ nativeConvolute(kernel, bias); return; }
+    fimg.filters = [
+      new fabric.Image.filters.Convolute({matrix: kernel})
+    ];
+    if(bias !== 0){
+      fimg.filters.push(new fabric.Image.filters.Brightness({brightness: bias/255}));
+    }
+    fimg.applyFilters();
+
+    // 把 fabric 处理后的图绘到 dstCanvas（原生 drawImage）
+    dstCtx.fillStyle = '#fff';
+    dstCtx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+    const fEl = fimg.getElement();   // <canvas> 或 <img>
+    dstCtx.drawImage(fEl, 0, 0, CANVAS_W, CANVAS_H);
+
+    document.getElementById('costTime').textContent =
+      (performance.now()-t0).toFixed(1) + ' ms · fabric';
+  });
+}
+
+/* ---- 兜底：纯原生卷积（fabric 不可用时） ---- */
+function nativeConvolute(kernel, bias){
+  const src = srcCtx.getImageData(0, 0, CANVAS_W, CANVAS_H);
+  const dst = dstCtx.createImageData(CANVAS_W, CANVAS_H);
+  const sd = src.data, dd = dst.data;
+  const w = CANVAS_W, h = CANVAS_H;
+  for(let y=1;y<h-1;y++){
+    for(let x=1;x<w-1;x++){
+      let r=0,g=0,b=0;
+      for(let ky=-1;ky<=1;ky++){
+        for(let kx=-1;kx<=1;kx++){
+          const off = ((y+ky)*w + (x+kx))*4;
+          const k = kernel[(ky+1)*3 + (kx+1)];
+          r += sd[off]*k; g += sd[off+1]*k; b += sd[off+2]*k;
+        }
+      }
+      const i = (y*w + x)*4;
+      dd[i]   = Math.max(0, Math.min(255, r+bias));
+      dd[i+1] = Math.max(0, Math.min(255, g+bias));
+      dd[i+2] = Math.max(0, Math.min(255, b+bias));
+      dd[i+3] = 255;
+    }
+  }
+  dstCtx.putImageData(dst, 0, 0);
+}
+
+/* ============================================================
+   加载图片
+   ============================================================ */
+function loadImageURL(url){
+  const img = new Image();
+  img.onload = () => {
+    srcImageEl = img;
+    strokes.length = 0;   // 切图时清空涂鸦
+    redrawSrc();
+    applyConvolution();
+  };
+  img.onerror = () => {
+    const bar = document.getElementById('errBar');
+    document.getElementById('errMsg').textContent = '图片加载失败';
+    bar.style.display = 'block';
+  };
+  img.src = url;
+}
+
+function loadDemo(){
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='320' height='280'>
+    <defs>
+      <linearGradient id='g' x1='0' y1='0' x2='1' y2='1'>
+        <stop offset='0' stop-color='#FFD89B'/><stop offset='1' stop-color='#C2410C'/>
+      </linearGradient>
+    </defs>
+    <rect width='100%' height='100%' fill='url(#g)'/>
+    <circle cx='80' cy='90' r='40' fill='#fff' opacity='.85'/>
+    <circle cx='200' cy='100' r='55' fill='#1F2937' opacity='.7'/>
+    <rect x='40' y='180' width='240' height='60' fill='#fff' opacity='.9'/>
+    <text x='160' y='220' text-anchor='middle' font-size='28' fill='#C2410C' font-family='Arial' font-weight='bold'>CONV</text>
+    <line x1='0' y1='160' x2='320' y2='160' stroke='#1F2937' stroke-width='3'/>
+  </svg>`;
+  const dataURL = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
+  loadImageURL(dataURL);
+}
+
+/* ============================================================
+   事件委托：所有按钮统一绑到 document
+   ============================================================ */
+const ACTIONS = {
+  btnUpload: ()=> document.getElementById('fileInput').click(),
+  btnDemo: loadDemo,
+  btnApply: applyConvolution,
+  btnDownload: ()=>{
+    const url = dstCanvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = url; a.download = 'conv_result.png'; a.click();
+  },
+  btnReset: ()=>{
+    srcImageEl = null; strokes.length = 0;
+    srcCtx.fillStyle = '#fff'; srcCtx.fillRect(0,0,CANVAS_W,CANVAS_H);
+    dstCtx.fillStyle = '#fff'; dstCtx.fillRect(0,0,CANVAS_W,CANVAS_H);
+  },
+  't-select': ()=>{ currentPenColor = null; setActiveTool('t-select'); srcCanvas.classList.add('no-draw'); },
+  't-pen':    ()=>{ currentPenColor = '#C2410C'; setActiveTool('t-pen'); srcCanvas.classList.remove('no-draw'); },
+  't-pen2':   ()=>{ currentPenColor = '#1F2937'; setActiveTool('t-pen2'); srcCanvas.classList.remove('no-draw'); },
+  't-eraser': ()=>{ strokes.length = 0; redrawSrc(); },
+};
+
+function setActiveTool(id){
+  document.querySelectorAll('.tool-btn').forEach(b=>b.classList.remove('active'));
+  if(id){ const el = document.getElementById(id); if(el) el.classList.add('active'); }
+}
+
+document.addEventListener('click', e => {
+  // 1) 优先匹配预设核按钮（按 class 找，不看 id）
+  const preset = e.target.closest('.preset-btn');
+  if(preset){
+    const key = preset.dataset.preset;
+    let cfg;
+    if(key === 'random'){
+      cfg = {k: Array.from({length:9}, ()=> +(Math.random()*2-1).toFixed(2)), b:0, name:'随机核'};
+    } else { cfg = PRESETS[key]; }
+    if(cfg){
+      writeKernel(cfg.k, cfg.b);
+      document.getElementById('filterName').textContent = cfg.name;
+      applyConvolution();
+    }
+    return;
+  }
+  // 2) 其它按钮按 id 派发
+  const btn = e.target.closest('[id]');
+  if(!btn) return;
+  const handler = ACTIONS[btn.id];
+  if(handler){
+    try{ handler(); }catch(err){
+      console.error(btn.id, err);
+      const bar = document.getElementById('errBar');
+      document.getElementById('errMsg').textContent = btn.id + ' 出错: ' + err.message;
+      bar.style.display = 'block';
+    }
+  }
+});
+
+/* ---- 文件上传 ---- */
+document.getElementById('fileInput').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => loadImageURL(ev.target.result);
+  reader.readAsDataURL(file);
+});
+
+/* ---- 卷积核输入实时刷新公式 ---- */
+document.querySelectorAll('.kernel-cell input, #biasInput').forEach(inp=>{
+  inp.addEventListener('input', refreshFormula);
+});
+
+/* ---- 暴露调试 ---- */
+window.app = { srcCanvas, dstCanvas, srcCtx, dstCtx, applyConvolution, loadDemo, redrawSrc };
+
+/* ---- 启动 ---- */
+try{ refreshFormula(); }catch(e){ console.error('refreshFormula', e); }
+try{ setActiveTool('t-select'); }catch(e){}
+try{ srcCanvas.classList.add('no-draw'); loadDemo(); }catch(e){ console.error('loadDemo', e); }
+console.log('[Playground] 初始化完成', {srcCanvas, dstCanvas, fabricLoaded: typeof fabric !== 'undefined'});
+</script>
+
+</body>
+</html>

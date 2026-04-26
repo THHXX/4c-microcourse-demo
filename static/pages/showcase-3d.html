@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-CN" translate="no" class="notranslate">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="google" content="notranslate">
+<meta name="robots" content="notranslate">
+<meta http-equiv="Content-Language" content="zh-CN">
+<title>3D 卷积核展示 · Three.js | 卷积核微课</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<!-- 用 r128：examples/js/controls/OrbitControls.js 仍以全局 THREE.OrbitControls 暴露，最稳 -->
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<style>
+  :root{
+    --bg:#FFF4E6; --bg-deep:#F5E6CF; --c-coral:#C2410C; --c-yellow:#D97706; --c-mint:#B45309;
+    --ink:#1F2937; --muted:#6B7280; --line:#d9d1c0;
+    --shadow:0 20px 40px rgba(17,24,39,0.14);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Nunito','PingFang SC',sans-serif;
+    background:var(--bg);
+    background-image:
+      radial-gradient(1200px 600px at 10% 0%, rgba(255,255,255,0.6), transparent 60%),
+      radial-gradient(800px 500px at 100% 100%, rgba(217,119,6,0.10), transparent 70%);
+    color:var(--ink); min-height:100vh; padding:24px;
+  }
+  .top-bar{max-width:1280px;margin:0 auto 18px;display:flex;justify-content:space-between;align-items:center;}
+  .top-bar .title{
+    font-family:'Fredoka',sans-serif;font-size:1.6rem;
+    background:linear-gradient(90deg,var(--c-coral),var(--c-yellow));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .top-bar .sub{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:.1em;}
+  .nav-back{
+    background:#fff;border:1px solid var(--line);padding:8px 16px;border-radius:10px;
+    color:var(--ink);text-decoration:none;font-size:14px;
+  }
+  .nav-back:hover{background:#f0e9dc;}
+
+  .layout{
+    max-width:1280px; margin:0 auto;
+    display:grid; grid-template-columns:1fr 320px; gap:20px;
+  }
+  @media(max-width:980px){.layout{grid-template-columns:1fr;}}
+
+  .scene-wrap{
+    position:relative;
+    background:linear-gradient(180deg, #1a1814 0%, #2a2722 100%);
+    border-radius:18px; overflow:hidden; min-height:600px;
+    box-shadow:var(--shadow); border:1px solid var(--line);
+  }
+  #threeCanvas{display:block;width:100%;height:600px;background:#1a1814;}
+  .hud{
+    position:absolute; top:16px; left:16px; right:16px;
+    display:flex; justify-content:space-between; align-items:flex-start;
+    pointer-events:none; color:#fff;
+  }
+  .hud .pill{
+    background:rgba(0,0,0,0.5); backdrop-filter:blur(8px);
+    padding:6px 12px; border-radius:20px; font-family:'JetBrains Mono',monospace;
+    font-size:11px; letter-spacing:.08em; pointer-events:auto;
+    border:1px solid rgba(255,255,255,0.15);
+  }
+  .hud .pill b{color:#FFD89B;}
+  .scene-tabs{
+    position:absolute; bottom:16px; left:50%; transform:translateX(-50%);
+    display:flex; gap:6px; background:rgba(0,0,0,0.5); backdrop-filter:blur(8px);
+    padding:6px; border-radius:14px; border:1px solid rgba(255,255,255,0.12);
+  }
+  .scene-tab{
+    padding:8px 14px; color:#f0e9dc; background:transparent; border:none; cursor:pointer;
+    border-radius:10px; font-size:13px; font-family:'Nunito',sans-serif; transition:all .18s;
+  }
+  .scene-tab:hover{background:rgba(255,255,255,0.08);}
+  .scene-tab.active{background:linear-gradient(135deg,#C2410C,#D97706);color:#fff;}
+
+  .panel{
+    background:#FFF8EF; border:1px solid var(--line); border-radius:18px; padding:20px;
+    box-shadow:var(--shadow); display:flex; flex-direction:column; gap:14px;
+  }
+  .panel h3{font-family:'Fredoka',sans-serif;color:var(--c-mint);font-size:1.05rem;display:flex;align-items:center;gap:8px;}
+  .info-card{
+    background:#fff8ef; border:1px solid #f0e0c0; border-radius:10px; padding:12px;
+    font-size:13px; line-height:1.7; color:#3d3a34;
+  }
+  .info-card b{color:var(--c-coral);}
+  .info-card code{font-family:'JetBrains Mono',monospace;background:rgba(217,119,6,.12);padding:1px 6px;border-radius:4px;color:var(--c-coral);}
+
+  .slider-row{display:flex;align-items:center;gap:10px;font-size:13px;}
+  .slider-row label{flex:0 0 70px; color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:11px;}
+  .slider-row input[type=range]{flex:1; accent-color:var(--c-yellow);}
+  .slider-row span{flex:0 0 40px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--ink);}
+
+  .btn{
+    background:#fff;border:1px solid var(--line);padding:8px 14px;border-radius:10px;
+    cursor:pointer; font-size:13px; color:var(--ink);
+    display:inline-flex; align-items:center; gap:6px; font-family:'Nunito',sans-serif;
+  }
+  .btn:hover{background:#f0e9dc;}
+  .btn-primary{background:var(--c-yellow);color:#fff;border-color:var(--c-yellow);}
+  .btn-primary:hover{background:var(--c-mint);}
+  .btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+
+  .legend{display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--muted);}
+  .legend span{display:inline-flex;align-items:center;gap:6px;}
+  .dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <div>
+    <div class="title"><i class="fas fa-cube"></i> 3D 卷积核展示厅</div>
+    <div class="sub">THREE.JS · 3D CONVOLUTION VISUALIZATION</div>
+  </div>
+  <a href="/" class="nav-back"><i class="fas fa-arrow-left"></i> 返回首页</a>
+</div>
+
+<div class="layout">
+
+  <div class="scene-wrap">
+    <canvas id="threeCanvas"></canvas>
+    <div class="hud">
+      <div class="pill"><i class="fas fa-eye"></i> 当前场景：<b id="sceneName">3D 卷积核</b></div>
+      <div class="pill"><i class="fas fa-mouse"></i> 鼠标拖拽 / 滚轮缩放 / 右键平移</div>
+    </div>
+    <div class="scene-tabs">
+      <button class="scene-tab active" data-scene="kernel">3D 卷积核</button>
+      <button class="scene-tab" data-scene="sliding">滑窗动画</button>
+      <button class="scene-tab" data-scene="featuremap">特征图金字塔</button>
+      <button class="scene-tab" data-scene="hover">鼠标悬浮</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h3><i class="fas fa-sliders-h"></i> 交互控制</h3>
+
+    <div class="slider-row">
+      <label>旋转速度</label>
+      <input type="range" id="rotSpeed" min="0" max="100" value="30">
+      <span id="rotVal">0.3</span>
+    </div>
+    <div class="slider-row">
+      <label>核大小</label>
+      <input type="range" id="kSize" min="3" max="9" step="2" value="3">
+      <span id="kSizeVal">3×3</span>
+    </div>
+    <div class="slider-row">
+      <label>发光度</label>
+      <input type="range" id="glow" min="0" max="100" value="60">
+      <span id="glowVal">0.6</span>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnAuto"><i class="fas fa-sync"></i> 自动旋转</button>
+      <button class="btn" id="btnReset"><i class="fas fa-compress-arrows-alt"></i> 复位</button>
+      <button class="btn" id="btnWire"><i class="fas fa-border-none"></i> 线框</button>
+    </div>
+
+    <div class="legend">
+      <span><span class="dot" style="background:#D97706"></span>正权重</span>
+      <span><span class="dot" style="background:#1F2937"></span>零权重</span>
+      <span><span class="dot" style="background:#C2410C"></span>负权重</span>
+    </div>
+
+    <div class="info-card" id="sceneDesc">
+      <b>3D 卷积核：</b> 把抽象的 3×3 矩阵 "立体化"。每个小立方体的高度 = 权重绝对值，颜色代表正负 ——
+      你能直接 "看到" 一个边缘检测核长什么样。
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   Three.js 主程序
+   ============================================================ */
+const canvas = document.getElementById('threeCanvas');
+// 兜底：若父容器尺寸还没算出来，给个安全值
+const initW = canvas.clientWidth || canvas.parentElement.clientWidth || 800;
+const initH = canvas.clientHeight || 600;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1a1814);
+scene.fog = new THREE.Fog(0x1a1814, 30, 80);
+
+const camera = new THREE.PerspectiveCamera(45, initW/initH, 0.1, 1000);
+camera.position.set(8, 8, 12);
+camera.lookAt(0,0,0);
+
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false});
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(initW, initH, false);
+renderer.shadowMap.enabled = true;
+
+let controls;
+if(typeof THREE.OrbitControls === 'function'){
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.07;
+} else {
+  // 降级：没有 OrbitControls 也能看到自动旋转的场景
+  console.warn('OrbitControls 未加载，使用降级模式');
+  controls = { update(){}, target:{set(){}} };
+}
+
+/* ---- 灯光 ---- */
+scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+const dirLight = new THREE.DirectionalLight(0xffd89b, 0.9);
+dirLight.position.set(10, 12, 8); dirLight.castShadow = true;
+scene.add(dirLight);
+const pt = new THREE.PointLight(0xC2410C, 0.6, 30);
+pt.position.set(-6, 4, -6); scene.add(pt);
+
+/* ---- 公用工具 ---- */
+const SOBEL_X = [1,0,-1, 2,0,-2, 1,0,-1];
+const root = new THREE.Group();
+scene.add(root);
+let autoRotate = true;
+let wireframe = false;
+let glowFactor = 0.6;
+let rotSpeedFactor = 0.3;
+let currentScene = 'kernel';
+
+function clearRoot(){
+  while(root.children.length){
+    const c = root.children.pop();
+    c.traverse?.(o=>{ o.geometry?.dispose(); o.material?.dispose?.(); });
+  }
+}
+function colorByWeight(w, max){
+  const n = w / max;
+  if(Math.abs(n) < 0.05) return new THREE.Color(0x1F2937);
+  if(n > 0) return new THREE.Color().lerpColors(new THREE.Color(0xFFD89B), new THREE.Color(0xD97706), n);
+  return new THREE.Color().lerpColors(new THREE.Color(0xFCA5A5), new THREE.Color(0xC2410C), -n);
+}
+
+/* ============================================================
+   场景 1：3D 卷积核（每个权重一个立方体）
+   ============================================================ */
+function buildKernelScene(kernelArr, size=3){
+  clearRoot();
+  const max = Math.max(...kernelArr.map(Math.abs)) || 1;
+  const spacing = 1.6;
+  for(let r=0;r<size;r++){
+    for(let c=0;c<size;c++){
+      const w = kernelArr[r*size+c] ?? 0;
+      const h = Math.max(0.2, Math.abs(w)/max * 2.5);
+      const geo = new THREE.BoxGeometry(1.1, h, 1.1);
+      const color = colorByWeight(w, max);
+      const mat = new THREE.MeshStandardMaterial({
+        color, metalness:0.3, roughness:0.4,
+        emissive:color, emissiveIntensity:glowFactor*0.4,
+        wireframe
+      });
+      const cube = new THREE.Mesh(geo, mat);
+      cube.position.set((c-(size-1)/2)*spacing, h/2, (r-(size-1)/2)*spacing);
+      cube.castShadow = true;
+      root.add(cube);
+
+      // 数值标签（用 sprite）
+      const label = makeLabel(w.toFixed(2));
+      label.position.set(cube.position.x, h+0.7, cube.position.z);
+      root.add(label);
+    }
+  }
+  // 地面
+  const planeGeo = new THREE.PlaneGeometry(size*spacing+2, size*spacing+2);
+  const planeMat = new THREE.MeshStandardMaterial({color:0xF5E6CF, roughness:0.9});
+  const plane = new THREE.Mesh(planeGeo, planeMat);
+  plane.rotation.x = -Math.PI/2; plane.receiveShadow = true;
+  root.add(plane);
+}
+
+function makeLabel(text){
+  const c = document.createElement('canvas'); c.width=128; c.height=64;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = 'rgba(255,255,255,0.95)';
+  ctx.fillRect(0,0,128,64); ctx.strokeStyle = '#D97706'; ctx.lineWidth=2; ctx.strokeRect(2,2,124,60);
+  ctx.fillStyle = '#1F2937'; ctx.font = 'bold 28px JetBrains Mono';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText(text, 64, 32);
+  const tex = new THREE.CanvasTexture(c);
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, transparent:true}));
+  sprite.scale.set(1.4, 0.7, 1);
+  return sprite;
+}
+
+/* ============================================================
+   场景 2：滑窗动画（卷积核扫过 5×5 像素网格）
+   ============================================================ */
+let slidingState = null;
+function buildSlidingScene(){
+  clearRoot();
+  const size = 5;
+  const spacing = 1.2;
+  // 像素网格
+  const pixels = [];
+  for(let r=0;r<size;r++){
+    for(let c=0;c<size;c++){
+      const v = Math.random();
+      const geo = new THREE.BoxGeometry(1, 0.3, 1);
+      const mat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color().setHSL(0.08, 0.4, 0.4 + v*0.3),
+        roughness:0.6
+      });
+      const px = new THREE.Mesh(geo, mat);
+      px.position.set((c-2)*spacing, 0, (r-2)*spacing);
+      root.add(px);
+      pixels.push({mesh:px, r, c, originalColor: mat.color.clone()});
+    }
+  }
+  // 卷积核框（半透明高亮立方体）
+  const kernelBoxGeo = new THREE.BoxGeometry(3*spacing-0.05, 1.2, 3*spacing-0.05);
+  const kernelBoxMat = new THREE.MeshStandardMaterial({
+    color:0xD97706, transparent:true, opacity:0.35,
+    emissive:0xD97706, emissiveIntensity:0.6,
+    wireframe:false
+  });
+  const kBox = new THREE.Mesh(kernelBoxGeo, kernelBoxMat);
+  root.add(kBox);
+  // 边缘线框
+  const edges = new THREE.LineSegments(
+    new THREE.EdgesGeometry(kernelBoxGeo),
+    new THREE.LineBasicMaterial({color:0xC2410C, linewidth:2})
+  );
+  kBox.add(edges);
+
+  slidingState = {pixels, kBox, size, spacing, idx:0, t:0};
+}
+function updateSliding(dt){
+  if(!slidingState) return;
+  slidingState.t += dt;
+  if(slidingState.t > 0.6){
+    slidingState.t = 0;
+    slidingState.idx = (slidingState.idx + 1) % 9;
+  }
+  const i = slidingState.idx;
+  const r = Math.floor(i/3), c = i%3;
+  const sp = slidingState.spacing;
+  // 位置（中心从 (-1,-1) 到 (1,1)）
+  const targetX = (c-1)*sp;
+  const targetZ = (r-1)*sp;
+  slidingState.kBox.position.x += (targetX - slidingState.kBox.position.x) * 0.15;
+  slidingState.kBox.position.z += (targetZ - slidingState.kBox.position.z) * 0.15;
+  slidingState.kBox.position.y = 0.6 + Math.sin(performance.now()*0.003)*0.05;
+  // 高亮被覆盖的像素
+  slidingState.pixels.forEach(p=>{
+    const dr = p.r - 2 - (r-1);
+    const dc = p.c - 2 - (c-1);
+    const inside = Math.abs(p.mesh.position.x - targetX) < sp*1.5 - 0.1 &&
+                   Math.abs(p.mesh.position.z - targetZ) < sp*1.5 - 0.1;
+    p.mesh.material.emissive.setHex(inside ? 0xD97706 : 0x000000);
+    p.mesh.material.emissiveIntensity = inside ? 0.5 : 0;
+  });
+}
+
+/* ============================================================
+   场景 3：特征图金字塔（CNN 多层结构）
+   ============================================================ */
+function buildPyramid(){
+  clearRoot();
+  const layers = [
+    {n:6, size:1.2, color:0xFFD89B, label:'输入层'},
+    {n:5, size:1.0, color:0xD97706, label:'Conv1'},
+    {n:4, size:0.8, color:0xC2410C, label:'Conv2'},
+    {n:3, size:0.6, color:0xB45309, label:'Conv3'},
+  ];
+  let y = 0;
+  layers.forEach((L, idx)=>{
+    for(let r=0;r<L.n;r++){
+      for(let c=0;c<L.n;c++){
+        const geo = new THREE.BoxGeometry(L.size*0.85, 0.25, L.size*0.85);
+        const mat = new THREE.MeshStandardMaterial({
+          color:L.color, roughness:0.5, metalness:0.3,
+          emissive:L.color, emissiveIntensity:0.15+glowFactor*0.2,
+          wireframe
+        });
+        const m = new THREE.Mesh(geo, mat);
+        m.position.set(
+          (c-(L.n-1)/2)*L.size,
+          y,
+          (r-(L.n-1)/2)*L.size
+        );
+        root.add(m);
+      }
+    }
+    // 层标签
+    const label = makeLabel(L.label);
+    label.position.set(L.n*L.size/2 + 1.5, y, 0);
+    label.scale.set(2.2,1.1,1);
+    root.add(label);
+    y += 1.6;
+  });
+}
+
+/* ============================================================
+   场景 4：鼠标悬浮交互（特征图浮起）
+   ============================================================ */
+let hoverState = null;
+function buildHoverScene(){
+  clearRoot();
+  const size = 6;
+  const sp = 1.1;
+  const cubes = [];
+  for(let r=0;r<size;r++){
+    for(let c=0;c<size;c++){
+      const v = Math.sin(r*0.7)*Math.cos(c*0.7)*0.5+0.5;
+      const geo = new THREE.BoxGeometry(0.95, 0.4, 0.95);
+      const color = new THREE.Color().setHSL(0.08, 0.6, 0.4+v*0.3);
+      const mat = new THREE.MeshStandardMaterial({color, roughness:0.5,
+        emissive:color, emissiveIntensity:0.1});
+      const m = new THREE.Mesh(geo, mat);
+      m.position.set((c-(size-1)/2)*sp, 0, (r-(size-1)/2)*sp);
+      m.userData.baseY = 0;
+      m.userData.baseColor = color.clone();
+      root.add(m);
+      cubes.push(m);
+    }
+  }
+  hoverState = {cubes, raycaster:new THREE.Raycaster(), mouse:new THREE.Vector2(-100,-100)};
+  canvas.addEventListener('pointermove', onHoverMove);
+}
+function onHoverMove(e){
+  if(currentScene !== 'hover' || !hoverState) return;
+  const rect = canvas.getBoundingClientRect();
+  hoverState.mouse.x = ((e.clientX-rect.left)/rect.width)*2-1;
+  hoverState.mouse.y = -((e.clientY-rect.top)/rect.height)*2+1;
+}
+function updateHover(){
+  if(!hoverState) return;
+  hoverState.raycaster.setFromCamera(hoverState.mouse, camera);
+  const hits = hoverState.raycaster.intersectObjects(hoverState.cubes);
+  const hitSet = new Set(hits.slice(0,1).map(h=>h.object));
+  hoverState.cubes.forEach(c=>{
+    const targetY = hitSet.has(c) ? 1.2 : c.userData.baseY;
+    c.position.y += (targetY - c.position.y) * 0.18;
+    c.material.emissiveIntensity = hitSet.has(c) ? 0.8 : 0.1;
+  });
+}
+
+/* ============================================================
+   动画主循环
+   ============================================================ */
+const clock = new THREE.Clock();
+function animate(){
+  const dt = clock.getDelta();
+  if(autoRotate){ root.rotation.y += dt * rotSpeedFactor; }
+  if(currentScene === 'sliding') updateSliding(dt);
+  if(currentScene === 'hover') updateHover();
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
+
+/* ============================================================
+   场景切换
+   ============================================================ */
+function switchScene(name){
+  currentScene = name;
+  if(hoverState){ canvas.removeEventListener('pointermove', onHoverMove); hoverState=null; }
+  slidingState = null;
+  const desc = {
+    kernel:'<b>3D 卷积核：</b>把抽象的 3×3 矩阵"立体化"。每个小立方体的高度 = 权重绝对值，颜色代表正负 —— 你能直接"看到"一个边缘检测核长什么样。',
+    sliding:'<b>滑窗动画：</b>橙色发光立方体就是卷积核，它在 5×5 的像素图像上滑动，每停在一个位置就做一次"加权求和"。这就是卷积运算的本质。',
+    featuremap:'<b>特征图金字塔：</b>展示 CNN 的多层结构。每经过一次卷积，特征图变小，但"语义"更抽象 —— 从像素到边缘到形状到物体。',
+    hover:'<b>鼠标悬浮交互：</b>把鼠标移到任意立方体上，它会浮起来并发光。这模拟了"注意力机制"—— 网络重点关注哪一格特征。'
+  };
+  document.getElementById('sceneDesc').innerHTML = desc[name];
+  document.getElementById('sceneName').textContent = {
+    kernel:'3D 卷积核', sliding:'滑窗动画',
+    featuremap:'特征金字塔', hover:'鼠标悬浮'
+  }[name];
+
+  if(name==='kernel'){
+    const size = parseInt(document.getElementById('kSize').value);
+    let arr;
+    if(size===3) arr = SOBEL_X;
+    else arr = Array.from({length:size*size},()=> +(Math.random()*2-1).toFixed(2));
+    buildKernelScene(arr, size);
+  } else if(name==='sliding'){ buildSlidingScene(); }
+    else if(name==='featuremap'){ buildPyramid(); }
+    else if(name==='hover'){ buildHoverScene(); }
+}
+
+/* ============================================================
+   控制面板事件
+   ============================================================ */
+document.querySelectorAll('.scene-tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.scene-tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    switchScene(t.dataset.scene);
+  });
+});
+document.getElementById('rotSpeed').addEventListener('input', e=>{
+  rotSpeedFactor = e.target.value/100;
+  document.getElementById('rotVal').textContent = rotSpeedFactor.toFixed(2);
+});
+document.getElementById('kSize').addEventListener('input', e=>{
+  const v = parseInt(e.target.value);
+  document.getElementById('kSizeVal').textContent = `${v}×${v}`;
+  if(currentScene==='kernel') switchScene('kernel');
+});
+document.getElementById('glow').addEventListener('input', e=>{
+  glowFactor = e.target.value/100;
+  document.getElementById('glowVal').textContent = glowFactor.toFixed(2);
+  root.traverse(o=>{ if(o.material?.emissiveIntensity!==undefined){ o.material.emissiveIntensity = glowFactor*0.5; }});
+});
+document.getElementById('btnAuto').addEventListener('click', ()=>{ autoRotate = !autoRotate; });
+document.getElementById('btnReset').addEventListener('click', ()=>{
+  camera.position.set(8,8,12); controls.target.set(0,0,0); root.rotation.set(0,0,0);
+});
+document.getElementById('btnWire').addEventListener('click', ()=>{
+  wireframe = !wireframe;
+  root.traverse(o=>{ if(o.material && 'wireframe' in o.material) o.material.wireframe = wireframe; });
+});
+
+/* ---- 自适应 ---- */
+window.addEventListener('resize', ()=>{
+  const w = canvas.clientWidth || canvas.parentElement.clientWidth || 800;
+  const h = canvas.clientHeight || 600;
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h; camera.updateProjectionMatrix();
+});
+
+/* ---- 启动 ---- */
+switchScene('kernel');
+animate();
+</script>
+
+</body>
+</html>

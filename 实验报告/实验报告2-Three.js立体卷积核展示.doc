@@ -1,0 +1,439 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office"
+      xmlns:w="urn:schemas-microsoft-com:office:word"
+      xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="ProgId" content="Word.Document">
+<meta name="Generator" content="Microsoft Word">
+<title>实验报告二 - Three.js 立体卷积核展示</title>
+<!--[if gte mso 9]>
+<xml>
+<w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument>
+</xml>
+<![endif]-->
+<style>
+@page WordSection1 { size:21cm 29.7cm; margin:2.54cm 2.54cm 2.54cm 2.54cm; mso-page-orientation:portrait; }
+div.WordSection1 { page:WordSection1; }
+body { font-family:"宋体","SimSun",serif; font-size:12pt; line-height:1.75; color:#1F2937; }
+h1 { font-family:"黑体","SimHei",sans-serif; font-size:22pt; color:#C2410C; text-align:center; margin:20pt 0 8pt 0; }
+h2 { font-family:"黑体","SimHei",sans-serif; font-size:16pt; color:#B45309; border-bottom:2pt solid #D97706; padding-bottom:4pt; margin-top:18pt; }
+h3 { font-family:"黑体","SimHei",sans-serif; font-size:13pt; color:#C2410C; margin-top:14pt; }
+p { text-indent:2em; margin:6pt 0; }
+.no-indent { text-indent:0; }
+.cover { text-align:center; margin-top:80pt; }
+.cover .big { font-family:"黑体","SimHei",sans-serif; font-size:28pt; color:#C2410C; letter-spacing:6pt; margin-bottom:10pt; }
+.cover .sub { font-size:18pt; color:#B45309; margin-bottom:60pt; }
+.cover table { margin:0 auto; border-collapse:collapse; font-size:14pt; }
+.cover td { padding:10pt 24pt; border-bottom:1pt solid #B45309; }
+.info-table { width:100%; border-collapse:collapse; margin:8pt 0 14pt 0; }
+.info-table td { border:0.75pt solid #B45309; padding:6pt 10pt; font-size:11pt; }
+.info-table td.label { background:#FFF4E6; font-weight:bold; width:24%; color:#B45309; }
+.toc { background:#FFF8EF; border:0.75pt solid #D97706; padding:10pt 18pt; margin:10pt 0 16pt 0; }
+.toc h3 { color:#C2410C; margin:0 0 6pt 0; font-size:13pt; border:none; }
+.toc ol { margin:4pt 0 0 28pt; }
+.toc li { font-size:11.5pt; line-height:1.9; }
+table.box { width:100%; border-collapse:collapse; margin:10pt 0; }
+table.box th { background:#FFE4B5; color:#1F2937; border:0.75pt solid #B45309; padding:6pt; font-size:11pt; font-family:"黑体","SimHei",sans-serif; }
+table.box td { border:0.75pt solid #D97706; padding:6pt 10pt; font-size:11pt; }
+.code { font-family:"Consolas","Courier New",monospace; font-size:10.5pt; background:#FFF4E6;
+        border:0.75pt solid #D97706; padding:8pt 12pt; margin:8pt 0; white-space:pre-wrap; line-height:1.5; }
+.fig { text-align:center; margin:14pt 0; }
+.fig .cap { font-size:10.5pt; color:#6B7280; margin-top:4pt; }
+.svg-box { display:inline-block; padding:8pt; background:#FFF4E6; border:0.75pt solid #D97706; border-radius:6pt; }
+.note { background:#FFF8EF; border-left:4pt solid #D97706; padding:8pt 12pt; margin:10pt 0; font-size:11pt; }
+.kw { color:#C2410C; font-weight:bold; }
+ul, ol { margin:4pt 0 8pt 24pt; }
+li { margin:3pt 0; line-height:1.7; }
+</style>
+</head>
+<body lang="ZH-CN">
+<div class="WordSection1">
+
+<div class="cover">
+<div class="big">实 验 报 告</div>
+<div class="sub">作业二：基于 Three.js 的"3D 卷积核展示场"设计与实现</div>
+<table>
+<tr><td>课程名称</td><td>Web前端综合实践</td></tr>
+<tr><td>实验项目</td><td>Three.js 3D 可视化专题</td></tr>
+<tr><td>姓&nbsp;&nbsp;&nbsp;&nbsp;名</td><td>谭海华</td></tr>
+<tr><td>学&nbsp;&nbsp;&nbsp;&nbsp;号</td><td>202326401042</td></tr>
+<tr><td>所属项目</td><td>"卷积核微课" —— 计算机设计大赛参赛作品</td></tr>
+<tr><td>实验日期</td><td>2026 年 04 月 26 日</td></tr>
+</table>
+</div>
+
+<p style="page-break-before:always"></p>
+
+<h1>基于 Three.js 的"3D 卷积核展示场"设计与实现</h1>
+
+<div class="toc">
+<h3>目 录</h3>
+<ol>
+<li>实验背景与项目简介</li>
+<li>实验目的</li>
+<li>实验环境</li>
+<li>整体架构与场景规划</li>
+<li>关键模块实现（含核心代码）</li>
+<li>运行效果与交互演示</li>
+<li>Three.js 核心 API 小结</li>
+<li>创意性、交互性、实用性分析</li>
+<li>遇到的问题与解决方案</li>
+<li>实验总结</li>
+</ol>
+</div>
+
+<h2>一、实验背景与项目简介</h2>
+<p>本实验依托本人参赛作品 <span class="kw">"卷积核微课"</span>。在二维平面上展示卷积运算（参见报告一）虽然直观，但学生很难理解几个事实："卷积核为何要一格一格地滑动？""为什么 CNN 越深越窄？""一个核里 9 个权重的正负到底意味着什么？"——这些都是<span class="kw">空间感很强</span>的问题，二维图很难讲清楚。</p>
+<p>因此，我设计并实现了项目中的另一个核心页面：<span class="kw">"3D 卷积核展示场"</span>（<span class="code" style="display:inline;padding:1pt 4pt">static/pages/showcase-3d.html</span>），用 <span class="kw">Three.js 0.128</span> 把卷积核的"权重立柱"、"滑窗扫描动画"、"CNN 特征图金字塔"、"鼠标悬停浮起"四个场景全部立体化，让学生能够<span class="kw">"绕着卷积核走一圈"</span>地观察这些抽象概念。这极大地提升了项目的科普穿透力，也直接呼应了本次作业"3D 旋转模型 / 鼠标悬浮 3D 交互 / 模型旋转/缩放/平移 / 场景切换"的全部要求。</p>
+
+<h2>二、实验目的</h2>
+<ol>
+<li>掌握 Three.js 的核心三件套：<span class="kw">Scene / Camera / Renderer</span> 与三件套的渲染循环。</li>
+<li>掌握 OrbitControls 实现鼠标拖拽、滚轮缩放、右键平移的相机控制。</li>
+<li>使用 BoxGeometry + MeshStandardMaterial 构建可被光照影响的立体物体，结合环境光、方向光、点光源做出富有质感的氛围。</li>
+<li>学会用 Group 组织一组对象，通过 traverse + dispose 妥善释放显存。</li>
+<li>实现<span class="kw">场景切换、滑窗动画、Raycaster 拾取、自动旋转、线框/发光开关</span>等综合交互。</li>
+<li>把以上技术真实嵌入到"卷积核微课"项目，使之成为有教学价值的功能模块，而非孤立的 demo。</li>
+</ol>
+
+<h2>三、实验环境</h2>
+<table class="info-table">
+<tr><td class="label">运行环境</td><td>Windows 11 + Chrome（支持 WebGL2）</td></tr>
+<tr><td class="label">后端框架</td><td>Python 3 + Flask（main.py）</td></tr>
+<tr><td class="label">3D 引擎</td><td>Three.js 0.128.0（含 examples/js/controls/OrbitControls.js）</td></tr>
+<tr><td class="label">CDN</td><td>jsdelivr 全球 CDN</td></tr>
+<tr><td class="label">页面入口</td><td>http://127.0.0.1:5000/showcase-3d</td></tr>
+<tr><td class="label">源码文件</td><td>static/pages/showcase-3d.html（共 537 行）</td></tr>
+</table>
+
+<h2>四、整体架构与场景规划</h2>
+<p>3D 展示场以"一个 Scene + 一个 Camera + 一个 Renderer + 四种 Group 内容"为骨架，通过<span class="kw">场景切换函数 switchScene()</span> 在 4 种 3D 内容间切换。整体如下图：</p>
+
+<div class="fig">
+<div class="svg-box">
+<svg width="640" height="320" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="bg3d" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0" stop-color="#1a1814"/><stop offset="1" stop-color="#2a2722"/>
+</linearGradient>
+<marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#D97706"/></marker>
+</defs>
+<rect x="20" y="20" width="280" height="280" rx="14" fill="url(#bg3d)" stroke="#D97706"/>
+<text x="160" y="46" text-anchor="middle" font-family="SimHei" font-size="14" fill="#FFD89B">3D 主场景（WebGLRenderer）</text>
+
+<g transform="translate(50,80)">
+<rect x="0" y="0" width="220" height="40" rx="8" fill="#C2410C" opacity="0.9"/>
+<text x="110" y="26" text-anchor="middle" font-family="SimHei" font-size="13" fill="#fff">Scene + AmbientLight + DirectionalLight + PointLight</text>
+</g>
+<g transform="translate(50,135)">
+<rect x="0" y="0" width="100" height="40" rx="8" fill="#D97706"/>
+<text x="50" y="26" text-anchor="middle" font-family="SimHei" font-size="13" fill="#fff">Camera</text>
+<rect x="120" y="0" width="100" height="40" rx="8" fill="#D97706"/>
+<text x="170" y="26" text-anchor="middle" font-family="SimHei" font-size="13" fill="#fff">OrbitControls</text>
+</g>
+<g transform="translate(50,190)">
+<rect x="0" y="0" width="220" height="90" rx="8" fill="#FFD89B"/>
+<text x="110" y="22" text-anchor="middle" font-family="SimHei" font-size="13" fill="#1F2937" font-weight="bold">root: THREE.Group</text>
+<text x="110" y="44" text-anchor="middle" font-family="SimSun" font-size="11" fill="#1F2937">所有动态内容都挂在 root 下</text>
+<text x="110" y="64" text-anchor="middle" font-family="SimSun" font-size="11" fill="#1F2937">切换场景时调用 clearRoot() 释放</text>
+<text x="110" y="80" text-anchor="middle" font-family="Consolas" font-size="10.5" fill="#B45309">geometry.dispose()/material.dispose()</text>
+</g>
+
+<g transform="translate(330,30)" font-family="SimHei" font-size="13">
+<rect x="0" y="0" width="290" height="60" rx="8" fill="#FFE4B5" stroke="#D97706"/>
+<text x="145" y="22" text-anchor="middle" fill="#C2410C" font-weight="bold">场景①：3D 卷积核（权重立柱）</text>
+<text x="145" y="42" text-anchor="middle" font-size="11" fill="#6B7280">9 个 BoxGeometry，高度 = |weight|，正/负权重不同色</text>
+
+<rect x="0" y="80" width="290" height="60" rx="8" fill="#FFE4B5" stroke="#D97706"/>
+<text x="145" y="102" text-anchor="middle" fill="#C2410C" font-weight="bold">场景②：滑窗扫描动画</text>
+<text x="145" y="122" text-anchor="middle" font-size="11" fill="#6B7280">5×5 像素网格 + 半透明 3×3 高亮框来回扫</text>
+
+<rect x="0" y="160" width="290" height="60" rx="8" fill="#FFE4B5" stroke="#D97706"/>
+<text x="145" y="182" text-anchor="middle" fill="#C2410C" font-weight="bold">场景③：CNN 特征图金字塔</text>
+<text x="145" y="202" text-anchor="middle" font-size="11" fill="#6B7280">4 层叠叠塔：6×6→5×5→4×4→3×3</text>
+
+<rect x="0" y="240" width="290" height="60" rx="8" fill="#FFE4B5" stroke="#D97706"/>
+<text x="145" y="262" text-anchor="middle" fill="#C2410C" font-weight="bold">场景④：鼠标悬浮浮起</text>
+<text x="145" y="282" text-anchor="middle" font-size="11" fill="#6B7280">Raycaster 拾取 → 立柱浮起 + 发光</text>
+</g>
+
+<line x1="300" y1="60" x2="330" y2="60" stroke="#D97706" stroke-width="2" marker-end="url(#ar3)"/>
+<line x1="300" y1="110" x2="330" y2="110" stroke="#D97706" stroke-width="2" marker-end="url(#ar3)"/>
+<line x1="300" y1="190" x2="330" y2="190" stroke="#D97706" stroke-width="2" marker-end="url(#ar3)"/>
+<line x1="300" y1="270" x2="330" y2="270" stroke="#D97706" stroke-width="2" marker-end="url(#ar3)"/>
+</svg>
+</div>
+<div class="cap">图 2-1 Three.js 3D 展示场架构与四种场景切换</div>
+</div>
+
+<h2>五、关键模块实现</h2>
+
+<h3>5.1 三件套初始化与相机控制</h3>
+<p>Three.js 程序的"三件套"——场景、相机、渲染器，是所有内容的舞台。本实验在初始化时还集成了 OrbitControls，让学生可以用<span class="kw">鼠标拖拽旋转、滚轮缩放、右键平移</span>，同时设置自动旋转作为兜底。</p>
+
+<div class="code">// showcase-3d.html 第 187-216 行（节选）
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1a1814);
+scene.fog = new THREE.Fog(0x1a1814, 30, 80);          // 远处雾化营造深度感
+
+const camera = new THREE.PerspectiveCamera(45, initW/initH, 0.1, 1000);
+camera.position.set(8, 8, 8);
+camera.lookAt(0,0,0);
+
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+
+// OrbitControls：鼠标交互的灵魂
+let controls;
+if(typeof THREE.OrbitControls === 'function'){
+  controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;        // 拖动后惯性衰减
+  controls.dampingFactor = 0.08;
+}
+
+// 三层光照
+scene.add(new THREE.AmbientLight(0xffffff, 0.4));     // 环境光
+const dirLight = new THREE.DirectionalLight(0xffd89b, 0.9);  // 方向光（暖色）
+dirLight.position.set(10,15,8); dirLight.castShadow = true;
+scene.add(dirLight);
+scene.add(new THREE.PointLight(0xC2410C, 0.6, 30));   // 点光源（红橙）</div>
+
+<div class="note"><b>设计要点：</b>使用 <span class="kw">三层光照</span>（环境光 + 方向光 + 点光源）配合 MeshStandardMaterial 的 PBR 反射，能在不写自定义 Shader 的前提下，让卷积核立柱呈现出"工业陶瓷"的高级质感，远胜默认材质的塑料感。</div>
+
+<h3>5.2 场景①：3D 卷积核 —— 权重立柱可视化</h3>
+<p>这是项目中最具代表性的可视化创新：把 3×3 卷积核中的 9 个权重做成 9 根<span class="kw">立柱</span>，立柱<span class="kw">高度对应权重绝对值</span>，立柱<span class="kw">颜色对应权重正负</span>（暖色为正、冷色/红色为负）。学生绕着模型旋转一圈，就能"一眼看穿"这个核到底在加强什么、抑制什么。</p>
+
+<div class="code">// showcase-3d.html 第 245-277 行
+function buildKernelScene(kernelArr, size=3){
+  clearRoot();
+  const max = Math.max(...kernelArr.map(Math.abs)) || 1;
+  const spacing = 1.6;
+  for(let r=0; r<size; r++){
+    for(let c=0; c<size; c++){
+      const w = kernelArr[r*size+c] ?? 0;
+      const h = Math.max(0.2, Math.abs(w)/max * 2.5);   // 高度映射 |w|
+      const geo = new THREE.BoxGeometry(1.1, h, 1.1);
+      const color = colorByWeight(w, max);              // 暖正/冷负
+      const mat = new THREE.MeshStandardMaterial({
+        color, metalness:0.3, roughness:0.4,
+        emissive:color, emissiveIntensity:glowFactor*0.4,
+        wireframe
+      });
+      const cube = new THREE.Mesh(geo, mat);
+      cube.position.set(
+        (c-(size-1)/2)*spacing,
+        h/2,                            // 立柱底部贴地
+        (r-(size-1)/2)*spacing
+      );
+      cube.castShadow = true;
+      root.add(cube);
+      // 立柱上方挂数值标签（CanvasTexture + Sprite）
+      const label = makeLabel(w.toFixed(2));
+      label.position.set(cube.position.x, h+0.7, cube.position.z);
+      root.add(label);
+    }
+  }
+}</div>
+
+<p>其中 <span class="kw">colorByWeight()</span> 是教学语义最强的一段：用 lerpColors 做颜色插值，实现"权重越正、颜色越暖；权重越负、颜色越红"，对应"激发 / 抑制"两种神经元行为，这是 CNN 教学中非常重要却经常被一笔带过的概念。</p>
+
+<h3>5.3 场景②：滑窗扫描动画</h3>
+<p>这是 4 个场景中<span class="kw">交互动画感最强</span>的一个：5×5 的像素网格摆在地面，3×3 的半透明高亮框（卷积核）在网格上自左上角向右下角逐格滑动，每经过 0.6 秒前进一格，被覆盖的像素同步亮起 emissive 发光。这正是 CNN 中 stride=1 卷积的真实空间形态。</p>
+
+<div class="code">// 卷积核高亮框：半透明 + 发光 + 边缘线框
+const kernelBoxMat = new THREE.MeshStandardMaterial({
+  color:0xD97706, transparent:true, opacity:0.35,
+  emissive:0xD97706, emissiveIntensity:0.6
+});
+const kBox = new THREE.Mesh(kernelBoxGeo, kernelBoxMat);
+kBox.add(new THREE.LineSegments(           // 加边缘线框增强可读性
+  new THREE.EdgesGeometry(kernelBoxGeo),
+  new THREE.LineBasicMaterial({color:0xC2410C})
+));
+
+// 动画推进（在 animate() 主循环内每帧调用）
+function updateSliding(dt){
+  slidingState.t += dt;
+  if(slidingState.t > 0.6){                // 每 0.6s 走一格
+    slidingState.t = 0;
+    slidingState.idx = (slidingState.idx + 1) % 9;
+  }
+  const r = Math.floor(slidingState.idx/3), c = slidingState.idx%3;
+  // 用差值平滑插值到目标位置（手感比直接赋值更自然）
+  slidingState.kBox.position.x += (targetX - slidingState.kBox.position.x) * 0.15;
+  slidingState.kBox.position.z += (targetZ - slidingState.kBox.position.z) * 0.15;
+  slidingState.kBox.position.y = 0.6 + Math.sin(performance.now()*0.003)*0.05;  // 上下漂浮
+  // 被高亮框覆盖的像素发光
+  slidingState.pixels.forEach(p => {
+    const inside = ...;
+    p.mesh.material.emissive.setHex(inside ? 0xD97706 : 0x000000);
+    p.mesh.material.emissiveIntensity = inside ? 0.5 : 0;
+  });
+}</div>
+
+<h3>5.4 场景③：CNN 特征图金字塔</h3>
+<p>4 层"叠叠塔"——输入层 6×6、Conv1 5×5、Conv2 4×4、Conv3 3×3，颜色由浅到深、网格由大到小，从下往上堆叠，配合 Sprite 文字标签。这一场景把 CNN <span class="kw">"逐层抽象、空间下采样"</span>这一核心思想，直接拍成了"金字塔"形状的 3D 模型，学生可绕、可缩、可平移地从任意角度查看。</p>
+
+<h3>5.5 场景④：鼠标悬浮 3D 交互</h3>
+<p>使用 <span class="kw">THREE.Raycaster</span>（射线投射器）从相机经鼠标位置向场景发射射线，并用 intersectObjects 找出最近交点，触发该立柱的"浮起 + 发光"动画。这是 Three.js 中实现"3D UI 拾取"的标准做法，也是本作业要求的"鼠标悬浮时的 3D 交互效果"的核心实现。</p>
+
+<div class="code">// showcase-3d.html 第 405-440 行（要点）
+hoverState = {
+  cubes,
+  raycaster: new THREE.Raycaster(),
+  mouse:     new THREE.Vector2(-100,-100)
+};
+canvas.addEventListener('mousemove', e => {
+  const rect = canvas.getBoundingClientRect();
+  hoverState.mouse.x =  ((e.clientX-rect.left)/rect.width) *2 -1;
+  hoverState.mouse.y = -((e.clientY-rect.top )/rect.height)*2 +1;
+});
+
+function updateHover(){
+  hoverState.raycaster.setFromCamera(hoverState.mouse, camera);
+  const hits = hoverState.raycaster.intersectObjects(hoverState.cubes);
+  hoverState.cubes.forEach(c=>{
+    const isHit = hits[0]?.object === c;
+    // 平滑插值到目标 Y（浮起）和 emissive（发光）
+    c.position.y += ((isHit ? 0.6 : 0) - c.position.y) * 0.18;
+    c.material.emissiveIntensity += ((isHit ? 0.8 : 0.1) - c.material.emissiveIntensity) * 0.18;
+  });
+}</div>
+
+<h3>5.6 场景切换 + 显存释放</h3>
+<p>四个场景共用一个 <span class="code" style="display:inline;padding:1pt 4pt">root</span> Group。切换时通过 <span class="kw">clearRoot()</span> 把所有子对象的 <span class="code" style="display:inline;padding:1pt 4pt">geometry.dispose()</span> 和 <span class="code" style="display:inline;padding:1pt 4pt">material.dispose()</span> 都调用一次，<span class="kw">妥善释放显存</span>，避免长时间反复切换造成 GPU 内存泄漏。这是初学者最容易忽略的工程细节。</p>
+
+<div class="code">// 显存安全释放
+function clearRoot(){
+  while(root.children.length){
+    const c = root.children.pop();
+    c.traverse?.(o=>{
+      o.geometry?.dispose();
+      o.material?.dispose?.();
+    });
+  }
+}</div>
+
+<h3>5.7 主渲染循环 + 自动旋转 + 阻尼</h3>
+<div class="code">// 主循环（requestAnimationFrame 驱动，每帧调用）
+const clock = new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  if(autoRotate) root.rotation.y += dt * rotSpeedFactor;   // 自动旋转
+  if(currentScene==='sliding') updateSliding(dt);
+  if(currentScene==='hover')   updateHover();
+  controls?.update();           // OrbitControls 阻尼平滑
+  renderer.render(scene, camera);
+}
+animate();</div>
+
+<h2>六、运行效果与交互演示</h2>
+
+<table class="box">
+<tr><th>场景</th><th>关键交互</th><th>视觉特征</th></tr>
+<tr><td>3D 卷积核</td><td>左键拖拽旋转、滚轮缩放、右键平移；切换 8 种预设核实时重绘</td><td>9 根立柱+地面投影+数值标签</td></tr>
+<tr><td>滑窗扫描</td><td>自动循环动画，可叠加自动旋转俯视/侧视</td><td>橙色高亮框来回扫，被覆盖像素发光</td></tr>
+<tr><td>金字塔</td><td>360° 旋转观察，4 层从大到小叠加</td><td>颜色从浅到深，对应"特征越来越抽象"</td></tr>
+<tr><td>鼠标悬浮</td><td>鼠标移动到立柱上方→浮起+发光</td><td>Raycaster 命中检测的标准教学样例</td></tr>
+</table>
+
+<div class="fig">
+<div class="svg-box">
+<svg width="640" height="170" xmlns="http://www.w3.org/2000/svg">
+<rect x="0" y="0" width="640" height="170" fill="#1a1814" rx="10"/>
+<g transform="translate(60,40)">
+<text x="60" y="-10" text-anchor="middle" font-family="SimHei" font-size="13" fill="#FFD89B">场景 ① 卷积核</text>
+<rect x="0" y="0" width="20" height="60" fill="#FFD89B"/>
+<rect x="25" y="20" width="20" height="40" fill="#D97706"/>
+<rect x="50" y="40" width="20" height="20" fill="#FCA5A5"/>
+<rect x="75" y="30" width="20" height="30" fill="#C2410C"/>
+<rect x="100" y="10" width="20" height="50" fill="#D97706"/>
+</g>
+<g transform="translate(220,40)">
+<text x="60" y="-10" text-anchor="middle" font-family="SimHei" font-size="13" fill="#FFD89B">场景 ② 滑窗</text>
+<g transform="translate(0,0)">
+<rect x="0" y="0" width="14" height="14" fill="#666"/><rect x="16" y="0" width="14" height="14" fill="#888"/>
+<rect x="32" y="0" width="14" height="14" fill="#666"/><rect x="48" y="0" width="14" height="14" fill="#888"/>
+<rect x="64" y="0" width="14" height="14" fill="#666"/>
+<rect x="0" y="16" width="14" height="14" fill="#888"/><rect x="16" y="16" width="14" height="14" fill="#FFD89B"/>
+<rect x="32" y="16" width="14" height="14" fill="#FFD89B"/><rect x="48" y="16" width="14" height="14" fill="#FFD89B"/><rect x="64" y="16" width="14" height="14" fill="#666"/>
+<rect x="0" y="32" width="14" height="14" fill="#666"/><rect x="16" y="32" width="14" height="14" fill="#FFD89B"/>
+<rect x="32" y="32" width="14" height="14" fill="#FFD89B"/><rect x="48" y="32" width="14" height="14" fill="#FFD89B"/><rect x="64" y="32" width="14" height="14" fill="#666"/>
+<rect x="0" y="48" width="14" height="14" fill="#888"/><rect x="16" y="48" width="14" height="14" fill="#FFD89B"/>
+<rect x="32" y="48" width="14" height="14" fill="#FFD89B"/><rect x="48" y="48" width="14" height="14" fill="#FFD89B"/><rect x="64" y="48" width="14" height="14" fill="#666"/>
+<rect x="0" y="64" width="14" height="14" fill="#666"/><rect x="16" y="64" width="14" height="14" fill="#888"/>
+<rect x="32" y="64" width="14" height="14" fill="#666"/><rect x="48" y="64" width="14" height="14" fill="#888"/><rect x="64" y="64" width="14" height="14" fill="#666"/>
+<rect x="14" y="14" width="48" height="50" fill="none" stroke="#C2410C" stroke-width="2"/>
+</g>
+</g>
+<g transform="translate(380,40)">
+<text x="60" y="-10" text-anchor="middle" font-family="SimHei" font-size="13" fill="#FFD89B">场景 ③ 金字塔</text>
+<rect x="0"  y="60" width="120" height="14" fill="#FFD89B"/>
+<rect x="10" y="44" width="100" height="14" fill="#D97706"/>
+<rect x="20" y="28" width="80"  height="14" fill="#C2410C"/>
+<rect x="30" y="12" width="60"  height="14" fill="#B45309"/>
+</g>
+<g transform="translate(540,40)">
+<text x="40" y="-10" text-anchor="middle" font-family="SimHei" font-size="13" fill="#FFD89B">场景 ④ 悬浮</text>
+<rect x="0"  y="40" width="20" height="30" fill="#D97706"/>
+<rect x="25" y="40" width="20" height="30" fill="#D97706"/>
+<rect x="50" y="20" width="20" height="50" fill="#FFD89B" stroke="#fff" stroke-width="2"/>
+<text x="60" y="14" text-anchor="middle" font-family="SimSun" font-size="11" fill="#FFD89B">↑hover</text>
+</g>
+</svg>
+</div>
+<div class="cap">图 2-2 四种 3D 场景的核心视觉示意</div>
+</div>
+
+<h2>七、Three.js 核心 API 小结</h2>
+
+<table class="box">
+<tr><th>API</th><th>作用</th><th>本实验角色</th></tr>
+<tr><td>THREE.Scene / Group</td><td>组织 3D 物体的容器</td><td>主场景 + root（动态内容容器）</td></tr>
+<tr><td>PerspectiveCamera</td><td>透视相机</td><td>提供"绕着模型走"的真实视角</td></tr>
+<tr><td>WebGLRenderer</td><td>WebGL 渲染器</td><td>把场景画到 canvas</td></tr>
+<tr><td>OrbitControls</td><td>鼠标控制相机</td><td>旋转/缩放/平移交互</td></tr>
+<tr><td>BoxGeometry / PlaneGeometry / EdgesGeometry</td><td>几何体</td><td>立柱、地面、边线</td></tr>
+<tr><td>MeshStandardMaterial</td><td>PBR 标准材质</td><td>立柱质感 + emissive 发光</td></tr>
+<tr><td>AmbientLight / DirectionalLight / PointLight</td><td>三种光源</td><td>构建暖色氛围</td></tr>
+<tr><td>Raycaster + Vector2</td><td>射线拾取</td><td>实现鼠标悬浮命中检测</td></tr>
+<tr><td>CanvasTexture + Sprite</td><td>2D 文字贴图</td><td>立柱顶部权重数值标签</td></tr>
+<tr><td>Clock + requestAnimationFrame</td><td>时间增量驱动</td><td>主循环 + 滑窗动画</td></tr>
+<tr><td>geometry.dispose() / material.dispose()</td><td>显存释放</td><td>场景切换避免泄漏</td></tr>
+</table>
+
+<h2>八、创意性、交互性、实用性分析</h2>
+<h3>8.1 创意性</h3>
+<p>把抽象的"卷积核权重矩阵"翻译成"权重立柱"，<span class="kw">让数值有了重量与色温</span>；把"滑动卷积"翻译成"高亮框逐格扫描"，<span class="kw">让算法有了节奏</span>；把"CNN 多层抽象"翻译成"叠叠塔金字塔"，<span class="kw">让网络有了形状</span>。三种翻译都精准锚定项目教学目标。</p>
+
+<h3>8.2 交互性</h3>
+<p>实现了本次作业要求的全部交互：模型旋转（左键拖拽）/ 缩放（滚轮）/ 平移（右键），鼠标悬浮 3D 反馈（Raycaster 浮起 + 发光），简单 3D 图形绘制（BoxGeometry 等），场景切换（4 个标签按钮）。叠加自动旋转、线框开关、发光强度、旋转速度滑杆，整体交互密度极高。</p>
+
+<h3>8.3 实用性</h3>
+<p>页面已嵌入"卷积核微课"主导航，与"卷积核操场"形成"二维亲手算 + 三维直觉看"的<span class="kw">双轨教学闭环</span>。教师讲到"卷积层"时直接打开本页，学生在 30 秒内即可对一个 3×3 核形成立体直觉，对真实课堂教学有显著价值。</p>
+
+<h2>九、遇到的问题与解决方案</h2>
+<table class="box">
+<tr><th>问题</th><th>原因</th><th>解决方案</th></tr>
+<tr><td>OrbitControls 在新版 Three.js 不再以全局形式暴露</td><td>r140+ 改为 ESM 模块</td><td>固定使用 r128 + examples/js/controls，全局 THREE.OrbitControls 仍可用</td></tr>
+<tr><td>切换场景后 GPU 内存持续上涨</td><td>未释放上一场景的 geometry/material</td><td>实现 clearRoot() 调用 dispose() 完整释放</td></tr>
+<tr><td>OrbitControls 加载失败时页面黑屏</td><td>缺少容错</td><td>加 typeof 判断，缺失时降级为自动旋转，不阻塞渲染</td></tr>
+<tr><td>移动端字体过小、按钮难按</td><td>未做响应式</td><td>1100px 媒体查询切单列布局，按钮加大触摸区</td></tr>
+<tr><td>滑窗动画"瞬移"不自然</td><td>直接赋值 position</td><td>改为差值插值（每帧靠近目标 15%），形成阻尼过渡</td></tr>
+</table>
+
+<h2>十、实验总结</h2>
+<p>本次实验以"卷积核微课"项目为载体，使用 <span class="kw">Three.js 0.128</span> 实现了 4 个具有教学语义的 3D 场景，覆盖<span class="kw">3D 模型旋转、模型缩放/平移、鼠标悬浮 3D 交互、简单 3D 图形绘制、场景切换</span>等本次作业全部要求。代码总量约 537 行，关键交互逻辑（旋转、滑窗、悬浮、释放）每个不超过 30 行，体现了 Three.js"少代码、强表达"的优势。</p>
+<p>最大的收获在于：3D 不仅是炫技，而是一种<span class="kw">空间表达语言</span>。把数学抽象翻译为可旋转、可缩放、可悬浮的立体物体后，学生第一次"看到"了卷积核的权重高低与正负、看到了滑窗的真实步进、看到了 CNN 越深越窄的金字塔形状。这些直觉是任何二维 PPT 都无法替代的。这次实验也使我对 Three.js 的核心 API、显存管理、动画驱动方式建立了完整的工程级认识。</p>
+
+<table class="info-table" style="margin-top:30pt">
+<tr><td class="label">报告完成人</td><td>谭海华（学号 202326401042）</td></tr>
+<tr><td class="label">完成日期</td><td>2026 年 04 月 26 日</td></tr>
+<tr><td class="label">附件</td><td>static/pages/showcase-3d.html（源码）</td></tr>
+</table>
+
+</div>
+</body>
+</html>

@@ -8,3 +8,11 @@ __pycache__/
 
 # Streamlit
 .streamlit/
+
+# Claude Code 本地配置 / 锁 / worktree
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+.claude/worktrees/
+
+# Word 临时锁文件
+~$*
